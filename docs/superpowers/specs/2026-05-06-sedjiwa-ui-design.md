@@ -20,11 +20,15 @@ The library is built first to serve internal consumers, but its API surface, the
 
 Port the ~20 primitives currently duplicated in uang-gantung's `src/components/ui/`:
 
-`alert-dialog`, `avatar`, `badge`, `breadcrumb`, `button`, `dialog`, `dropdown-menu`, `form`, `input`, `label`, `select`, `separator`, `sheet`, `sidebar`, `skeleton`, `sonner`, `table`, `tabs`, plus `tooltip` and `popover` if they exist in another app.
+`alert-dialog`, `avatar`, `badge`, `breadcrumb`, `button`, `dialog`, `dropdown-menu`, `form`, `input`, `label`, `select`, `separator`, `sheet`, `sidebar`, `skeleton`, `sonner`, `table`, `tabs`, `tooltip` (uang-gantung depends on `@radix-ui/react-tooltip`).
+
+Any other primitives discovered in sales-pipeline, kreasi-quotation, or magenta-quotation during their migrations are added in subsequent minor releases — not in v0.1.0.
 
 Each primitive is a thin wrapper over its corresponding Radix UI package, styled with Tailwind utility classes via `class-variance-authority`.
 
 ## Architecture
+
+The library lives in its own standalone git repository at `sedjiwa-ui/`. It is not a member of any bun/npm workspace; consumers install it from the private registry, the same way they consume `@qyubit/sedjiwa-permissions`.
 
 ### Repo structure
 
