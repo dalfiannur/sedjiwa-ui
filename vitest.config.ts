@@ -6,7 +6,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts"],
+    setupFiles: ["./src/test/setup.ts", "./src/test/setup.pointer-events.ts"],
     css: false,
     include: ["src/**/*.test.{ts,tsx}"],
   },
