@@ -72,4 +72,15 @@ describe("<Button />", () => {
     render(<Button ref={ref}>Ref test</Button>);
     expect(ref.current).toBeInstanceOf(HTMLButtonElement);
   });
+
+  it("forwards ref to the child element when asChild is set", () => {
+    const ref = { current: null as HTMLAnchorElement | null };
+    render(
+      <Button asChild ref={ref}>
+        <a href="/home">Home</a>
+      </Button>
+    );
+    expect(ref.current).toBeInstanceOf(HTMLAnchorElement);
+    expect(ref.current?.getAttribute("href")).toBe("/home");
+  });
 });
