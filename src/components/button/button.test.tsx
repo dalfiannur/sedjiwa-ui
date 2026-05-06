@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -76,8 +77,10 @@ describe("<Button />", () => {
   it("forwards ref to the child element when asChild is set", () => {
     const ref = { current: null as HTMLElement | null };
     render(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      <Button asChild ref={ref as any}>
+      <Button
+        asChild
+        ref={ref as unknown as Ref<HTMLButtonElement>}
+      >
         <a href="/home">Home</a>
       </Button>
     );
