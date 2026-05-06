@@ -4,7 +4,7 @@ Shared React + Tailwind CSS UI primitives for the sedjiwa-portal apps.
 
 ## Status
 
-`v0.0.x` is a pipeline-validation preview. The full v0.1.0 ships ~19 primitives — see Plan B.
+`v0.1.0` ships 19 primitives — the full set duplicated across sedjiwa-portal apps, ready to consume.
 
 ## Requirements
 
@@ -15,10 +15,16 @@ Shared React + Tailwind CSS UI primitives for the sedjiwa-portal apps.
 ## Install
 
 ```bash
-bun add @qyubit/sedjiwa-ui @radix-ui/react-slot tw-animate-css
+bun add @qyubit/sedjiwa-ui \
+  @radix-ui/react-alert-dialog @radix-ui/react-avatar \
+  @radix-ui/react-dialog @radix-ui/react-dropdown-menu \
+  @radix-ui/react-label @radix-ui/react-select \
+  @radix-ui/react-separator @radix-ui/react-slot \
+  @radix-ui/react-tabs @radix-ui/react-tooltip \
+  lucide-react next-themes react-hook-form sonner tw-animate-css
 ```
 
-`react`, `react-dom`, `tailwindcss`, `@radix-ui/react-slot`, and `tw-animate-css` are peer dependencies — your app must provide them. (`react`/`react-dom` and `tailwindcss` are usually already installed.)
+`react`, `react-dom`, and `tailwindcss` are peer dependencies your app already provides. The Radix `@radix-ui/*` packages, `lucide-react` (icons), `next-themes` (Toaster theme integration), `react-hook-form` (Form integration), `sonner` (Toaster runtime), and `tw-animate-css` (entrance/exit animations) are also peer dependencies — install whichever you actually use.
 
 ## Setup
 
@@ -47,9 +53,16 @@ Toggle the `.dark` class on `<html>` (or any ancestor of your app):
 document.documentElement.classList.toggle("dark");
 ```
 
-## Components (preview)
+## Components
 
-- `<Button />` — variants: `default`, `destructive`, `outline`, `secondary`, `ghost`, `link`. Sizes: `sm`, `default`, `lg`, `icon`, `icon-sm`, `icon-lg`. Supports `asChild` for composition.
+All shadcn-style primitives, composable via Tailwind utility classes:
+
+- **Layout & overlay:** `Dialog`, `AlertDialog`, `Sheet`, `Tooltip`, `DropdownMenu`, `Sidebar`, `Tabs`
+- **Forms:** `Form`, `Input`, `Label`, `Select`, `Separator`, plus `react-hook-form` integration via `FormField`/`FormItem`/`FormControl`/`FormMessage`/`FormDescription`/`FormLabel`
+- **Display:** `Avatar`, `Badge`, `Breadcrumb`, `Button`, `Skeleton`, `Table`
+- **Feedback:** `Toaster` (sonner)
+
+Helper: `cn` (clsx + tailwind-merge) is exported for consumer-side class composition.
 
 ## Development
 
