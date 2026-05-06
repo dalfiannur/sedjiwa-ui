@@ -18,6 +18,10 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@qyubit/sedjiwa-ui": ["./src/index.ts"]
+    },
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src", "playground"],
