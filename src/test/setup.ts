@@ -6,6 +6,7 @@ import { cleanup } from "@testing-library/react";
 // libraries like sonner that call it during mount don't throw.
 Object.defineProperty(window, "matchMedia", {
   writable: true,
+  configurable: true,
   value: (query: string) => ({
     matches: false,
     media: query,
