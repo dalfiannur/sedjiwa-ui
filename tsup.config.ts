@@ -7,7 +7,7 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ["react", "react-dom", "tailwindcss"],
+  external: ["react", "react-dom", "tailwindcss", "@radix-ui/react-slot", "tw-animate-css"],
   treeshake: true,
   splitting: false,
   async onSuccess() {
