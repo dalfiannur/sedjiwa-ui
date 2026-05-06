@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
-  Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter,
-  DialogTitle, DialogDescription, DialogClose,
+  Dialog, DialogTrigger, DialogContent,
+  DialogTitle, DialogDescription,
 } from "./dialog";
 
 describe("<Dialog />", () => {
