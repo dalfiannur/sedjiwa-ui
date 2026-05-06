@@ -74,9 +74,10 @@ describe("<Button />", () => {
   });
 
   it("forwards ref to the child element when asChild is set", () => {
-    const ref = { current: null as HTMLAnchorElement | null };
+    const ref = { current: null as HTMLElement | null };
     render(
-      <Button asChild ref={ref}>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      <Button asChild ref={ref as any}>
         <a href="/home">Home</a>
       </Button>
     );
