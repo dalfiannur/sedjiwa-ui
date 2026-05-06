@@ -15,8 +15,10 @@ Shared React + Tailwind CSS UI primitives for the sedjiwa-portal apps.
 ## Install
 
 ```bash
-bun add @qyubit/sedjiwa-ui
+bun add @qyubit/sedjiwa-ui @radix-ui/react-slot tw-animate-css
 ```
+
+`react`, `react-dom`, `tailwindcss`, `@radix-ui/react-slot`, and `tw-animate-css` are peer dependencies — your app must provide them. (`react`/`react-dom` and `tailwindcss` are usually already installed.)
 
 ## Setup
 
