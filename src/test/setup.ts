@@ -19,6 +19,16 @@ Object.defineProperty(window, "matchMedia", {
   }),
 });
 
+// jsdom does not implement ResizeObserver; provide a minimal stub so
+// Radix UI primitives (e.g. Tooltip) that use it during mount don't throw.
+if (typeof window.ResizeObserver === "undefined") {
+  window.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 afterEach(() => {
   cleanup();
 });
