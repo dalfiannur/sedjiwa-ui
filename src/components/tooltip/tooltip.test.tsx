@@ -11,28 +11,53 @@ import {
 describe("<Tooltip />", () => {
   it("renders the trigger but not the content by default", () => {
     render(
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger>hover me</TooltipTrigger>
-          <TooltipContent>tip text</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>hover me</TooltipTrigger>
+        <TooltipContent>tip text</TooltipContent>
+      </Tooltip>
     );
     expect(screen.getByText("hover me")).toBeInTheDocument();
-    expect(screen.queryByText("tip text")).not.toBeInTheDocument();
+    // No tooltip role rendered until the trigger is activated.
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
   it("opens content on focus", async () => {
     const user = userEvent.setup();
     render(
+      <Tooltip>
+        <TooltipTrigger>hover me</TooltipTrigger>
+        <TooltipContent>tip text</TooltipContent>
+      </Tooltip>
+    );
+    await user.tab();
+    // Use role=tooltip to disambiguate from the assistive-tech duplicate
+    // that Radix renders. Then assert the visible text is inside it.
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveTextContent("tip text");
+  });
+
+  it("Tooltip works without an outer TooltipProvider (auto-wraps)", () => {
+    // Sanity check: <Tooltip> should provide its own context, matching the
+    // uang-gantung source. If the inner TooltipProvider were removed, this
+    // would throw at runtime.
+    render(
+      <Tooltip>
+        <TooltipTrigger>x</TooltipTrigger>
+        <TooltipContent>y</TooltipContent>
+      </Tooltip>
+    );
+    expect(screen.getByText("x")).toBeInTheDocument();
+  });
+
+  it("works wrapped in an explicit TooltipProvider too", () => {
+    render(
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger>hover me</TooltipTrigger>
-          <TooltipContent>tip text</TooltipContent>
+          <TooltipTrigger>z</TooltipTrigger>
+          <TooltipContent>w</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
-    await user.tab();
-    expect(await screen.findByText("tip text")).toBeInTheDocument();
+    expect(screen.getByText("z")).toBeInTheDocument();
   });
 });
