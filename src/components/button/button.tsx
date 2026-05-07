@@ -22,8 +22,23 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
+  if (
+    process.env.NODE_ENV !== "production" &&
+    asChild &&
+    loading &&
+    !hasWarnedAsChildLoading
+  ) {
+    hasWarnedAsChildLoading = true;
+    console.warn(
+      "[sedjiwa-ui Button] `asChild` + `loading` does not inject a spinner into the slotted child. Render a spinner inside the slotted element if you need one."
+    );
+  }
+
   const handleClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     if (loading) {
+      // Block consumer onClick AND prevent native default — important for
+      // type="submit" buttons inside a <form>, where Enter or programmatic
+      // .click() would otherwise submit the form during loading.
       e.preventDefault();
       return;
     }
@@ -64,6 +79,8 @@ export function Button({
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       onClick={handleClick}
+      // Cast: after destructuring above, `props` only contains HTML button
+      // attributes, but TS can't narrow past the ButtonVariants intersection.
       {...(props as React.ComponentProps<"button">)}
       aria-pressed={pressed}
       aria-busy={loading || undefined}
@@ -81,3 +98,5 @@ export function Button({
     </button>
   );
 }
+
+let hasWarnedAsChildLoading = false;
