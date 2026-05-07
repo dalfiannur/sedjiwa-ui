@@ -79,4 +79,10 @@ export {
   Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
 } from "./components/tooltip";
 
+export { DataTable } from "./components/data-table";
+export type { Column, DataTableProps } from "./components/data-table";
+
+export { Modal } from "./components/modal";
+export type { ModalProps } from "./components/modal";
+
 export { cn, type ClassValue } from "./lib/cn";
