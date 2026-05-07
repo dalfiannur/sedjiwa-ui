@@ -16,6 +16,8 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
   Toaster,
+  DataTable, type Column,
+  Modal,
 } from "@qyubit/sedjiwa-ui";
 
 const buttonVariants = ["default", "destructive", "outline", "secondary", "ghost", "link"] as const;
@@ -40,6 +42,7 @@ export function Playground() {
           <TabsTrigger value="forms">Forms</TabsTrigger>
           <TabsTrigger value="overlays">Overlays</TabsTrigger>
           <TabsTrigger value="data">Data</TabsTrigger>
+          <TabsTrigger value="composed">Composed</TabsTrigger>
           <TabsTrigger value="misc">Misc</TabsTrigger>
         </TabsList>
 
@@ -181,6 +184,10 @@ export function Playground() {
           </section>
         </TabsContent>
 
+        <TabsContent value="composed" className="space-y-8 pt-4">
+          <ComposedShowcase />
+        </TabsContent>
+
         <TabsContent value="misc" className="space-y-6 pt-4">
           <section>
             <h2 className="text-lg font-medium mb-3">Avatar</h2>
@@ -213,5 +220,88 @@ export function Playground() {
 
       <Toaster />
     </main>
+  );
+}
+
+type DemoPerson = { id: string; name: string; role: string; salary: number };
+
+const PEOPLE: DemoPerson[] = [
+  { id: "1", name: "Ada Lovelace", role: "Engineer", salary: 95000 },
+  { id: "2", name: "Grace Hopper", role: "Designer", salary: 88000 },
+  { id: "3", name: "Margaret Hamilton", role: "Director", salary: 120000 },
+];
+
+const PERSON_COLUMNS: Column<DemoPerson>[] = [
+  { key: "name", header: "Name", render: (p) => p.name },
+  { key: "role", header: "Role", render: (p) => p.role },
+  {
+    key: "salary",
+    header: "Salary",
+    align: "right",
+    render: (p) => `$${p.salary.toLocaleString("en-US")}`,
+  },
+];
+
+function ComposedShowcase() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [size, setSize] = useState<"sm" | "md" | "lg" | "xl">("md");
+
+  return (
+    <>
+      <section className="space-y-4">
+        <h2 className="text-lg font-medium">DataTable</h2>
+        <DataTable
+          columns={PERSON_COLUMNS}
+          rows={PEOPLE}
+          getRowKey={(p) => p.id}
+          renderAction={(p) => (
+            <Button size="sm" variant="ghost">
+              Edit {p.name.split(" ")[0]}
+            </Button>
+          )}
+          onRowClick={(p) => {
+            console.log("row clicked:", p.name);
+          }}
+        />
+
+        <h3 className="text-sm font-medium pt-4">Empty state</h3>
+        <DataTable
+          columns={PERSON_COLUMNS}
+          rows={[]}
+          getRowKey={(p) => p.id}
+          emptyMessage="No people found"
+        />
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-medium">Modal</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          {(["sm", "md", "lg", "xl"] as const).map((s) => (
+            <Button
+              key={s}
+              variant="outline"
+              onClick={() => {
+                setSize(s);
+                setModalOpen(true);
+              }}
+            >
+              Open {s}
+            </Button>
+          ))}
+        </div>
+        <Modal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          title={`Modal — size ${size}`}
+          description="A composed convenience layer over Dialog. Press Escape or click the backdrop to close."
+          size={size}
+        >
+          <p className="text-sm text-muted-foreground">
+            Modal body. Replace with whatever the consumer needs — forms,
+            confirmations, embedded flows.
+          </p>
+        </Modal>
+      </section>
+    </>
   );
 }
