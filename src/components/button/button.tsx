@@ -19,20 +19,17 @@ export function Button({
 }: ButtonProps) {
   const Comp = asChild ? Slot : "button";
 
-  const stateAttrs: Record<string, string> = {};
-  if (pressed !== undefined) {
-    stateAttrs["aria-pressed"] = pressed ? "true" : "false";
-    stateAttrs["data-state"] = pressed ? "on" : "off";
-  }
-
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
-      {...stateAttrs}
       {...props}
+      aria-pressed={pressed}
+      data-state={
+        pressed === undefined ? undefined : pressed ? "on" : "off"
+      }
     />
   );
 }
