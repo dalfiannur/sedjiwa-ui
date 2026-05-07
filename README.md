@@ -4,7 +4,7 @@ Shared React + Tailwind CSS UI primitives for the sedjiwa-portal apps.
 
 ## Status
 
-`v0.1.0` ships 19 primitives — the full set duplicated across sedjiwa-portal apps, ready to consume.
+`v0.2.0` ships 19 atomic primitives plus 2 composed primitives (DataTable, Modal) extracted from observed consumer patterns.
 
 ## Requirements
 
@@ -55,7 +55,9 @@ document.documentElement.classList.toggle("dark");
 
 ## Components
 
-All shadcn-style primitives, composable via Tailwind utility classes:
+### Atomic primitives (v0.1.0)
+
+shadcn-style primitives, composable via Tailwind utility classes:
 
 - **Layout & overlay:** `Dialog`, `AlertDialog`, `Sheet`, `Tooltip`, `DropdownMenu`, `Sidebar`, `Tabs`
 - **Forms:** `Form`, `Input`, `Label`, `Select`, `Separator`, plus `react-hook-form` integration via `FormField`/`FormItem`/`FormControl`/`FormMessage`/`FormDescription`/`FormLabel`
@@ -63,6 +65,63 @@ All shadcn-style primitives, composable via Tailwind utility classes:
 - **Feedback:** `Toaster` (sonner)
 
 Helper: `cn` (clsx + tailwind-merge) is exported for consumer-side class composition.
+
+### Composed primitives (v0.2.0)
+
+Higher-level building blocks layered on the atomic primitives.
+
+#### `<DataTable<T> />`
+
+Typed, declarative table with column config. Composes `Table`, so consumers can drop down to lower-level primitives whenever they need full control.
+
+```tsx
+import { DataTable, type Column } from "@qyubit/sedjiwa-ui";
+
+type Person = { id: string; name: string; role: string };
+
+const columns: Column<Person>[] = [
+  { key: "name", header: "Name", render: (p) => p.name },
+  { key: "role", header: "Role", render: (p) => p.role, align: "right" },
+];
+
+<DataTable
+  columns={columns}
+  rows={people}
+  getRowKey={(p) => p.id}
+  emptyMessage="No people yet"
+  onRowClick={(p) => navigate(`/people/${p.id}`)}
+  renderAction={(p) => <Button size="sm">Edit</Button>}
+/>;
+```
+
+Props: `columns`, `rows`, `getRowKey`, `renderAction?`, `onRowClick?`, `emptyMessage?`, `className?`.
+
+#### `<Modal />`
+
+Convenience wrapper over `Dialog` for the common "controlled open + title + body" shape. Inherits Radix's focus-trap, Escape-to-close, and ARIA semantics.
+
+```tsx
+import { Modal, Button } from "@qyubit/sedjiwa-ui";
+
+const [open, setOpen] = useState(false);
+
+<>
+  <Button onClick={() => setOpen(true)}>Open</Button>
+  <Modal
+    open={open}
+    onOpenChange={setOpen}
+    title="Confirm action"
+    description="This cannot be undone."
+    size="md"
+  >
+    <p>Modal body content here.</p>
+  </Modal>
+</>;
+```
+
+Props: `open`, `onOpenChange`, `title`, `description?`, `size?` (`sm` | `md` | `lg` | `xl`), `preventBackdropClose?`, `children`.
+
+For richer composition (multiple sections, custom close logic, no header), use `Dialog` and its sub-components directly.
 
 ## Development
 
