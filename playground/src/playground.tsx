@@ -56,6 +56,20 @@ export function Playground() {
             </div>
           </section>
           <section>
+            <h2 className="text-lg font-medium mb-3">Button — loading state</h2>
+            <div className="flex flex-wrap gap-3">
+              <Button loading>Saving…</Button>
+              <Button variant="destructive" loading>Deleting…</Button>
+              <Button variant="outline" loading>Loading</Button>
+              <Button variant="secondary" loading>Loading</Button>
+              <Button variant="ghost" loading>Loading</Button>
+            </div>
+          </section>
+          <section>
+            <h2 className="text-lg font-medium mb-3">Button — pressed (toggle) state</h2>
+            <ToggleButtonRow />
+          </section>
+          <section>
             <h2 className="text-lg font-medium mb-3">Badge variants</h2>
             <div className="flex flex-wrap gap-3">
               {badgeVariants.map((v) => (
@@ -303,5 +317,24 @@ function ComposedShowcase() {
         </Modal>
       </section>
     </>
+  );
+}
+
+function ToggleButtonRow() {
+  const [pressed, setPressed] = useState<Record<string, boolean>>({});
+  const variants = ["default", "outline", "secondary", "ghost", "link"] as const;
+  return (
+    <div className="flex flex-wrap gap-3">
+      {variants.map((v) => (
+        <Button
+          key={v}
+          variant={v}
+          pressed={!!pressed[v]}
+          onClick={() => setPressed((p) => ({ ...p, [v]: !p[v] }))}
+        >
+          {v} {pressed[v] ? "(on)" : "(off)"}
+        </Button>
+      ))}
+    </div>
   );
 }
