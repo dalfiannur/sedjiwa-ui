@@ -22,23 +22,10 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  if (
-    process.env.NODE_ENV !== "production" &&
-    asChild &&
-    loading &&
-    !hasWarnedAsChildLoading
-  ) {
-    hasWarnedAsChildLoading = true;
-    console.warn(
-      "[sedjiwa-ui Button] `asChild` + `loading` does not inject a spinner into the slotted child. Render a spinner inside the slotted element if you need one."
-    );
-  }
-
   const handleClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     if (loading) {
-      // Block consumer onClick AND prevent native default — important for
-      // type="submit" buttons inside a <form>, where Enter or programmatic
-      // .click() would otherwise submit the form during loading.
+      // preventDefault is load-bearing for type="submit" inside a <form>:
+      // Enter or programmatic .click() would otherwise submit during loading.
       e.preventDefault();
       return;
     }
@@ -98,5 +85,3 @@ export function Button({
     </button>
   );
 }
-
-let hasWarnedAsChildLoading = false;
