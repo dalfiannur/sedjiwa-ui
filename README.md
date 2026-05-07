@@ -66,6 +66,35 @@ shadcn-style primitives, composable via Tailwind utility classes:
 
 Helper: `cn` (clsx + tailwind-merge) is exported for consumer-side class composition.
 
+#### `<Button />`
+
+Standard variants (`default`, `destructive`, `outline`, `secondary`, `ghost`, `link`) and sizes (`sm`, `default`, `lg`, `icon`, `icon-sm`, `icon-lg`), plus two interactive-state props:
+
+- `loading?: boolean` — renders a spinner before the children, sets `aria-busy="true"`, `aria-disabled="true"`, `data-state="loading"`, and suppresses `onClick` (also calls `e.preventDefault()` to stop form submission for `type="submit"` buttons). Children stay mounted (no width jitter). The native `disabled` attribute is **not** set, so focus is preserved for screen readers.
+- `pressed?: boolean` — controlled toggle state. Sets `aria-pressed` and `data-state="on" | "off"`. When `loading` is also true, `loading` wins visually (`data-state="loading"`).
+
+```tsx
+import { Button } from "@qyubit/sedjiwa-ui";
+
+<Button loading>Saving…</Button>
+<Button pressed={isOn} onClick={() => setIsOn((v) => !v)}>Toggle</Button>
+```
+
+Limitation: when used with `asChild`, the spinner is **not** injected into the slotted child (Radix `Slot` only accepts a single child). The ARIA + data-state attributes still propagate. If you need a spinner inside a slotted element, render it yourself.
+
+##### Interactive-state vocabulary
+
+All stateful interactive components in this library expose state through a shared contract:
+
+| Concept | DOM signal | ARIA |
+|---|---|---|
+| toggled on | `data-state="on"` | `aria-pressed="true"` (toggle) or `aria-selected="true"` (option) |
+| busy / processing | `data-state="loading"` | `aria-busy="true"` |
+| open / expanded | `data-state="open"` | `aria-expanded="true"` (Radix-driven) |
+| disabled by app logic | `data-disabled="true"` | `aria-disabled="true"` |
+
+This is a documentation contract, not a shared abstraction — Tabs, Dropdown, and Dialog already conform via Radix. Future components (Toggle, Switch) should adopt the same vocabulary.
+
 ### Composed primitives (v0.2.0)
 
 Higher-level building blocks layered on the atomic primitives.
