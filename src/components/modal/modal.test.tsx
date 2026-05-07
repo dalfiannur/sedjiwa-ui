@@ -86,4 +86,13 @@ describe("<Modal />", () => {
     render(<ControlledModal />);
     expect(screen.getByRole("dialog")).toHaveClass("max-w-md");
   });
+
+  it("emits the sm: responsive variant so size overrides DialogContent's sm:max-w-lg", () => {
+    // DialogContent has a built-in `sm:max-w-lg` that would otherwise win at
+    // ≥640px viewports because twMerge can't reconcile across responsive
+    // groups. Modal must include the `sm:` variant explicitly for the size
+    // prop to actually take effect at desktop sizes.
+    render(<ControlledModal size="sm" />);
+    expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-sm");
+  });
 });

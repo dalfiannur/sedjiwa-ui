@@ -18,11 +18,15 @@ export type ModalProps = {
   children: ReactNode;
 };
 
+// Each size emits BOTH the base and the `sm:` responsive variant so it
+// overrides DialogContent's built-in `sm:max-w-lg` at every breakpoint.
+// twMerge cannot reconcile across responsive groups, so the `sm:` prefix
+// is required even when we want the same width across breakpoints.
 const SIZE_CLASS = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+  sm: "max-w-sm sm:max-w-sm",
+  md: "max-w-md sm:max-w-md",
+  lg: "max-w-2xl sm:max-w-2xl",
+  xl: "max-w-4xl sm:max-w-4xl",
 } as const;
 
 export function Modal({
