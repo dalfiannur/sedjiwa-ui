@@ -87,4 +87,25 @@ describe("<Button />", () => {
     expect(ref.current).toBeInstanceOf(HTMLAnchorElement);
     expect(ref.current?.getAttribute("href")).toBe("/home");
   });
+
+  it("emits aria-pressed=true and data-state=on when pressed=true", () => {
+    render(<Button pressed>Toggle</Button>);
+    const btn = screen.getByRole("button", { name: "Toggle" });
+    expect(btn).toHaveAttribute("aria-pressed", "true");
+    expect(btn).toHaveAttribute("data-state", "on");
+  });
+
+  it("emits aria-pressed=false and data-state=off when pressed=false", () => {
+    render(<Button pressed={false}>Toggle</Button>);
+    const btn = screen.getByRole("button", { name: "Toggle" });
+    expect(btn).toHaveAttribute("aria-pressed", "false");
+    expect(btn).toHaveAttribute("data-state", "off");
+  });
+
+  it("emits neither aria-pressed nor data-state when pressed is undefined", () => {
+    render(<Button>Toggle</Button>);
+    const btn = screen.getByRole("button", { name: "Toggle" });
+    expect(btn).not.toHaveAttribute("aria-pressed");
+    expect(btn).not.toHaveAttribute("data-state");
+  });
 });
