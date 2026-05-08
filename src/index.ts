@@ -45,6 +45,11 @@ export type {
   InputActionProps,
 } from "./components/input";
 
+export { CurrencyInput, CURRENCY_PRESETS } from "./components/currency-input";
+export type {
+  CurrencyInputProps, CurrencyConfig, CurrencyPresetKey,
+} from "./components/currency-input";
+
 export { Textarea } from "./components/textarea";
 export type { TextareaProps } from "./components/textarea";
 
