@@ -5,3 +5,8 @@ coverage
 *.log
 .env
 .env.local
+
+*storybook.log
+storybook-static
+
+.claude/
