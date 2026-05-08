@@ -38,6 +38,25 @@ export {
 } from "./components/form";
 
 export { Input } from "./components/input";
+export type {
+  InputRootProps, InputFieldProps,
+  InputLeadingIconProps, InputTrailingIconProps,
+  InputLeadingAddonProps, InputTrailingAddonProps,
+  InputActionProps,
+} from "./components/input";
+
+export { Textarea } from "./components/textarea";
+export type { TextareaProps } from "./components/textarea";
+
+export { Checkbox } from "./components/checkbox";
+export type { CheckboxProps } from "./components/checkbox";
+
+export { RadioGroup, RadioGroupItem } from "./components/radio-group";
+export type { RadioGroupProps, RadioGroupItemProps } from "./components/radio-group";
+
+export { Switch } from "./components/switch";
+export type { SwitchProps } from "./components/switch";
+
 export { Label } from "./components/label";
 export {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel,

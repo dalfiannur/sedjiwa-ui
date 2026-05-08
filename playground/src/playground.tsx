@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { FormsShowcase } from "./forms";
 import {
   Button, Badge, Avatar, AvatarFallback, AvatarImage,
-  Input, Label, Separator, Skeleton,
+  Separator, Skeleton,
   Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
   Tabs, TabsList, TabsTrigger, TabsContent,
   Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
@@ -80,13 +81,7 @@ export function Playground() {
         </TabsContent>
 
         <TabsContent value="forms" className="space-y-6 pt-4">
-          <section className="max-w-md space-y-3">
-            <h2 className="text-lg font-medium">Input + Label</h2>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="ada@example.com" />
-            </div>
-          </section>
+          <FormsShowcase />
           <section className="max-w-md space-y-3">
             <h2 className="text-lg font-medium">Select</h2>
             <Select>

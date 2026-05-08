@@ -324,14 +324,15 @@ export function SidebarInset({ className, ...props }: React.ComponentProps<"main
 export function SidebarInput({
   className,
   ...props
-}: React.ComponentProps<typeof Input>) {
+}: React.ComponentProps<"input">) {
   return (
-    <Input
-      data-slot="sidebar-input"
+    <Input.Root
+      size="sm"
       data-sidebar="input"
-      className={cn("bg-background h-8 w-full shadow-none", className)}
-      {...props}
-    />
+      className={cn("bg-background shadow-none", className)}
+    >
+      <Input.Field data-slot="sidebar-input" {...props} />
+    </Input.Root>
   )
 }
 
