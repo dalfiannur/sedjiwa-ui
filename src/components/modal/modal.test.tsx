@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -9,12 +9,14 @@ function ControlledModal({
   preventBackdropClose,
   size,
   description,
+  footer,
   onOpenChange,
 }: {
   defaultOpen?: boolean;
   preventBackdropClose?: boolean;
   size?: "sm" | "md" | "lg" | "xl";
   description?: string;
+  footer?: ReactNode;
   onOpenChange?: (open: boolean) => void;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -29,6 +31,7 @@ function ControlledModal({
       description={description}
       size={size}
       preventBackdropClose={preventBackdropClose}
+      footer={footer}
     >
       <p>Modal body</p>
     </Modal>
@@ -94,5 +97,24 @@ describe("<Modal />", () => {
     // prop to actually take effect at desktop sizes.
     render(<ControlledModal size="sm" />);
     expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-sm");
+  });
+
+  it("renders the footer slot inside a DialogFooter when footer is provided", () => {
+    render(
+      <ControlledModal
+        footer={<button type="button">Confirm</button>}
+      />
+    );
+    const footerButton = screen.getByRole("button", { name: "Confirm" });
+    expect(footerButton).toBeInTheDocument();
+    const footer = footerButton.closest('[data-slot="dialog-footer"]');
+    expect(footer).not.toBeNull();
+  });
+
+  it("does not render a DialogFooter when no footer prop is supplied", () => {
+    render(<ControlledModal />);
+    expect(
+      screen.getByRole("dialog").querySelector('[data-slot="dialog-footer"]')
+    ).toBeNull();
   });
 });

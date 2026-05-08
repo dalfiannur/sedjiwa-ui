@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../dialog";
@@ -15,6 +16,7 @@ export type ModalProps = {
   description?: ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
   preventBackdropClose?: boolean;
+  footer?: ReactNode;
   children: ReactNode;
 };
 
@@ -36,6 +38,7 @@ export function Modal({
   description,
   size = "md",
   preventBackdropClose = false,
+  footer,
   children,
 }: ModalProps) {
   return (
@@ -55,6 +58,7 @@ export function Modal({
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {children}
+        {footer && <DialogFooter>{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>
   );

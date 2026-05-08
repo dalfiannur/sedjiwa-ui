@@ -1,4 +1,4 @@
 export {
   Sheet, SheetTrigger, SheetClose, SheetPortal, SheetOverlay,
-  SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription,
+  SheetContent, SheetHeader, SheetFooter, SheetBody, SheetTitle, SheetDescription,
 } from "./sheet";
