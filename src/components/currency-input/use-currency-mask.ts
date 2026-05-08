@@ -10,6 +10,8 @@ type UseCurrencyMaskOptions = {
   min?: number;
   max?: number;
   onValueChange?: (value: number | null) => void;
+  /** Ref to the underlying `<input>`. Used to restore caret position after reformat. */
+  inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
 type CurrencyMaskInputProps = {
@@ -41,10 +43,11 @@ function deriveSeparators(locale: string): Separators {
   }
 }
 
-/** Strip everything that isn't a digit, the locale decimal mark, or a leading minus (when allowed). */
+/** Strip everything that isn't a digit, the locale decimal mark (when `decimals > 0`), or a leading minus (when allowed). */
 function sanitizeForEditing(
   raw: string,
   decimal: string,
+  decimals: number,
   allowNegative: boolean,
 ): string {
   let s = raw;
@@ -53,14 +56,18 @@ function sanitizeForEditing(
     if (allowNegative) negative = true;
     s = s.slice(1);
   }
-  const allowed = new RegExp(`[^0-9${escapeRegex(decimal)}]`, "g");
-  s = s.replace(allowed, "");
-  // Collapse multiple decimal marks to the first one.
-  const firstDecimal = s.indexOf(decimal);
-  if (firstDecimal !== -1) {
-    const head = s.slice(0, firstDecimal + decimal.length);
-    const tail = s.slice(firstDecimal + decimal.length).split(decimal).join("");
-    s = head + tail;
+  if (decimals === 0) {
+    s = s.replace(/[^0-9]/g, "");
+  } else {
+    const allowed = new RegExp(`[^0-9${escapeRegex(decimal)}]`, "g");
+    s = s.replace(allowed, "");
+    // Collapse multiple decimal marks to the first one.
+    const firstDecimal = s.indexOf(decimal);
+    if (firstDecimal !== -1) {
+      const head = s.slice(0, firstDecimal + decimal.length);
+      const tail = s.slice(firstDecimal + decimal.length).split(decimal).join("");
+      s = head + tail;
+    }
   }
   return negative ? "-" + s : s;
 }
@@ -99,10 +106,62 @@ function parseAndTruncate(
   return negative ? -truncated : truncated;
 }
 
-function numberToRawString(n: number | null, decimal: string): string {
+/** Numeric → editable raw string, padded to `decimals`. Used to seed `rawDraft` on focus. */
+function numberToRawForEdit(
+  n: number | null,
+  decimal: string,
+  decimals: number,
+): string {
   if (n === null) return "";
-  const s = String(n);
+  const s = decimals > 0 ? n.toFixed(decimals) : String(Math.trunc(n));
   return decimal === "." ? s : s.replaceAll(".", decimal);
+}
+
+/**
+ * Format the user's in-progress raw string with locale grouping while preserving
+ * their typing state (e.g., trailing decimal mark with no fraction, partial fraction).
+ */
+function formatLive(
+  raw: string,
+  locale: string,
+  decimal: string,
+  decimals: number,
+): string {
+  if (!raw) return "";
+
+  let s = raw;
+  let negative = false;
+  if (s.startsWith("-")) {
+    negative = true;
+    s = s.slice(1);
+  }
+
+  const decIdx = decimals > 0 ? s.indexOf(decimal) : -1;
+  const intPart = decIdx >= 0 ? s.slice(0, decIdx) : s;
+  const fracPart = decIdx >= 0 ? s.slice(decIdx + decimal.length) : null;
+
+  let formattedInt = "";
+  if (intPart) {
+    const n = Number(intPart);
+    if (Number.isFinite(n)) {
+      try {
+        formattedInt = new Intl.NumberFormat(locale, {
+          useGrouping: true,
+          maximumFractionDigits: 0,
+        }).format(n);
+      } catch {
+        formattedInt = intPart;
+      }
+    } else {
+      formattedInt = intPart;
+    }
+  }
+
+  let result = formattedInt;
+  if (fracPart !== null && decimals > 0) {
+    result += decimal + fracPart.slice(0, decimals);
+  }
+  return negative ? "-" + result : result;
 }
 
 function formatNumber(
@@ -129,19 +188,55 @@ function clamp(n: number, min?: number, max?: number): number {
   return v;
 }
 
+function isSignificantChar(ch: string, decimal: string): boolean {
+  return (ch >= "0" && ch <= "9") || ch === decimal || ch === "-";
+}
+
+/** Find the caret position in `formatted` that corresponds to having passed `n` significant chars. */
+function caretPosForSignificantCount(
+  formatted: string,
+  n: number,
+  decimal: string,
+): number {
+  if (n <= 0) return 0;
+  let count = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (isSignificantChar(formatted[i]!, decimal)) {
+      count++;
+      if (count === n) return i + 1;
+    }
+  }
+  return formatted.length;
+}
+
+function countSignificantBefore(
+  s: string,
+  caret: number,
+  decimal: string,
+): number {
+  let count = 0;
+  const stop = Math.min(caret, s.length);
+  for (let i = 0; i < stop; i++) {
+    if (isSignificantChar(s[i]!, decimal)) count++;
+  }
+  return count;
+}
+
 /**
  * Drives the live formatting and parsing for `<CurrencyInput />`.
  *
- * - **Focused** — display the user's raw editable string (digits + locale decimal mark).
- * - **Blurred** — display `Intl.NumberFormat` `style: "decimal"` grouping.
+ * - **Focused** — formatted live (`Intl` grouping), preserving the user's in-progress
+ *   decimal portion (e.g., typing `1234.5` shows `1,234.5`, not the padded `1,234.50`).
+ * - **Blurred** — `Intl.NumberFormat` `style: "decimal"` with min/max decimals padded.
  * - **Blur reflow** — empty stays empty (never `"Rp 0"`); clamps to `min` / `max`.
+ * - **Caret** — preserved across reformats by counting significant chars (digits +
+ *   decimal mark + leading sign) before the caret and re-locating in the new string.
  * - **IME** — does not emit while composing; reformats on `compositionend`.
- * - **Caret** — accepted trade-off: caret jumps to end after reformatting in v1.
  */
 export function useCurrencyMask(
   opts: UseCurrencyMaskOptions,
 ): UseCurrencyMaskResult {
-  const { value, config, allowNegative, min, max, onValueChange } = opts;
+  const { value, config, allowNegative, min, max, onValueChange, inputRef } = opts;
   const { locale, decimals } = config;
 
   const separators = React.useMemo(() => deriveSeparators(locale), [locale]);
@@ -150,15 +245,34 @@ export function useCurrencyMask(
   const [focused, setFocused] = React.useState(false);
   const [rawDraft, setRawDraft] = React.useState<string>("");
   const isComposing = React.useRef(false);
+  /** When set, useLayoutEffect restores the caret after the next render. */
+  const pendingSignificantCaret = React.useRef<number | null>(null);
 
   const handleFocus: React.FocusEventHandler<HTMLInputElement> = () => {
     setFocused(true);
-    setRawDraft(numberToRawString(value ?? null, decimalMark));
+    setRawDraft(numberToRawForEdit(value ?? null, decimalMark, decimals));
   };
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const cleaned = sanitizeForEditing(e.target.value, decimalMark, allowNegative);
+    const inputEl = e.target;
+    const editedDisplay = inputEl.value;
+    const caretBefore = inputEl.selectionStart ?? editedDisplay.length;
+
+    const significantBefore = countSignificantBefore(
+      editedDisplay,
+      caretBefore,
+      decimalMark,
+    );
+
+    const cleaned = sanitizeForEditing(
+      editedDisplay,
+      decimalMark,
+      decimals,
+      allowNegative,
+    );
     setRawDraft(cleaned);
+    pendingSignificantCaret.current = significantBefore;
+
     if (isComposing.current) return;
     const parsed = parseAndTruncate(cleaned, decimalMark, decimals, allowNegative);
     onValueChange?.(parsed);
@@ -166,6 +280,7 @@ export function useCurrencyMask(
 
   const handleBlur: React.FocusEventHandler<HTMLInputElement> = () => {
     setFocused(false);
+    pendingSignificantCaret.current = null;
     const parsed = parseAndTruncate(rawDraft, decimalMark, decimals, allowNegative);
     const clamped = parsed === null ? null : clamp(parsed, min, max);
     onValueChange?.(clamped);
@@ -184,6 +299,7 @@ export function useCurrencyMask(
     const cleaned = sanitizeForEditing(
       e.currentTarget.value,
       decimalMark,
+      decimals,
       allowNegative,
     );
     setRawDraft(cleaned);
@@ -192,8 +308,26 @@ export function useCurrencyMask(
   };
 
   const display = focused
-    ? rawDraft
+    ? formatLive(rawDraft, locale, decimalMark, decimals)
     : formatNumber(value ?? null, locale, decimals);
+
+  // After the input value updates, restore the caret to its significant-char position.
+  React.useLayoutEffect(() => {
+    const significant = pendingSignificantCaret.current;
+    if (significant === null) return;
+    pendingSignificantCaret.current = null;
+
+    const el = inputRef.current;
+    if (!el) return;
+    if (typeof document !== "undefined" && document.activeElement !== el) return;
+
+    const pos = caretPosForSignificantCount(el.value, significant, decimalMark);
+    try {
+      el.setSelectionRange(pos, pos);
+    } catch {
+      /* some input types (e.g., type="number") throw — ignore */
+    }
+  });
 
   const inputMode: "decimal" | "numeric" =
     decimals > 0 || allowNegative ? "decimal" : "numeric";

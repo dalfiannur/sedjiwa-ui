@@ -109,7 +109,7 @@ describe("<CurrencyInput />", () => {
       const input = getInput();
       expect(input.value).toBe("500");
       await user.click(input);
-      // Focused: switch to raw form
+      // Focused: live-formatted ("500" needs no grouping)
       expect(input.value).toBe("500");
       await user.keyboard("0");
       await user.tab();
@@ -148,6 +148,58 @@ describe("<CurrencyInput />", () => {
       await user.click(input);
       await user.tab();
       expect(input.value).toBe("");
+    });
+  });
+
+  describe("live formatting (while typing)", () => {
+    it("inserts thousand separators after each keystroke (IDR)", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(<CurrencyInput currency="IDR" onValueChange={onChange} />);
+      const input = getInput();
+      await user.click(input);
+      await user.keyboard("1");
+      expect(input.value).toBe("1");
+      await user.keyboard("2");
+      expect(input.value).toBe("12");
+      await user.keyboard("3");
+      expect(input.value).toBe("123");
+      await user.keyboard("4");
+      expect(input.value).toBe("1.234");
+      await user.keyboard("567");
+      expect(input.value).toBe("1.234.567");
+    });
+
+    it("preserves the in-progress decimal portion while typing (USD)", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(<CurrencyInput currency="USD" onValueChange={onChange} />);
+      const input = getInput();
+      await user.click(input);
+      await user.keyboard("1234.5");
+      // While focused, the trailing ".5" stays as typed (not padded to ".50").
+      expect(input.value).toBe("1,234.5");
+      await user.tab();
+      // Blur reflow pads to min decimals.
+      expect(input.value).toBe("1,234.50");
+    });
+
+    it("preserves caret position when editing in the middle of the value", async () => {
+      const user = userEvent.setup();
+      render(
+        <CurrencyInput currency="IDR" defaultValue={1234567} onValueChange={() => {}} />,
+      );
+      const input = getInput();
+      await user.click(input);
+      // Focused live-format: "1.234.567" (length 9). Position 3 sits between
+      // '2' (idx 2) and '3' (idx 3).
+      expect(input.value).toBe("1.234.567");
+      input.setSelectionRange(3, 3);
+      await user.keyboard("9");
+      // Inserting '9' between '2' and '3' produces digit-stream "12934567" →
+      // formatted "12.934.567". Caret should sit immediately after the inserted '9'.
+      expect(input.value).toBe("12.934.567");
+      expect(input.selectionStart).toBe(4);
     });
   });
 
@@ -190,7 +242,21 @@ describe("<CurrencyInput />", () => {
   });
 
   describe("decimals override", () => {
-    it("USD with decimals=0 truncates and renders without decimals", async () => {
+    it("USD with decimals=0 renders without decimals (controlled)", () => {
+      render(
+        <CurrencyInput
+          currency="USD"
+          decimals={0}
+          value={1234}
+          onValueChange={() => {}}
+        />,
+      );
+      expect(getInput().value).toBe("1,234");
+    });
+
+    it("USD with decimals=0 rejects the decimal mark while typing (integer-only)", async () => {
+      // With decimals=0 the input is integer-only — the decimal mark is stripped
+      // immediately, so subsequent digits flow into the integer portion.
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
@@ -200,8 +266,8 @@ describe("<CurrencyInput />", () => {
       await user.click(input);
       await user.keyboard("1234.56");
       await user.tab();
-      expect(input.value).toBe("1,234");
-      expect(onChange).toHaveBeenLastCalledWith(1234);
+      expect(input.value).toBe("123,456");
+      expect(onChange).toHaveBeenLastCalledWith(123456);
     });
   });
 

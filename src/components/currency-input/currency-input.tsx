@@ -53,6 +53,12 @@ export type CurrencyInputProps = Omit<
   inputClassName?: string;
 };
 
+function setRef<T>(ref: React.Ref<T> | undefined, value: T | null): void {
+  if (typeof ref === "function") ref(value);
+  else if (ref != null)
+    (ref as React.MutableRefObject<T | null>).current = value;
+}
+
 export function CurrencyInput(props: CurrencyInputProps) {
   const {
     currency,
@@ -79,6 +85,8 @@ export function CurrencyInput(props: CurrencyInputProps) {
     "aria-invalid": ariaInvalid,
     onBlur: consumerOnBlur,
     onFocus: consumerOnFocus,
+    // Consumer ref must be merged with our internal ref (used for caret restoration).
+    ref: consumerRef,
     ...fieldProps
   } = props;
 
@@ -93,6 +101,15 @@ export function CurrencyInput(props: CurrencyInputProps) {
   );
   const currentValue = isControlled ? value! : internalValue;
 
+  const internalInputRef = React.useRef<HTMLInputElement | null>(null);
+  const mergedInputRef = React.useCallback(
+    (el: HTMLInputElement | null) => {
+      internalInputRef.current = el;
+      setRef(consumerRef, el);
+    },
+    [consumerRef],
+  );
+
   const { display, inputProps } = useCurrencyMask({
     value: currentValue,
     config,
@@ -103,6 +120,7 @@ export function CurrencyInput(props: CurrencyInputProps) {
       if (!isControlled) setInternalValue(n);
       onValueChange?.(n);
     },
+    inputRef: internalInputRef,
   });
 
   const consumerHasLeadingAddon = React.Children.toArray(children).some(
@@ -134,6 +152,7 @@ export function CurrencyInput(props: CurrencyInputProps) {
         type="text"
         {...fieldProps}
         {...inputProps}
+        ref={mergedInputRef}
         value={display}
         className={inputClassName}
         onFocus={(e) => {
