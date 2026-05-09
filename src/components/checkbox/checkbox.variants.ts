@@ -8,7 +8,7 @@ export const checkboxVariants = cva(
     "data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground",
     "data-[state=indeterminate]:bg-primary data-[state=indeterminate]:border-primary data-[state=indeterminate]:text-primary-foreground",
     "disabled:opacity-50 disabled:cursor-not-allowed",
-    "dark:bg-input/30",
+    "dark:data-[state=unchecked]:bg-input/30",
   ].join(" "),
   {
     variants: {
