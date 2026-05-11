@@ -82,3 +82,68 @@ describe("InputOrderProvider — duplicate orders", () => {
     warn.mockRestore();
   });
 });
+
+describe("InputOrderProvider — skipping", () => {
+  it("skips disabled inputs", async () => {
+    const user = userEvent.setup();
+    function Disabled({ order, label }: { order: number; label: string }) {
+      const { ref, onKeyDown } = useInputOrder(order);
+      return <input ref={ref} onKeyDown={onKeyDown} aria-label={label} disabled />;
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <FieldFixture order={1} label="a" />
+        <Disabled order={2} label="b" />
+        <FieldFixture order={3} label="c" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("a").focus();
+    await user.keyboard("{Tab}");
+    expect(screen.getByLabelText("c")).toHaveFocus();
+  });
+
+  it("skips elements with aria-disabled=true", async () => {
+    const user = userEvent.setup();
+    function AriaDisabled({ order, label }: { order: number; label: string }) {
+      const { ref, onKeyDown } = useInputOrder(order);
+      return (
+        <input
+          ref={ref}
+          onKeyDown={onKeyDown}
+          aria-label={label}
+          aria-disabled="true"
+        />
+      );
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <FieldFixture order={1} label="a" />
+        <AriaDisabled order={2} label="b" />
+        <FieldFixture order={3} label="c" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("a").focus();
+    await user.keyboard("{Tab}");
+    expect(screen.getByLabelText("c")).toHaveFocus();
+  });
+
+  it("skips elements with tabIndex=-1", async () => {
+    const user = userEvent.setup();
+    function Untabbable({ order, label }: { order: number; label: string }) {
+      const { ref, onKeyDown } = useInputOrder(order);
+      return (
+        <input ref={ref} onKeyDown={onKeyDown} aria-label={label} tabIndex={-1} />
+      );
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <FieldFixture order={1} label="a" />
+        <Untabbable order={2} label="b" />
+        <FieldFixture order={3} label="c" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("a").focus();
+    await user.keyboard("{Tab}");
+    expect(screen.getByLabelText("c")).toHaveFocus();
+  });
+});

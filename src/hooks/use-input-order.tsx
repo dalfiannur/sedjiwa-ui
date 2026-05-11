@@ -12,6 +12,13 @@ type InputOrderContextValue = {
 
 const InputOrderContext = React.createContext<InputOrderContextValue | null>(null);
 
+function isSkippable(el: HTMLElement): boolean {
+  if ((el as HTMLInputElement).disabled) return true;
+  if (el.getAttribute("aria-disabled") === "true") return true;
+  if (el.tabIndex === -1) return true;
+  return false;
+}
+
 export type InputOrderProviderProps = {
   onLastField?: "submit" | "wrap" | "none";
   onSubmit?: (event: React.SyntheticEvent) => void;
@@ -59,12 +66,15 @@ export function InputOrderProvider({
         const idx = sorted.findIndex(([o]) => o === fromOrder);
         if (idx === -1) return;
         const delta = direction === "next" ? 1 : -1;
-        const cursor = idx + delta;
+        let cursor = idx + delta;
         while (cursor >= 0 && cursor < sorted.length) {
           const [, el] = sorted[cursor];
-          event.preventDefault();
-          el.focus();
-          return;
+          if (!isSkippable(el)) {
+            event.preventDefault();
+            el.focus();
+            return;
+          }
+          cursor += delta;
         }
         // out-of-range handled in later tasks
       },
