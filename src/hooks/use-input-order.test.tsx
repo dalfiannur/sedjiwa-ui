@@ -162,3 +162,106 @@ describe("InputOrderProvider — Enter to advance", () => {
     expect(screen.getByLabelText("b")).toHaveFocus();
   });
 });
+
+describe("InputOrderProvider — Enter skip rules", () => {
+  it("does not intercept Enter on a textarea (newlines must work)", async () => {
+    const user = userEvent.setup();
+    function TextareaField({ order, label }: { order: number; label: string }) {
+      const { ref, onKeyDown } = useInputOrder(order);
+      return (
+        <textarea
+          ref={ref as React.Ref<HTMLTextAreaElement>}
+          onKeyDown={onKeyDown}
+          aria-label={label}
+        />
+      );
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <TextareaField order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    const a = screen.getByLabelText("a");
+    a.focus();
+    await user.keyboard("{Enter}");
+    expect(a).toHaveFocus();
+  });
+
+  it("does not intercept Enter on a button", async () => {
+    const user = userEvent.setup();
+    function ButtonField({ order, label }: { order: number; label: string }) {
+      const { ref, onKeyDown } = useInputOrder(order);
+      return (
+        <button
+          type="button"
+          ref={ref as React.Ref<HTMLButtonElement>}
+          onKeyDown={onKeyDown}
+          aria-label={label}
+        >
+          go
+        </button>
+      );
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <ButtonField order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    const a = screen.getByLabelText("a");
+    a.focus();
+    await user.keyboard("{Enter}");
+    expect(a).toHaveFocus();
+  });
+
+  it("does not intercept Enter when target has aria-expanded=true", async () => {
+    const user = userEvent.setup();
+    function Combo({ order, label }: { order: number; label: string }) {
+      const { ref, onKeyDown } = useInputOrder(order);
+      return (
+        <input
+          ref={ref}
+          onKeyDown={onKeyDown}
+          aria-label={label}
+          aria-expanded="true"
+        />
+      );
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <Combo order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    const a = screen.getByLabelText("a");
+    a.focus();
+    await user.keyboard("{Enter}");
+    expect(a).toHaveFocus();
+  });
+
+  it("does not intercept Enter when target has data-input-order-enter=ignore", async () => {
+    const user = userEvent.setup();
+    function Escape({ order, label }: { order: number; label: string }) {
+      const { ref, onKeyDown } = useInputOrder(order);
+      return (
+        <input
+          ref={ref}
+          onKeyDown={onKeyDown}
+          aria-label={label}
+          data-input-order-enter="ignore"
+        />
+      );
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <Escape order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    const a = screen.getByLabelText("a");
+    a.focus();
+    await user.keyboard("{Enter}");
+    expect(a).toHaveFocus();
+  });
+});

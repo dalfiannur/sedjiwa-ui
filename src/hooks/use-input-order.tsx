@@ -19,6 +19,15 @@ function isSkippable(el: HTMLElement): boolean {
   return false;
 }
 
+function shouldSkipEnter(event: React.KeyboardEvent): boolean {
+  const target = event.target as HTMLElement;
+  if (target.tagName === "TEXTAREA") return true;
+  if (target.tagName === "BUTTON") return true;
+  if (target.getAttribute("aria-expanded") === "true") return true;
+  if (target.getAttribute("data-input-order-enter") === "ignore") return true;
+  return false;
+}
+
 export type InputOrderProviderProps = {
   onLastField?: "submit" | "wrap" | "none";
   onSubmit?: (event: React.SyntheticEvent) => void;
@@ -128,6 +137,7 @@ export function useInputOrder(
         return;
       }
       if (event.key === "Enter") {
+        if (shouldSkipEnter(event)) return;
         ctx.step("next", order, event);
       }
     },
