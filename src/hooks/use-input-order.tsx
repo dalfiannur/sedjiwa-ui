@@ -102,7 +102,7 @@ export function InputOrderProvider({
         const delta = direction === "next" ? 1 : -1;
         let cursor = idx + delta;
         while (cursor >= 0 && cursor < sorted.length) {
-          const [, el] = sorted[cursor];
+          const [, el] = sorted[cursor]!;
           if (!isSkippable(el)) {
             event.preventDefault();
             el.focus();

@@ -439,6 +439,7 @@ describe("useInputOrder — return stability", () => {
     function Harness({ tick }: { tick: number }) {
       const v = useInputOrder(1, { onEnter: () => tick });
       captured.push({ ref: v.ref, onKeyDown: v.onKeyDown });
+      // eslint-disable-next-line react-hooks/refs
       return <input ref={v.ref} onKeyDown={v.onKeyDown} />;
     }
     const { rerender } = render(

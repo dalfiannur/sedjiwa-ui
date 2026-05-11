@@ -110,3 +110,10 @@ export { Modal } from "./components/modal";
 export type { ModalProps } from "./components/modal";
 
 export { cn, type ClassValue } from "./lib/cn";
+
+export { InputOrderProvider, useInputOrder } from "./hooks/use-input-order";
+export type {
+  InputOrderProviderProps,
+  UseInputOrderOptions,
+  UseInputOrderReturn,
+} from "./hooks/use-input-order";
