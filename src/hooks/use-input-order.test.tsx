@@ -147,3 +147,18 @@ describe("InputOrderProvider — skipping", () => {
     expect(screen.getByLabelText("c")).toHaveFocus();
   });
 });
+
+describe("InputOrderProvider — Enter to advance", () => {
+  it("Enter on a plain input focuses the next field", async () => {
+    const user = userEvent.setup();
+    render(
+      <InputOrderProvider onLastField="none">
+        <FieldFixture order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("a").focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByLabelText("b")).toHaveFocus();
+  });
+});

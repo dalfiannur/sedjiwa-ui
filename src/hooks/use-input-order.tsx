@@ -125,6 +125,10 @@ export function useInputOrder(
       if (event.defaultPrevented) return;
       if (event.key === "Tab") {
         ctx.step(event.shiftKey ? "prev" : "next", order, event);
+        return;
+      }
+      if (event.key === "Enter") {
+        ctx.step("next", order, event);
       }
     },
     [ctx, order],
