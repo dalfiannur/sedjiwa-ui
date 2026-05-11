@@ -1,3 +1,4 @@
+import * as React from "react";
 import { describe, expect, it } from "vitest";
 import { renderHook, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -393,5 +394,41 @@ describe("InputOrderProvider — onLastField=wrap", () => {
     screen.getByLabelText("a").focus();
     await user.keyboard("{Shift>}{Tab}{/Shift}");
     expect(screen.getByLabelText("b")).toHaveFocus();
+  });
+});
+
+describe("InputOrderProvider — onLastField=none", () => {
+  it("does not preventDefault on Tab past the last field", () => {
+    function Inline() {
+      const { ref, onKeyDown } = useInputOrder(2);
+      const last = React.useRef<HTMLInputElement>(null);
+      React.useEffect(() => last.current?.focus(), []);
+      return (
+        <input
+          ref={(el) => {
+            ref(el);
+            last.current = el;
+          }}
+          onKeyDown={onKeyDown}
+          aria-label="last"
+        />
+      );
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <FieldFixture order={1} label="a" />
+        <Inline />
+      </InputOrderProvider>,
+    );
+
+    const last = screen.getByLabelText("last");
+    last.focus();
+    const event = new KeyboardEvent("keydown", {
+      key: "Tab",
+      bubbles: true,
+      cancelable: true,
+    });
+    last.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
   });
 });
