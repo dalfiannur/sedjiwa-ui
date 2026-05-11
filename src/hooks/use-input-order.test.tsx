@@ -432,3 +432,26 @@ describe("InputOrderProvider — onLastField=none", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 });
+
+describe("useInputOrder — return stability", () => {
+  it("ref and onKeyDown identities are stable across re-renders", () => {
+    const captured: { ref?: unknown; onKeyDown?: unknown }[] = [];
+    function Harness({ tick }: { tick: number }) {
+      const v = useInputOrder(1, { onEnter: () => tick });
+      captured.push({ ref: v.ref, onKeyDown: v.onKeyDown });
+      return <input ref={v.ref} onKeyDown={v.onKeyDown} />;
+    }
+    const { rerender } = render(
+      <InputOrderProvider onLastField="none">
+        <Harness tick={0} />
+      </InputOrderProvider>,
+    );
+    rerender(
+      <InputOrderProvider onLastField="none">
+        <Harness tick={1} />
+      </InputOrderProvider>,
+    );
+    expect(captured[0]?.ref).toBe(captured.at(-1)?.ref);
+    expect(captured[0]?.onKeyDown).toBe(captured.at(-1)?.onKeyDown);
+  });
+});
