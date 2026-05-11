@@ -265,3 +265,50 @@ describe("InputOrderProvider — Enter skip rules", () => {
     expect(a).toHaveFocus();
   });
 });
+
+describe("useInputOrder — options.onEnter", () => {
+  it("calls onEnter and prevents default instead of advancing", async () => {
+    const user = userEvent.setup();
+    const onEnter = vi.fn();
+    function CustomEnter() {
+      const { ref, onKeyDown } = useInputOrder(1, { onEnter });
+      return <input ref={ref} onKeyDown={onKeyDown} aria-label="a" />;
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <CustomEnter />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    const a = screen.getByLabelText("a");
+    a.focus();
+    await user.keyboard("{Enter}");
+    expect(onEnter).toHaveBeenCalledTimes(1);
+    expect(a).toHaveFocus(); // did not advance
+  });
+
+  it("still uses the latest onEnter closure after re-render", async () => {
+    const user = userEvent.setup();
+    const calls: string[] = [];
+    function Harness({ tag }: { tag: string }) {
+      const onEnter = () => calls.push(tag);
+      const { ref, onKeyDown } = useInputOrder(1, { onEnter });
+      return <input ref={ref} onKeyDown={onKeyDown} aria-label="a" />;
+    }
+    const { rerender } = render(
+      <InputOrderProvider onLastField="none">
+        <Harness tag="first" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("a").focus();
+    await user.keyboard("{Enter}");
+    rerender(
+      <InputOrderProvider onLastField="none">
+        <Harness tag="second" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("a").focus();
+    await user.keyboard("{Enter}");
+    expect(calls).toEqual(["first", "second"]);
+  });
+});

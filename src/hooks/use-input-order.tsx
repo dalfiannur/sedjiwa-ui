@@ -107,7 +107,7 @@ export type UseInputOrderReturn = {
 
 export function useInputOrder(
   order: number,
-  _options?: UseInputOrderOptions,
+  options?: UseInputOrderOptions,
 ): UseInputOrderReturn {
   const ctx = React.useContext(InputOrderContext);
   if (!ctx) {
@@ -115,6 +115,10 @@ export function useInputOrder(
   }
 
   const elRef = React.useRef<HTMLElement | null>(null);
+  const optionsRef = React.useRef(options);
+  React.useEffect(() => {
+    optionsRef.current = options;
+  });
 
   const ref = React.useCallback<React.RefCallback<HTMLElement>>(
     (el) => {
@@ -138,6 +142,12 @@ export function useInputOrder(
       }
       if (event.key === "Enter") {
         if (shouldSkipEnter(event)) return;
+        const onEnter = optionsRef.current?.onEnter;
+        if (onEnter) {
+          event.preventDefault();
+          onEnter(event);
+          return;
+        }
         ctx.step("next", order, event);
       }
     },
