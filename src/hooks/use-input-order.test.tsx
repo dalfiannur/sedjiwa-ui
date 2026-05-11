@@ -367,3 +367,31 @@ describe("InputOrderProvider — onLastField=submit", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
+
+describe("InputOrderProvider — onLastField=wrap", () => {
+  it("Tab on the last field focuses the first", async () => {
+    const user = userEvent.setup();
+    render(
+      <InputOrderProvider onLastField="wrap">
+        <FieldFixture order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("b").focus();
+    await user.keyboard("{Tab}");
+    expect(screen.getByLabelText("a")).toHaveFocus();
+  });
+
+  it("Shift+Tab on the first field focuses the last", async () => {
+    const user = userEvent.setup();
+    render(
+      <InputOrderProvider onLastField="wrap">
+        <FieldFixture order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("a").focus();
+    await user.keyboard("{Shift>}{Tab}{/Shift}");
+    expect(screen.getByLabelText("b")).toHaveFocus();
+  });
+});
