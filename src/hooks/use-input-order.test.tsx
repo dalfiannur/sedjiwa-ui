@@ -312,3 +312,58 @@ describe("useInputOrder — options.onEnter", () => {
     expect(calls).toEqual(["first", "second"]);
   });
 });
+
+describe("InputOrderProvider — onLastField=submit", () => {
+  it("calls form.requestSubmit() when Tab past the last field inside a <form>", async () => {
+    const user = userEvent.setup();
+    const requestSubmit = vi.fn();
+    function Harness() {
+      return (
+        <form
+          aria-label="f"
+          onSubmit={(e) => e.preventDefault()}
+          ref={(el) => {
+            if (el) el.requestSubmit = requestSubmit;
+          }}
+        >
+          <InputOrderProvider onLastField="submit">
+            <FieldFixture order={1} label="a" />
+            <FieldFixture order={2} label="b" />
+          </InputOrderProvider>
+        </form>
+      );
+    }
+    render(<Harness />);
+    screen.getByLabelText("b").focus();
+    await user.keyboard("{Tab}");
+    expect(requestSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls provider.onSubmit when no <form> ancestor exists", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(
+      <InputOrderProvider onLastField="submit" onSubmit={onSubmit}>
+        <FieldFixture order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("b").focus();
+    await user.keyboard("{Tab}");
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not submit when stepping backward past the first field", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(
+      <InputOrderProvider onLastField="submit" onSubmit={onSubmit}>
+        <FieldFixture order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("a").focus();
+    await user.keyboard("{Shift>}{Tab}{/Shift}");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});

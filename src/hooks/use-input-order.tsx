@@ -28,6 +28,33 @@ function shouldSkipEnter(event: React.KeyboardEvent): boolean {
   return false;
 }
 
+function applyEndBehavior(
+  direction: Direction,
+  event: React.KeyboardEvent,
+  mode: "submit" | "wrap" | "none",
+  onSubmit: ((event: React.SyntheticEvent) => void) | undefined,
+  sorted: ReadonlyArray<[number, HTMLElement]>,
+) {
+  if (mode === "none") return; // do not preventDefault
+  if (mode === "wrap") {
+    if (sorted.length === 0) return;
+    event.preventDefault();
+    const target = direction === "next" ? sorted[0]![1] : sorted[sorted.length - 1]![1];
+    target.focus();
+    return;
+  }
+  // mode === "submit"
+  if (direction === "prev") return; // don't submit backward
+  event.preventDefault();
+  const active = event.currentTarget as HTMLElement;
+  const form = active.closest("form");
+  if (form) {
+    form.requestSubmit();
+  } else if (onSubmit) {
+    onSubmit(event);
+  }
+}
+
 export type InputOrderProviderProps = {
   onLastField?: "submit" | "wrap" | "none";
   onSubmit?: (event: React.SyntheticEvent) => void;
@@ -69,9 +96,7 @@ export function InputOrderProvider({
         if (reg.get(order) === el) reg.delete(order);
       },
       step(direction, fromOrder, event) {
-        const sorted = [...registryRef.current.entries()].sort(
-          ([a], [b]) => a - b,
-        );
+        const sorted = [...registryRef.current.entries()].sort(([a], [b]) => a - b);
         const idx = sorted.findIndex(([o]) => o === fromOrder);
         if (idx === -1) return;
         const delta = direction === "next" ? 1 : -1;
@@ -85,7 +110,7 @@ export function InputOrderProvider({
           }
           cursor += delta;
         }
-        // out-of-range handled in later tasks
+        applyEndBehavior(direction, event, onLastFieldRef.current, onSubmitRef.current, sorted);
       },
     }),
     [],
