@@ -101,8 +101,8 @@ export function useInputOrder(
   const onKeyDown = React.useCallback<(e: React.KeyboardEvent) => void>(
     (event) => {
       if (event.defaultPrevented) return;
-      if (event.key === "Tab" && !event.shiftKey) {
-        ctx.step("next", order, event);
+      if (event.key === "Tab") {
+        ctx.step(event.shiftKey ? "prev" : "next", order, event);
       }
     },
     [ctx, order],

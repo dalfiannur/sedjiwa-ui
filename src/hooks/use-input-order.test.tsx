@@ -35,3 +35,35 @@ describe("InputOrderProvider — Tab forward", () => {
     expect(b).toHaveFocus();
   });
 });
+
+describe("InputOrderProvider — Shift+Tab and sort order", () => {
+  it("Shift+Tab on second field focuses the first", async () => {
+    const user = userEvent.setup();
+    render(
+      <InputOrderProvider onLastField="none">
+        <FieldFixture order={1} label="a" />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("b").focus();
+    await user.keyboard("{Shift>}{Tab}{/Shift}");
+    expect(screen.getByLabelText("a")).toHaveFocus();
+  });
+
+  it("steps in sorted order even with gaps and DOM mis-order", async () => {
+    const user = userEvent.setup();
+    render(
+      <InputOrderProvider onLastField="none">
+        {/* DOM order intentionally != logical order */}
+        <FieldFixture order={10} label="last" />
+        <FieldFixture order={1} label="first" />
+        <FieldFixture order={5} label="middle" />
+      </InputOrderProvider>,
+    );
+    screen.getByLabelText("first").focus();
+    await user.keyboard("{Tab}");
+    expect(screen.getByLabelText("middle")).toHaveFocus();
+    await user.keyboard("{Tab}");
+    expect(screen.getByLabelText("last")).toHaveFocus();
+  });
+});
