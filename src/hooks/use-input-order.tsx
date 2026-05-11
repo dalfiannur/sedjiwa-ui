@@ -46,7 +46,7 @@ function applyEndBehavior(
   // mode === "submit"
   if (direction === "prev") return; // don't submit backward
   event.preventDefault();
-  const active = event.currentTarget as HTMLElement;
+  const active = event.target as HTMLElement;
   const form = active.closest("form");
   if (form) {
     form.requestSubmit();
