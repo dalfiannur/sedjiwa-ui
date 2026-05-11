@@ -455,3 +455,32 @@ describe("useInputOrder — return stability", () => {
     expect(captured[0]?.onKeyDown).toBe(captured.at(-1)?.onKeyDown);
   });
 });
+
+describe("useInputOrder — composition", () => {
+  it("does not advance if consumer onKeyDown has called preventDefault", async () => {
+    const user = userEvent.setup();
+    function Composed() {
+      const { ref, onKeyDown } = useInputOrder(1);
+      return (
+        <input
+          ref={ref}
+          aria-label="a"
+          onKeyDown={(e) => {
+            if (e.key === "Tab") e.preventDefault();
+            onKeyDown(e);
+          }}
+        />
+      );
+    }
+    render(
+      <InputOrderProvider onLastField="none">
+        <Composed />
+        <FieldFixture order={2} label="b" />
+      </InputOrderProvider>,
+    );
+    const a = screen.getByLabelText("a");
+    a.focus();
+    await user.keyboard("{Tab}");
+    expect(a).toHaveFocus(); // didn't advance
+  });
+});
