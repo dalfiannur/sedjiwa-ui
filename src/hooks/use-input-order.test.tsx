@@ -67,3 +67,18 @@ describe("InputOrderProvider — Shift+Tab and sort order", () => {
     expect(screen.getByLabelText("last")).toHaveFocus();
   });
 });
+
+describe("InputOrderProvider — duplicate orders", () => {
+  it("warns once in dev when two fields share the same order", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <InputOrderProvider onLastField="none">
+        <FieldFixture order={1} label="a" />
+        <FieldFixture order={1} label="b" />
+      </InputOrderProvider>,
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toMatch(/duplicate order/);
+    warn.mockRestore();
+  });
+});

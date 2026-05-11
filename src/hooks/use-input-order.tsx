@@ -24,6 +24,7 @@ export function InputOrderProvider({
   children,
 }: InputOrderProviderProps) {
   const registryRef = React.useRef<Registry>(new Map());
+  const seenDuplicates = React.useRef<Set<number>>(new Set());
   const onLastFieldRef = React.useRef(onLastField);
   const onSubmitRef = React.useRef(onSubmit);
   React.useEffect(() => {
@@ -34,7 +35,18 @@ export function InputOrderProvider({
   const value = React.useMemo<InputOrderContextValue>(
     () => ({
       register(order, el) {
-        registryRef.current.set(order, el);
+        const reg = registryRef.current;
+        const existing = reg.get(order);
+        if (existing && existing !== el) {
+          if (
+            process.env.NODE_ENV !== "production" &&
+            !seenDuplicates.current.has(order)
+          ) {
+            seenDuplicates.current.add(order);
+            console.warn("[useInputOrder] duplicate order %d", order);
+          }
+        }
+        reg.set(order, el);
       },
       unregister(order, el) {
         const reg = registryRef.current;
