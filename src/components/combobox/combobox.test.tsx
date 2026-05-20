@@ -1,7 +1,75 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Combobox } from "./combobox";
+
+type IOObserverEntry = {
+  target: Element;
+  callback: IntersectionObserverCallback;
+  instance: IntersectionObserver;
+};
+
+const ioRegistry: IOObserverEntry[] = [];
+
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root: Element | Document | null = null;
+  readonly rootMargin: string = "";
+  readonly thresholds: ReadonlyArray<number> = [];
+  private targets = new Set<Element>();
+  constructor(private cb: IntersectionObserverCallback) {}
+  observe(target: Element) {
+    this.targets.add(target);
+    ioRegistry.push({ target, callback: this.cb, instance: this });
+  }
+  unobserve(target: Element) {
+    this.targets.delete(target);
+    for (let i = ioRegistry.length - 1; i >= 0; i--) {
+      if (ioRegistry[i]!.target === target && ioRegistry[i]!.instance === this) {
+        ioRegistry.splice(i, 1);
+      }
+    }
+  }
+  disconnect() {
+    for (let i = ioRegistry.length - 1; i >= 0; i--) {
+      if (ioRegistry[i]!.instance === this) {
+        ioRegistry.splice(i, 1);
+      }
+    }
+    this.targets.clear();
+  }
+  takeRecords() {
+    return [];
+  }
+}
+
+beforeAll(() => {
+  (
+    globalThis as unknown as { IntersectionObserver: typeof IntersectionObserver }
+  ).IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+});
+
+afterEach(() => {
+  ioRegistry.length = 0;
+});
+
+function triggerSentinelIntersection() {
+  for (const entry of ioRegistry) {
+    entry.callback(
+      [
+        {
+          isIntersecting: true,
+          target: entry.target,
+          intersectionRatio: 1,
+          time: 0,
+          boundingClientRect: {} as DOMRectReadOnly,
+          intersectionRect: {} as DOMRectReadOnly,
+          rootBounds: null,
+        },
+      ],
+      entry.instance,
+    );
+  }
+}
 
 const FRUITS = [
   { id: "apple", name: "Apple" },
@@ -569,6 +637,74 @@ describe("<Combobox />", () => {
       await user.type(screen.getByPlaceholderText(/search/i), "a");
       await user.keyboard("{Backspace}");
       expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("pagination", () => {
+    it("calls onLoadMore when the sentinel intersects and hasMore is true", async () => {
+      const user = userEvent.setup();
+      const onLoadMore = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          onLoadMore={onLoadMore}
+          hasMore
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      triggerSentinelIntersection();
+      expect(onLoadMore).toHaveBeenCalledTimes(1);
+    });
+
+    it("does NOT call onLoadMore when loading", async () => {
+      const user = userEvent.setup();
+      const onLoadMore = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          onLoadMore={onLoadMore}
+          hasMore
+          loading
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      triggerSentinelIntersection();
+      expect(onLoadMore).not.toHaveBeenCalled();
+    });
+
+    it("does NOT call onLoadMore when hasMore is false", async () => {
+      const user = userEvent.setup();
+      const onLoadMore = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          onLoadMore={onLoadMore}
+          hasMore={false}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      triggerSentinelIntersection();
+      expect(onLoadMore).not.toHaveBeenCalled();
+    });
+
+    it("does NOT call onLoadMore when onLoadMore is undefined", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          hasMore
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
   });
 });

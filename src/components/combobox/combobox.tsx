@@ -59,6 +59,8 @@ function ComboboxImpl<T>(
     placeholder = DEFAULT_PLACEHOLDER,
     searchPlaceholder = DEFAULT_SEARCH_PLACEHOLDER,
     searchDebounceMs = 300,
+    onLoadMore,
+    hasMore = false,
     loading = false,
     loadingMessage = DEFAULT_LOADING_MESSAGE,
     emptyMessage = DEFAULT_EMPTY_MESSAGE,
@@ -464,6 +466,8 @@ function ComboboxImpl<T>(
           searchPlaceholder={searchPlaceholder}
           searchInputRef={searchInputRef}
           onSearchKeyDown={handleSearchKeyDown}
+          onLoadMore={onLoadMore}
+          hasMore={hasMore}
           loading={loading}
           loadingMessage={loadingMessage}
           activeOptionId={

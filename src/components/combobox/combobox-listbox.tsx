@@ -33,6 +33,8 @@ export type ComboboxListboxProps<T> = {
   className?: string;
   loading?: boolean;
   loadingMessage?: React.ReactNode;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
 };
 
 export function ComboboxListbox<T>({
@@ -54,7 +56,34 @@ export function ComboboxListbox<T>({
   className,
   loading = false,
   loadingMessage,
+  onLoadMore,
+  hasMore = false,
 }: ComboboxListboxProps<T>) {
+  const sentinelRef = React.useRef<HTMLLIElement>(null);
+  const onLoadMoreRef = React.useRef(onLoadMore);
+  React.useEffect(() => {
+    onLoadMoreRef.current = onLoadMore;
+  }, [onLoadMore]);
+
+  React.useEffect(() => {
+    if (!hasMore || loading || !onLoadMoreRef.current) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            onLoadMoreRef.current?.();
+            break;
+          }
+        }
+      },
+      { rootMargin: "0px 0px 24px 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loading, items.length]);
+
   return (
     <div
       data-slot="combobox-listbox-root"
@@ -156,6 +185,24 @@ export function ComboboxListbox<T>({
             );
           })
         )}
+        {items.length > 0 && loading ? (
+          <li
+            role="status"
+            aria-live="polite"
+            data-slot="combobox-loading-more"
+            className="px-2 py-1.5 text-center text-xs text-muted-foreground"
+          >
+            {loadingMessage ?? "Loading…"}
+          </li>
+        ) : null}
+        {hasMore && !loading ? (
+          <li
+            ref={sentinelRef}
+            data-slot="combobox-sentinel"
+            aria-hidden="true"
+            className="h-px"
+          />
+        ) : null}
       </ul>
     </div>
   );
