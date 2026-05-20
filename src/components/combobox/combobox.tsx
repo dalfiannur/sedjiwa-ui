@@ -11,6 +11,7 @@ import type { ComboboxProps } from "./combobox.types";
 
 const DEFAULT_PLACEHOLDER = "Select…";
 const DEFAULT_EMPTY_MESSAGE = "No results";
+const DEFAULT_SEARCH_PLACEHOLDER = "Search…";
 
 function asArrayValue(v: string | string[] | null | undefined): string[] {
   if (v == null) return [];
@@ -23,6 +24,15 @@ function findOptionByValue<T>(
   value: string,
 ): T | undefined {
   return options.find((o) => getOptionValue(o) === value);
+}
+
+function defaultFilter<T>(
+  option: T,
+  query: string,
+  getLabel: (o: T) => string,
+): boolean {
+  if (!query) return true;
+  return getLabel(option).toLowerCase().includes(query.toLowerCase());
 }
 
 function ComboboxImpl<T>(
@@ -39,7 +49,13 @@ function ComboboxImpl<T>(
     value,
     defaultValue,
     onValueChange,
+    searchable = true,
+    searchValue: searchValueProp,
+    defaultSearchValue,
+    onSearchChange,
+    filterFn,
     placeholder = DEFAULT_PLACEHOLDER,
+    searchPlaceholder = DEFAULT_SEARCH_PLACEHOLDER,
     emptyMessage = DEFAULT_EMPTY_MESSAGE,
     size = "default",
     state = "default",
@@ -70,9 +86,25 @@ function ComboboxImpl<T>(
   const listboxId = React.useId();
   const optionIdPrefix = `${listboxId}-opt`;
 
-  const items: ComboboxListboxItem<T>[] = React.useMemo(
-    () =>
-      options.map((option) => {
+  const isSearchControlled = searchValueProp !== undefined;
+  const [internalSearchValue, setInternalSearchValue] = React.useState(
+    defaultSearchValue ?? "",
+  );
+  const searchValue = isSearchControlled
+    ? (searchValueProp ?? "")
+    : internalSearchValue;
+
+  const isServerMode = onSearchChange !== undefined;
+
+  const items: ComboboxListboxItem<T>[] = React.useMemo(() => {
+    const filterPred = (option: T) => {
+      if (isServerMode) return true;
+      const fn = filterFn ?? ((o: T, q: string) => defaultFilter(o, q, getOptionLabel));
+      return fn(option, searchValue);
+    };
+    return options
+      .filter(filterPred)
+      .map((option) => {
         const optionValue = getOptionValue(option);
         return {
           option,
@@ -81,9 +113,17 @@ function ComboboxImpl<T>(
           selected: selectedValues.includes(optionValue),
           disabled: isOptionDisabled ? isOptionDisabled(option) : false,
         };
-      }),
-    [options, getOptionValue, getOptionLabel, isOptionDisabled, selectedValues],
-  );
+      });
+  }, [
+    options,
+    getOptionValue,
+    getOptionLabel,
+    isOptionDisabled,
+    selectedValues,
+    filterFn,
+    searchValue,
+    isServerMode,
+  ]);
 
   const commitValue = React.useCallback(
     (next: string | string[] | null) => {
@@ -116,6 +156,15 @@ function ComboboxImpl<T>(
       }
     },
     [items, multiple, selectedValues, commitValue],
+  );
+
+  const handleSearchChange = React.useCallback(
+    (next: string) => {
+      if (!isSearchControlled) setInternalSearchValue(next);
+      onSearchChange?.(next);
+      setActiveIndex(0);
+    },
+    [isSearchControlled, onSearchChange],
   );
 
   const triggerContent = React.useMemo(() => {
@@ -155,7 +204,11 @@ function ComboboxImpl<T>(
       onOpenChange={(next) => {
         if (disabled) return;
         setOpen(next);
-        if (next) setActiveIndex(0);
+        if (next) {
+          setActiveIndex(0);
+        } else {
+          if (!isSearchControlled) setInternalSearchValue("");
+        }
       }}
     >
       <PopoverTrigger
@@ -200,6 +253,15 @@ function ComboboxImpl<T>(
           onSelectIndex={handleSelectIndex}
           optionIdPrefix={optionIdPrefix}
           renderOption={renderOption}
+          searchable={searchable}
+          searchValue={searchValue}
+          onSearchValueChange={handleSearchChange}
+          searchPlaceholder={searchPlaceholder}
+          activeOptionId={
+            items.length > 0
+              ? `${optionIdPrefix}-${Math.min(activeIndex, items.length - 1)}`
+              : undefined
+          }
         />
       </PopoverContent>
     </Popover>

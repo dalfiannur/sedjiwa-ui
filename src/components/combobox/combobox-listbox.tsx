@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { cn } from "../../lib/cn";
 import type { ComboboxOptionRenderState } from "./combobox.types";
 
@@ -23,6 +23,13 @@ export type ComboboxListboxProps<T> = {
     option: T,
     state: ComboboxOptionRenderState,
   ) => React.ReactNode;
+  searchable: boolean;
+  searchValue: string;
+  onSearchValueChange: (value: string) => void;
+  searchPlaceholder: string;
+  searchInputRef?: React.Ref<HTMLInputElement>;
+  onSearchKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  activeOptionId?: string;
   className?: string;
 };
 
@@ -35,6 +42,13 @@ export function ComboboxListbox<T>({
   onSelectIndex,
   optionIdPrefix,
   renderOption,
+  searchable,
+  searchValue,
+  onSearchValueChange,
+  searchPlaceholder,
+  searchInputRef,
+  onSearchKeyDown,
+  activeOptionId,
   className,
 }: ComboboxListboxProps<T>) {
   return (
@@ -42,6 +56,35 @@ export function ComboboxListbox<T>({
       data-slot="combobox-listbox-root"
       className={cn("flex flex-col", className)}
     >
+      {searchable ? (
+        <div
+          data-slot="combobox-search"
+          className="flex items-center gap-2 border-b px-3 py-2"
+        >
+          <Search
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+          <input
+            ref={searchInputRef}
+            type="text"
+            role="combobox"
+            aria-controls={listboxId}
+            aria-expanded
+            aria-autocomplete="list"
+            aria-activedescendant={activeOptionId}
+            value={searchValue}
+            onChange={(e) => onSearchValueChange(e.target.value)}
+            onKeyDown={onSearchKeyDown}
+            placeholder={searchPlaceholder}
+            data-slot="combobox-search-input"
+            className={cn(
+              "flex h-7 w-full bg-transparent text-sm outline-none",
+              "placeholder:text-muted-foreground",
+            )}
+          />
+        </div>
+      ) : null}
       <ul
         id={listboxId}
         role="listbox"
@@ -71,7 +114,6 @@ export function ComboboxListbox<T>({
                 data-selected={item.selected || undefined}
                 data-disabled={item.disabled || undefined}
                 onMouseDown={(e) => {
-                  // Prevent the search input (in a later task) from losing focus.
                   e.preventDefault();
                 }}
                 onClick={() => {

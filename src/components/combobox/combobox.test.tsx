@@ -138,4 +138,85 @@ describe("<Combobox />", () => {
       expect(screen.getByRole("combobox")).toHaveTextContent("Apple");
     });
   });
+
+  describe("local search", () => {
+    it("renders a search input by default", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      expect(
+        screen.getByPlaceholderText(/search/i),
+      ).toBeInTheDocument();
+    });
+
+    it("hides the search input when searchable=false", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          searchable={false}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      expect(screen.queryByPlaceholderText(/search/i)).not.toBeInTheDocument();
+    });
+
+    it("filters options by case-insensitive substring on label", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "an");
+      const opts = screen.getAllByRole("option");
+      expect(opts).toHaveLength(1);
+      expect(opts[0]).toHaveTextContent(/banana/i);
+    });
+
+    it("shows the empty message when no options match", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          emptyMessage="Nothing found"
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "xyz");
+      expect(screen.getByText(/nothing found/i)).toBeInTheDocument();
+    });
+
+    it("custom filterFn overrides default substring match", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          filterFn={(o, q) =>
+            o.id.toLowerCase().startsWith(q.toLowerCase())
+          }
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "b");
+      const opts = screen.getAllByRole("option");
+      expect(opts).toHaveLength(1);
+      expect(opts[0]).toHaveTextContent(/banana/i);
+    });
+  });
 });
