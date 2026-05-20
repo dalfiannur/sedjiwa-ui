@@ -407,9 +407,13 @@ function ComboboxImpl<T>(
         className={cn(
           fieldSurfaceVariants({ size, state }),
           "items-center justify-between gap-2 px-3 text-left",
-          multiple && selectedValues.length > 0 && "h-auto min-h-9 py-1.5",
-          multiple && selectedValues.length > 0 && size === "sm" && "min-h-8",
-          multiple && selectedValues.length > 0 && size === "lg" && "min-h-10",
+          multiple &&
+            selectedValues.length > 0 &&
+            (size === "sm"
+              ? "h-auto min-h-8 py-1.5"
+              : size === "lg"
+                ? "h-auto min-h-10 py-1.5"
+                : "h-auto min-h-9 py-1.5"),
           className,
         )}
       >
