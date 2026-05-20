@@ -3,149 +3,168 @@
 **Target version:** v0.8.0
 **Date:** 2026-05-20
 **Author:** sedjiwa-ui
+**Revision:** 2 — switched to custom popover + calendar (rejected native `<input type="date">` per consumer feedback)
 
 ## Purpose
 
-Provide a date-input primitive that pairs the native `<input type="date">` control with the library's `Input.Root` surface, so consumers get the project's visual language, validation/state vocabulary, loading/disabled handling, and RHF integration with zero new runtime dependencies.
+Provide a date-input primitive whose UI is fully controlled by the library — same calendar grid in every browser, themable, locale-aware, and consistent with the rest of the field-surface family (`Input`, `CurrencyInput`, `Select`).
 
 ## Non-goals
 
-- **Custom popover calendar.** The library currently ships no Popover primitive and no calendar/date utility deps. A bespoke calendar is a much larger surface (keyboard a11y, month/year navigation, locale rendering, range selection) than this iteration justifies.
-- **Date range selection.** Single-date only. A future `DateRangePicker` can compose two `DatePicker`s or build on a future `Calendar` primitive.
-- **Time-of-day.** `type="datetime-local"` is out of scope for v0.8.0.
-- **Locale-formatted display string.** The value is exchanged in ISO format only. The browser renders the visible text in the user's locale; the wire value stays canonical.
+- **Date range selection.** Single-date only. A future `DateRangePicker` can compose two `DatePicker`s and a range-aware `Calendar` variant.
+- **Time-of-day.** Out of scope for v0.8.0.
+- **Year/decade nav views.** Header label is read-only; users navigate one month at a time (PageUp/PageDown + Shift for ±1 year).
+- **Locale-formatted text input.** No typing into the trigger; selection happens in the calendar grid.
 
 ## Architecture
 
-DatePicker is a thin wrapper that:
+DatePicker is a composed primitive built on three pieces:
 
-1. Renders `<Input.Root>` carrying `size`, `state`, `loading`, `disabled`, `readOnly`, plus the FormControl-cloned `id` / `aria-describedby` / `aria-invalid`.
-2. Renders `<Input.Field type="date">` inside, forwarding the rest of the consumer's input props.
-3. Renders an `<Input.Action>` with a `Calendar` icon (lucide) that calls `inputRef.current.showPicker()` on click — providing a clean, library-styled trigger that opens the browser's native calendar UI.
-4. Hides the browser's default calendar-picker indicator via CSS (`::-webkit-calendar-picker-indicator`) to avoid double icons.
-5. Accepts a `children` escape hatch for additional trailing slots (e.g., a custom clear `Input.Action`) — matching `CurrencyInput`'s shape.
+1. **`Popover`** — a new internal/exported primitive wrapping `@radix-ui/react-popover` with the project's styling. Adds `@radix-ui/react-popover` as a peer dep (and devDep).
+2. **`Calendar`** — a custom month-grid component (private to the `date-picker/` folder for now). Renders header (prev / month-year label / next), weekday row, and a 6×7 grid of day buttons. Implements full keyboard nav (arrows, Home/End, PgUp/PgDn, Shift+PgUp/PgDn).
+3. **`DatePicker`** — composes a Popover whose trigger is a field-surface-styled `<button>` showing the formatted date (or a placeholder), and whose content is the Calendar. Maintains the ISO `"YYYY-MM-DD"` wire contract.
 
-This is the same architecture as `CurrencyInput`, so the file layout and prop-routing conventions are familiar.
+The trigger button uses the shared `fieldSurfaceVariants` so it lines up visually with `Input` / `CurrencyInput` / `Select` in mixed forms.
+
+### Why a custom calendar over react-day-picker
+
+`react-day-picker` would be smaller in code but adds a new third-party logic dep. The library so far is exclusively Radix + Tailwind + lucide — no date-fns, no dayjs. A custom calendar:
+- Stays inside that constraint.
+- Avoids carrying date-fns or moment for keyboard nav math (~5 helper functions cover everything).
+- Lets us own theming end-to-end (no `.rdp-*` class overrides).
+
+### Why Radix Popover over hand-rolled
+
+Floating-element positioning, focus trap, outside-click dismiss, and `aria-expanded` wiring are all already solved by Radix. Reimplementing them is not where the value of this component lives.
 
 ## Public API
 
 ```ts
 type DatePickerProps = Omit<
-  React.ComponentProps<"input">,
+  React.ComponentProps<"button">,
   "value" | "defaultValue" | "onChange" | "type" | "size"
 > & {
   /** Controlled value. ISO "YYYY-MM-DD" or null. */
   value?: string | null;
-  /** Uncontrolled initial value. ISO "YYYY-MM-DD" or null. */
+  /** Uncontrolled initial value. */
   defaultValue?: string | null;
-  /** Fires with the ISO string (or null on empty). */
+  /** Fires when the user picks a day. */
   onValueChange?: (value: string | null) => void;
-  /** ISO date; forwarded to native min attribute. */
+  /** ISO date; disables days before this date in the calendar. */
   min?: string;
-  /** ISO date; forwarded to native max attribute. */
+  /** ISO date; disables days after this date in the calendar. */
   max?: string;
+  /** Placeholder shown when no value is selected. Default "Pick a date". */
+  placeholder?: string;
+  /** BCP-47 locale for header / weekday / display formatting. */
+  locale?: string;
+  /** Day the week starts on. 0 = Sunday, 1 = Monday (default). */
+  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  /** Custom formatter for the trigger label. Default: Intl.DateTimeFormat({ day:'numeric', month:'long', year:'numeric' }). */
+  formatLabel?: (d: Date) => string;
   size?: FieldSurfaceVariants["size"];
   state?: FieldSurfaceVariants["state"];
   loading?: boolean;
-  /** Suppress the auto calendar Input.Action trigger. */
-  hideTrigger?: boolean;
-  className?: string;       // Input.Root
-  inputClassName?: string;  // Input.Field
-  /** Appended inside Input.Root *after* the field (e.g., custom clear action). */
-  children?: React.ReactNode;
+  /** Name for the hidden form input (omit if you don't need form submission via name). */
+  name?: string;
 };
 ```
 
+The trigger button forwards `ref` (so RHF Controllers can focus it on validation errors) and `id` / `aria-describedby` / `aria-invalid` (so `FormControl` Slot-cloning lands on the focusable element).
+
 ### Wire format: ISO `"YYYY-MM-DD"` strings
 
-- Matches the native `input.value` of `type="date"` directly — no marshalling.
-- Locale-agnostic and JSON-safe (RHF-friendly).
-- Avoids `Date` object timezone hazards. A `Date` constructed from `"2026-05-20"` is parsed as UTC; rendered in a non-UTC timezone it can shift to 2026-05-19. Strings stay literal.
-- `null` represents "empty".
+Locale-agnostic, JSON-safe, RHF-friendly, no timezone drift. The parser constructs `new Date(y, m-1, d)` for local-time semantics; the formatter rebuilds the string from the local-time `getFullYear/Month/Date`. Round-trip is identity.
 
-### State / loading / disabled
+### Form submission
 
-Inherited from `Input.Root` — the same vocabulary as `Input` and `CurrencyInput`:
+When `name` is provided, an `<input type="hidden" name={name} value={value ?? ""} />` is rendered alongside the popover so native form submission picks up the value without consumer wiring.
 
-- `state="error"` → red surface + auto trailing `AlertCircle` icon (replaced by our calendar trigger position, see edge cases) + `aria-invalid=true` on the inner input.
-- `state="success" | "warning"` → corresponding surface + icon.
-- `loading` → spinner trailing icon, `aria-busy=true`, change/click/keydown suppressed on the inner input.
-- `disabled`, `readOnly` → forwarded to the inner input.
+## Calendar component (internal)
 
-### FormControl integration
+```ts
+type CalendarProps = {
+  value?: Date | null;
+  onSelect?: (value: Date) => void;
+  min?: Date;
+  max?: Date;
+  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  locale?: string;
+  autoFocus?: boolean;
+  className?: string;
+};
+```
 
-Like `CurrencyInput`, the props `id`, `aria-describedby`, `aria-invalid`, `onBlur`, `onFocus`, and `ref` are extracted from the rest spread and routed appropriately:
+State (kept internal):
+- `viewMonth: Date` — first-of-month of the currently displayed grid.
+- `focusedDate: Date` — the day currently focusable via roving `tabIndex`. Clamped into `[min, max]`.
 
-- `id` / `aria-describedby` / `aria-invalid` → `Input.Root` (which forwards them via `InputContext` to the inner `<input>`).
-- `ref` → merged with internal ref on the inner `<input>` so consumers (and RHF Controllers) get a real `HTMLInputElement`.
-- `onBlur` / `onFocus` → passed through to the inner input alongside any internal handlers.
+Layout:
+- Header: prev-month button — `Month YYYY` label (aria-live="polite") — next-month button. Prev/next disabled when stepping outside `[min, max]`.
+- Weekday header row, locale-formatted.
+- 6×7 day grid. Out-of-month days dimmed; today underlined; selected filled with `primary`; out-of-range disabled.
 
-## Edge cases & behaviors
+Keyboard:
+| Key | Effect |
+|---|---|
+| ←/→ | -/+ 1 day |
+| ↑/↓ | -/+ 7 days |
+| Home/End | start/end of week |
+| PgUp/PgDn | -/+ 1 month |
+| Shift+PgUp/PgDn | -/+ 1 year |
+| Enter/Space | select focused day (native `<button>` activation) |
 
-1. **Auto state icon vs. our trigger.** `Input.Root` injects an auto trailing icon for `state="error" | "success" | "warning"`. Our calendar trigger is an `Input.Action`, which sits in the same slot. `Input.Root`'s render logic already inserts the auto-icon *before* the first `Input.Action`, so visually we get: `[field][state-icon][calendar-trigger]`. This is correct — the user sees the state hint AND can still open the picker.
-
-2. **`hideTrigger`.** Some consumers want a bare date input with no extra icon (e.g., in dense table cells). `hideTrigger` suppresses the auto `Input.Action`. The browser's native indicator stays hidden via CSS, but consumers can click into the field and type, or hit Space/Enter, to open the picker.
-
-3. **`showPicker()` browser support.** Chromium, Safari ≥16.4, Firefox ≥101. If unsupported, `showPicker()` will throw — we wrap in try/catch and fall back to focusing the input, which on most browsers still opens the picker via the native indicator (still rendered but visually clipped).
-
-4. **Loading state.** `Input.Root`'s `readOnly` is set when loading (matching `CurrencyInput`) to suppress React's warning about a controlled `value` without `onChange`. The trigger button is auto-disabled by `Input.Action` when context `loading=true`.
-
-5. **`min`/`max` validation.** Forwarded as native attributes only. The browser enforces them on the calendar UI and form validation. We do NOT clamp programmatically — this is consistent with how the library treats native validation elsewhere (`required`, `pattern`).
-
-6. **Hiding the native indicator.** Tailwind has no built-in for `::-webkit-calendar-picker-indicator`. We add the class on the inner field:
-   ```
-   [&::-webkit-calendar-picker-indicator]:appearance-none
-   [&::-webkit-calendar-picker-indicator]:opacity-0
-   [&::-webkit-calendar-picker-indicator]:pointer-events-none
-   ```
-   `appearance-none` removes the icon entirely in Chromium; Firefox doesn't render one. On Safari we keep `opacity-0`.
-
-7. **Empty string `""` ↔ `null` mapping.** The native input emits `""` for "empty". We normalize empty/whitespace to `null` in `onValueChange` so consumers can lean on a single sentinel. Controlled `value === null` renders as `""`.
+Moving focus across a month boundary shifts `viewMonth` automatically and re-focuses the matching button on the next frame.
 
 ## File layout
 
 ```
+src/components/popover/
+  popover.tsx
+  index.ts
 src/components/date-picker/
+  calendar.tsx              // internal — not exported from the package
   date-picker.tsx
   date-picker.stories.tsx
   date-picker.test.tsx
   index.ts
 ```
 
-Public exports (added to `src/index.ts`):
+Public exports (`src/index.ts`):
 
 ```ts
 export { DatePicker } from "./components/date-picker";
 export type { DatePickerProps } from "./components/date-picker";
+
+export {
+  Popover, PopoverAnchor, PopoverContent, PopoverTrigger,
+} from "./components/popover";
 ```
 
 ## Testing
 
-Following `currency-input.test.tsx`'s shape:
-
-- **Rendering / variants:** size, state→aria-invalid propagation, disabled, readOnly, loading.
-- **Controlled / uncontrolled:** value/defaultValue round-tripping, empty → null.
-- **Trigger:** `hideTrigger` suppresses the button; clicking the button calls `showPicker()` (mock on `HTMLInputElement.prototype`).
-- **Forwarding:** ref lands on the inner `<input>`, `name` lands on the inner input.
-- **Min/max:** attributes appear on the inner input.
-- **Composition:** consumer-provided `Input.Action` in `children` is appended after the trigger.
-- **RHF:** FormControl Slot-cloning lands `id` / `aria-describedby` / `aria-invalid` on the inner input, not the wrapper.
+- Trigger: default placeholder, custom placeholder, formatted-date label, disabled-blocks-open, loading shows spinner + aria-busy, state=error sets aria-invalid.
+- Popover + calendar: opens on click; month header matches value; click day → ISO emitted + popover closes; controlled mode respects parent ownership.
+- Month nav: prev / next buttons cycle months.
+- Min/max: out-of-range days disabled.
+- Keyboard: ArrowRight moves roving focus; Enter selects.
+- Ref forwarding: trigger button receives `ref`.
+- Hidden form input: rendered when `name` provided; value mirrors current selection.
+- RHF integration: Controller wires `field.onChange` to `onValueChange`; `FormControl` Slot-cloning lands `id` / `aria-describedby` / `aria-invalid` on the trigger button.
 
 ## Stories
 
-Mirror the CurrencyInput story set:
+`Default`, `WithValue`, `Sizes`, `States`, `WithMinMax`, `IndonesianLocale`, `SundayWeekStart`, `ControlledExample`, `InRHFForm`.
 
-- `Default` — empty field.
-- `Sizes` — sm/default/lg.
-- `States` — default / error / success / warning / disabled / loading.
-- `WithMinMax` — bounded date range.
-- `WithoutTrigger` — `hideTrigger` variant.
-- `WithClearAction` — controlled, custom clear `Input.Action`.
-- `InRHFForm` — `useForm` + `FormField` integration showing validation.
+## Trade-offs accepted
 
-## Out of scope (future work)
+- We own the calendar bug surface (no upstream maintenance). Mitigated by the small implementation size (~200 lines incl. all keyboard nav).
+- One additional peer dep (`@radix-ui/react-popover`). Consistent with the library's "Radix-everywhere" runtime story.
+- No year/decade jump view. Stepping with Shift+PgDn moves a year at a time — adequate for the dates this library is likely to see (birthdays, deadlines).
 
-- `Calendar` primitive (custom-rendered, accessible month grid) + `Popover` primitive.
-- `DateRangePicker`.
-- Locale-formatted text input (e.g., "20/05/2026" with masking).
+## Out of scope (future)
+
+- `DateRangePicker` (compose two pickers or extend `Calendar` with `mode="range"`).
 - `DateTimePicker` (compose with a Time primitive).
+- Year/decade picker views inside Calendar.
+- `Calendar` as a public export (extract when a second consumer appears).

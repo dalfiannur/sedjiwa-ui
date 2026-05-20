@@ -50,6 +50,13 @@ export type {
   CurrencyInputProps, CurrencyConfig, CurrencyPresetKey,
 } from "./components/currency-input";
 
+export { DatePicker } from "./components/date-picker";
+export type { DatePickerProps } from "./components/date-picker";
+
+export {
+  Popover, PopoverAnchor, PopoverContent, PopoverTrigger,
+} from "./components/popover";
+
 export { Textarea } from "./components/textarea";
 export type { TextareaProps } from "./components/textarea";
 
