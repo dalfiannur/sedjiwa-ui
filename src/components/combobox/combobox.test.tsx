@@ -1,7 +1,17 @@
+import * as React from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useForm } from "react-hook-form";
 import { Combobox } from "./combobox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../form";
 
 type IOObserverEntry = {
   target: Element;
@@ -706,5 +716,257 @@ describe("<Combobox />", () => {
       await user.click(screen.getByRole("combobox"));
       expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
+  });
+});
+
+describe("clearable", () => {
+  it("does NOT show clear button by default", () => {
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        value="apple"
+        onValueChange={() => {}}
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /clear/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clearable renders a clear button when a value is selected", () => {
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        value="apple"
+        onValueChange={() => {}}
+        clearable
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /clear/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("clearable button clears single value", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        defaultValue="apple"
+        onValueChange={onChange}
+        clearable
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /clear/i }));
+    expect(onChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it("clearable button clears multi value", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        multiple
+        defaultValue={["apple", "cherry"]}
+        onValueChange={onChange}
+        clearable
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /clear/i }));
+    expect(onChange).toHaveBeenLastCalledWith([]);
+  });
+});
+
+describe("form submission", () => {
+  it("single mode renders one hidden input when name is set", () => {
+    const { container } = render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        defaultValue="apple"
+        name="fruit"
+      />,
+    );
+    const hiddens = container.querySelectorAll<HTMLInputElement>(
+      'input[type="hidden"][name="fruit"]',
+    );
+    expect(hiddens).toHaveLength(1);
+    expect(hiddens[0]!.value).toBe("apple");
+  });
+
+  it("multi mode renders one hidden input per selected value", () => {
+    const { container } = render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        multiple
+        defaultValue={["apple", "cherry"]}
+        name="fruits"
+      />,
+    );
+    const hiddens = container.querySelectorAll<HTMLInputElement>(
+      'input[type="hidden"][name="fruits"]',
+    );
+    expect(Array.from(hiddens).map((h) => h.value)).toEqual([
+      "apple",
+      "cherry",
+    ]);
+  });
+});
+
+describe("forwarding + ARIA", () => {
+  it("forwards ref to the trigger", () => {
+    const ref = React.createRef<HTMLButtonElement>();
+    render(
+      <Combobox
+        ref={ref}
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+      />,
+    );
+    expect(ref.current).toBeInstanceOf(HTMLButtonElement);
+  });
+
+  it("state='error' propagates aria-invalid", () => {
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        state="error"
+      />,
+    );
+    expect(screen.getByRole("combobox")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  });
+
+  it("disabled blocks opening", async () => {
+    const user = userEvent.setup();
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        disabled
+      />,
+    );
+    await user.click(screen.getByRole("combobox"));
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+});
+
+describe("RHF integration", () => {
+  function RHFTestForm({
+    multiple,
+    onSubmit,
+  }: {
+    multiple: boolean;
+    onSubmit: (data: Record<string, unknown>) => void;
+  }) {
+    const form = useForm<Record<string, unknown>>({
+      defaultValues: { fruit: multiple ? [] : null },
+    });
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <FormField
+            control={form.control}
+            name="fruit"
+            rules={{
+              validate: (v) =>
+                multiple
+                  ? Array.isArray(v) && v.length > 0
+                    ? true
+                    : "Pick at least one"
+                  : v
+                    ? true
+                    : "Required",
+            }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fruit</FormLabel>
+                <FormControl>
+                  {multiple ? (
+                    <Combobox
+                      options={FRUITS}
+                      getOptionValue={fruitValue}
+                      getOptionLabel={fruitLabel}
+                      multiple
+                      value={field.value as string[]}
+                      onValueChange={field.onChange}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  ) : (
+                    <Combobox
+                      options={FRUITS}
+                      getOptionValue={fruitValue}
+                      getOptionLabel={fruitLabel}
+                      value={field.value as string | null}
+                      onValueChange={field.onChange}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  )}
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <button type="submit">Submit</button>
+        </form>
+      </Form>
+    );
+  }
+
+  it("single-mode Controller wires field.onChange to onValueChange", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<RHFTestForm multiple={false} onSubmit={onSubmit} />);
+    await user.click(screen.getByLabelText("Fruit"));
+    await user.click(screen.getByRole("option", { name: /banana/i }));
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ fruit: "banana" }),
+      expect.anything(),
+    );
+  });
+
+  it("FormControl Slot-cloning lands aria-invalid on the trigger", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<RHFTestForm multiple={false} onSubmit={onSubmit} />);
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+    const trigger = screen.getByLabelText("Fruit");
+    expect(trigger).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("multi-mode Controller round-trips a string[]", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<RHFTestForm multiple onSubmit={onSubmit} />);
+    await user.click(screen.getByLabelText("Fruit"));
+    await user.click(screen.getByRole("option", { name: /apple/i }));
+    await user.click(screen.getByRole("option", { name: /cherry/i }));
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ fruit: ["apple", "cherry"] }),
+      expect.anything(),
+    );
   });
 });

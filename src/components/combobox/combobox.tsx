@@ -69,6 +69,8 @@ function ComboboxImpl<T>(
     size = "default",
     state = "default",
     disabled = false,
+    clearable = false,
+    name,
     className,
     id,
     "aria-label": ariaLabel,
@@ -186,6 +188,18 @@ function ComboboxImpl<T>(
     },
     [multiple, selectedValues, commitValue],
   );
+
+  const handleClear = React.useCallback(
+    (event: { preventDefault: () => void; stopPropagation: () => void }) => {
+      event.preventDefault();
+      event.stopPropagation();
+      commitValue(multiple ? [] : null);
+    },
+    [commitValue, multiple],
+  );
+
+  const showClearButton =
+    clearable && !disabled && selectedValues.length > 0;
 
   const searchDebounceTimer = React.useRef<number | null>(null);
 
@@ -399,85 +413,121 @@ function ComboboxImpl<T>(
   const isEmpty = selectedValues.length === 0;
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        if (disabled) return;
-        setOpen(next);
-        if (next) {
-          setActiveIndex(Math.max(0, findFirstEnabledIndex()));
-        } else {
-          if (!isSearchControlled) setInternalSearchValue("");
-        }
-      }}
-    >
-      <PopoverTrigger
-        ref={ref}
-        id={id}
-        type="button"
-        role="combobox"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={listboxId}
-        aria-label={ariaLabel ?? (isEmpty ? placeholder : undefined)}
-        aria-describedby={ariaDescribedBy}
-        aria-invalid={state === "error" ? true : ariaInvalid}
-        disabled={disabled}
-        data-slot="combobox-trigger"
-        data-state={state}
-        data-placeholder={isEmpty || undefined}
-        className={cn(
-          fieldSurfaceVariants({ size, state }),
-          "items-center justify-between gap-2 px-3 text-left",
-          multiple &&
-            selectedValues.length > 0 &&
-            (size === "sm"
-              ? "h-auto min-h-8 py-1.5"
-              : size === "lg"
-                ? "h-auto min-h-10 py-1.5"
-                : "h-auto min-h-9 py-1.5"),
-          className,
-        )}
-      >
-        {triggerContent}
-        <ChevronDown
-          aria-hidden="true"
-          className="size-4 shrink-0 text-muted-foreground"
-        />
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        sideOffset={4}
-        className="w-(--radix-popover-trigger-width) min-w-60 p-0"
-        onCloseAutoFocus={(e) => e.preventDefault()}
-      >
-        <ComboboxListbox<T>
-          listboxId={listboxId}
-          multiple={multiple}
-          items={items}
-          emptyMessage={emptyMessage}
-          activeIndex={activeIndex}
-          onSelectIndex={handleSelectIndex}
-          optionIdPrefix={optionIdPrefix}
-          renderOption={renderOption}
-          searchable={searchable}
-          searchValue={searchValue}
-          onSearchValueChange={handleSearchChange}
-          searchPlaceholder={searchPlaceholder}
-          searchInputRef={searchInputRef}
-          onSearchKeyDown={handleSearchKeyDown}
-          onLoadMore={onLoadMore}
-          hasMore={hasMore}
-          loading={loading}
-          loadingMessage={loadingMessage}
-          activeOptionId={
-            items.length > 0
-              ? `${optionIdPrefix}-${Math.min(activeIndex, items.length - 1)}`
-              : undefined
+    <>
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          if (disabled) return;
+          setOpen(next);
+          if (next) {
+            setActiveIndex(Math.max(0, findFirstEnabledIndex()));
+          } else {
+            if (!isSearchControlled) setInternalSearchValue("");
           }
+        }}
+      >
+        <PopoverTrigger
+          ref={ref}
+          id={id}
+          type="button"
+          role="combobox"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-label={ariaLabel ?? (isEmpty ? placeholder : undefined)}
+          aria-describedby={ariaDescribedBy}
+          aria-invalid={state === "error" ? true : ariaInvalid}
+          disabled={disabled}
+          data-slot="combobox-trigger"
+          data-state={state}
+          data-placeholder={isEmpty || undefined}
+          className={cn(
+            fieldSurfaceVariants({ size, state }),
+            "items-center justify-between gap-2 px-3 text-left",
+            multiple &&
+              selectedValues.length > 0 &&
+              (size === "sm"
+                ? "h-auto min-h-8 py-1.5"
+                : size === "lg"
+                  ? "h-auto min-h-10 py-1.5"
+                  : "h-auto min-h-9 py-1.5"),
+            className,
+          )}
+        >
+          {triggerContent}
+          {showClearButton ? (
+            <span
+              role="button"
+              aria-label="Clear selection"
+              tabIndex={-1}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleClear(e);
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleClear(e);
+              }}
+              className="-mr-1 inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
+            >
+              <X aria-hidden="true" className="size-3.5" />
+            </span>
+          ) : null}
+          <ChevronDown
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          sideOffset={4}
+          className="w-(--radix-popover-trigger-width) min-w-60 p-0"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
+          <ComboboxListbox<T>
+            listboxId={listboxId}
+            multiple={multiple}
+            items={items}
+            emptyMessage={emptyMessage}
+            loading={loading}
+            loadingMessage={loadingMessage}
+            activeIndex={activeIndex}
+            onSelectIndex={handleSelectIndex}
+            optionIdPrefix={optionIdPrefix}
+            renderOption={renderOption}
+            searchable={searchable}
+            searchValue={searchValue}
+            onSearchValueChange={handleSearchChange}
+            searchPlaceholder={searchPlaceholder}
+            searchInputRef={searchInputRef}
+            onSearchKeyDown={handleSearchKeyDown}
+            activeOptionId={
+              items.length > 0
+                ? `${optionIdPrefix}-${Math.min(activeIndex, items.length - 1)}`
+                : undefined
+            }
+            onLoadMore={onLoadMore}
+            hasMore={hasMore}
+          />
+        </PopoverContent>
+      </Popover>
+      {name && !multiple ? (
+        <input
+          type="hidden"
+          name={name}
+          value={selectedValues[0] ?? ""}
         />
-      </PopoverContent>
-    </Popover>
+      ) : null}
+      {name && multiple ? (
+        <>
+          {selectedValues.map((v) => (
+            <input key={v} type="hidden" name={name} value={v} />
+          ))}
+        </>
+      ) : null}
+    </>
   );
 }
 
