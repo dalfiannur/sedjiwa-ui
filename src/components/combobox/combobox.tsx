@@ -83,6 +83,17 @@ function ComboboxImpl<T>(
   const [open, setOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(0);
 
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    if (!searchable) return;
+    const id = window.requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [open, searchable]);
+
   const listboxId = React.useId();
   const optionIdPrefix = `${listboxId}-opt`;
 
@@ -167,6 +178,87 @@ function ComboboxImpl<T>(
     [isSearchControlled, onSearchChange],
   );
 
+  const findNextEnabledIndex = React.useCallback(
+    (from: number, dir: 1 | -1): number => {
+      if (items.length === 0) return -1;
+      let i = from;
+      for (let n = 0; n < items.length; n++) {
+        i = (i + dir + items.length) % items.length;
+        if (!items[i]!.disabled) return i;
+      }
+      return -1;
+    },
+    [items],
+  );
+
+  const findFirstEnabledIndex = React.useCallback((): number => {
+    for (let i = 0; i < items.length; i++) {
+      if (!items[i]!.disabled) return i;
+    }
+    return -1;
+  }, [items]);
+
+  const findLastEnabledIndex = React.useCallback((): number => {
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (!items[i]!.disabled) return i;
+    }
+    return -1;
+  }, [items]);
+
+  React.useEffect(() => {
+    if (items.length === 0) {
+      setActiveIndex(0);
+      return;
+    }
+    setActiveIndex((prev) => {
+      if (prev >= items.length || items[prev]?.disabled) {
+        return Math.max(0, findFirstEnabledIndex());
+      }
+      return prev;
+    });
+  }, [items, findFirstEnabledIndex]);
+
+  const handleSearchKeyDown = React.useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setActiveIndex((prev) => {
+          const next = findNextEnabledIndex(prev, 1);
+          return next === -1 ? prev : next;
+        });
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setActiveIndex((prev) => {
+          const next = findNextEnabledIndex(prev, -1);
+          return next === -1 ? prev : next;
+        });
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        const i = findFirstEnabledIndex();
+        if (i !== -1) setActiveIndex(i);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        const i = findLastEnabledIndex();
+        if (i !== -1) setActiveIndex(i);
+      } else if (event.key === "Enter") {
+        if (items.length === 0) return;
+        event.preventDefault();
+        handleSelectIndex(activeIndex);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+      }
+    },
+    [
+      findNextEnabledIndex,
+      findFirstEnabledIndex,
+      findLastEnabledIndex,
+      items,
+      activeIndex,
+      handleSelectIndex,
+    ],
+  );
+
   const triggerContent = React.useMemo(() => {
     if (selectedValues.length === 0) {
       return (
@@ -205,7 +297,7 @@ function ComboboxImpl<T>(
         if (disabled) return;
         setOpen(next);
         if (next) {
-          setActiveIndex(0);
+          setActiveIndex(Math.max(0, findFirstEnabledIndex()));
         } else {
           if (!isSearchControlled) setInternalSearchValue("");
         }
@@ -257,6 +349,8 @@ function ComboboxImpl<T>(
           searchValue={searchValue}
           onSearchValueChange={handleSearchChange}
           searchPlaceholder={searchPlaceholder}
+          searchInputRef={searchInputRef}
+          onSearchKeyDown={handleSearchKeyDown}
           activeOptionId={
             items.length > 0
               ? `${optionIdPrefix}-${Math.min(activeIndex, items.length - 1)}`

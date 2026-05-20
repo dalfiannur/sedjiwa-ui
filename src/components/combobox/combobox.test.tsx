@@ -219,4 +219,103 @@ describe("<Combobox />", () => {
       expect(opts[0]).toHaveTextContent(/banana/i);
     });
   });
+
+  describe("keyboard navigation", () => {
+    it("ArrowDown / ArrowUp moves the active option", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      const input = screen.getByPlaceholderText(/search/i);
+      expect(input).toHaveFocus();
+      await user.keyboard("{ArrowDown}");
+      expect(screen.getAllByRole("option")[1]).toHaveAttribute(
+        "data-active",
+        "true",
+      );
+      await user.keyboard("{ArrowUp}");
+      expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+        "data-active",
+        "true",
+      );
+    });
+
+    it("Home / End jump to first / last option", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.keyboard("{End}");
+      expect(screen.getAllByRole("option")[2]).toHaveAttribute(
+        "data-active",
+        "true",
+      );
+      await user.keyboard("{Home}");
+      expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+        "data-active",
+        "true",
+      );
+    });
+
+    it("Enter selects the active option", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          onValueChange={onChange}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.keyboard("{ArrowDown}{Enter}");
+      expect(onChange).toHaveBeenLastCalledWith("banana");
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("Esc closes the popover", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+      await user.keyboard("{Escape}");
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("skips disabled options when navigating", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          isOptionDisabled={(o) => o.id === "banana"}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.keyboard("{ArrowDown}");
+      // banana (idx 1) is disabled, active should land on cherry (idx 2).
+      expect(screen.getAllByRole("option")[2]).toHaveAttribute(
+        "data-active",
+        "true",
+      );
+    });
+  });
 });
