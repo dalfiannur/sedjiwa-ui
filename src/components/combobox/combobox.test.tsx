@@ -318,4 +318,173 @@ describe("<Combobox />", () => {
       );
     });
   });
+
+  describe("multiple select", () => {
+    it("renders no chips when empty", () => {
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          multiple
+        />,
+      );
+      expect(screen.queryByTestId("combobox-chip")).not.toBeInTheDocument();
+    });
+
+    it("toggles values on selection and keeps the popover open", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          multiple
+          onValueChange={onChange}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.click(screen.getByRole("option", { name: /apple/i }));
+      expect(onChange).toHaveBeenLastCalledWith(["apple"]);
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+      await user.click(screen.getByRole("option", { name: /cherry/i }));
+      expect(onChange).toHaveBeenLastCalledWith(["apple", "cherry"]);
+    });
+
+    it("renders chips for each selected value", () => {
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          multiple
+          value={["apple", "cherry"]}
+          onValueChange={() => {}}
+        />,
+      );
+      const chips = screen.getAllByTestId("combobox-chip");
+      expect(chips).toHaveLength(2);
+      expect(chips[0]).toHaveTextContent("Apple");
+      expect(chips[1]).toHaveTextContent("Cherry");
+    });
+
+    it("× on a chip removes only that value", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          multiple
+          defaultValue={["apple", "banana"]}
+          onValueChange={onChange}
+        />,
+      );
+      const removeBananaButton = screen.getByRole("button", {
+        name: /remove banana/i,
+      });
+      await user.click(removeBananaButton);
+      expect(onChange).toHaveBeenLastCalledWith(["apple"]);
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("collapses overflow chips into +N more", () => {
+      const many = [
+        { id: "a", name: "Apple" },
+        { id: "b", name: "Banana" },
+        { id: "c", name: "Cherry" },
+        { id: "d", name: "Date" },
+        { id: "e", name: "Elderberry" },
+      ];
+      render(
+        <Combobox
+          options={many}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          multiple
+          maxChips={3}
+          value={["a", "b", "c", "d", "e"]}
+          onValueChange={() => {}}
+        />,
+      );
+      const chips = screen.getAllByTestId("combobox-chip");
+      expect(chips).toHaveLength(3);
+      expect(screen.getByText(/\+2 more/i)).toBeInTheDocument();
+    });
+
+    it("backspace on empty search removes the last selected chip", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          multiple
+          defaultValue={["apple", "banana"]}
+          onValueChange={onChange}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.keyboard("{Backspace}");
+      expect(onChange).toHaveBeenLastCalledWith(["apple"]);
+    });
+
+    it("renderValue overrides the default single-mode label", () => {
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          value="apple"
+          onValueChange={() => {}}
+          renderValue={(s) =>
+            s ? <span>SELECTED: {(s as { name: string }).name}</span> : null
+          }
+        />,
+      );
+      expect(screen.getByRole("combobox")).toHaveTextContent(
+        /SELECTED: Apple/,
+      );
+    });
+
+    it("renderValue receives an array in multi mode", () => {
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          multiple
+          value={["apple", "cherry"]}
+          onValueChange={() => {}}
+          renderValue={(s) => {
+            const arr = s as { name: string }[];
+            return <span>COUNT={arr.length}</span>;
+          }}
+        />,
+      );
+      expect(screen.getByRole("combobox")).toHaveTextContent("COUNT=2");
+    });
+
+    it("backspace with non-empty search does NOT remove a chip", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          multiple
+          defaultValue={["apple", "banana"]}
+          onValueChange={onChange}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "a");
+      await user.keyboard("{Backspace}");
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { fieldSurfaceVariants } from "../../lib/field-surface.variants";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover";
@@ -12,6 +12,7 @@ import type { ComboboxProps } from "./combobox.types";
 const DEFAULT_PLACEHOLDER = "Select…";
 const DEFAULT_EMPTY_MESSAGE = "No results";
 const DEFAULT_SEARCH_PLACEHOLDER = "Search…";
+const DEFAULT_MAX_CHIPS = 3;
 
 function asArrayValue(v: string | string[] | null | undefined): string[] {
   if (v == null) return [];
@@ -57,6 +58,8 @@ function ComboboxImpl<T>(
     placeholder = DEFAULT_PLACEHOLDER,
     searchPlaceholder = DEFAULT_SEARCH_PLACEHOLDER,
     emptyMessage = DEFAULT_EMPTY_MESSAGE,
+    maxChips = DEFAULT_MAX_CHIPS,
+    renderValue,
     size = "default",
     state = "default",
     disabled = false,
@@ -169,6 +172,15 @@ function ComboboxImpl<T>(
     [items, multiple, selectedValues, commitValue],
   );
 
+  const removeValueAt = React.useCallback(
+    (valueToRemove: string) => {
+      if (!multiple) return;
+      const next = selectedValues.filter((v) => v !== valueToRemove);
+      commitValue(next);
+    },
+    [multiple, selectedValues, commitValue],
+  );
+
   const handleSearchChange = React.useCallback(
     (next: string) => {
       if (!isSearchControlled) setInternalSearchValue(next);
@@ -220,6 +232,17 @@ function ComboboxImpl<T>(
 
   const handleSearchKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (
+        event.key === "Backspace" &&
+        multiple &&
+        searchValue === "" &&
+        selectedValues.length > 0
+      ) {
+        event.preventDefault();
+        const last = selectedValues[selectedValues.length - 1]!;
+        removeValueAt(last);
+        return;
+      }
       if (event.key === "ArrowDown") {
         event.preventDefault();
         setActiveIndex((prev) => {
@@ -250,6 +273,10 @@ function ComboboxImpl<T>(
       }
     },
     [
+      multiple,
+      searchValue,
+      selectedValues,
+      removeValueAt,
       findNextEnabledIndex,
       findFirstEnabledIndex,
       findLastEnabledIndex,
@@ -267,16 +294,72 @@ function ComboboxImpl<T>(
         </span>
       );
     }
+    if (renderValue) {
+      let selected: T | T[] | null;
+      if (multiple) {
+        selected = selectedValues
+          .map((v) => findOptionByValue(options, getOptionValue, v))
+          .filter((o): o is T => o !== undefined);
+      } else {
+        selected =
+          findOptionByValue(options, getOptionValue, selectedValues[0]!) ??
+          null;
+      }
+      return (
+        <span className="flex flex-1 items-center gap-1 truncate text-sm">
+          {renderValue(selected)}
+        </span>
+      );
+    }
     if (!multiple) {
       const v = selectedValues[0]!;
       const found = findOptionByValue(options, getOptionValue, v);
       const label = found ? getOptionLabel(found) : v;
       return <span className="flex-1 truncate text-sm">{label}</span>;
     }
-    // Multi-mode chip rendering arrives in Task 5.
+    const visible = selectedValues.slice(0, maxChips);
+    const overflow = selectedValues.length - visible.length;
     return (
-      <span className="flex-1 truncate text-sm">
-        {selectedValues.length} selected
+      <span className="flex flex-1 flex-wrap items-center gap-1">
+        {visible.map((v) => {
+          const found = findOptionByValue(options, getOptionValue, v);
+          const label = found ? getOptionLabel(found) : v;
+          return (
+            <span
+              key={v}
+              data-slot="combobox-chip"
+              data-testid="combobox-chip"
+              className="inline-flex items-center gap-1 rounded-sm bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
+            >
+              {label}
+              <button
+                type="button"
+                aria-label={`Remove ${label}`}
+                tabIndex={-1}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  removeValueAt(v);
+                }}
+                className="inline-flex size-3 items-center justify-center rounded-sm text-secondary-foreground/70 hover:text-secondary-foreground"
+              >
+                <X aria-hidden="true" className="size-3" />
+              </button>
+            </span>
+          );
+        })}
+        {overflow > 0 ? (
+          <span
+            data-slot="combobox-chip-overflow"
+            className="text-xs text-muted-foreground"
+          >
+            +{overflow} more
+          </span>
+        ) : null}
       </span>
     );
   }, [
@@ -286,6 +369,9 @@ function ComboboxImpl<T>(
     getOptionValue,
     getOptionLabel,
     placeholder,
+    maxChips,
+    removeValueAt,
+    renderValue,
   ]);
 
   const isEmpty = selectedValues.length === 0;
@@ -321,6 +407,9 @@ function ComboboxImpl<T>(
         className={cn(
           fieldSurfaceVariants({ size, state }),
           "items-center justify-between gap-2 px-3 text-left",
+          multiple && selectedValues.length > 0 && "h-auto min-h-9 py-1.5",
+          multiple && selectedValues.length > 0 && size === "sm" && "min-h-8",
+          multiple && selectedValues.length > 0 && size === "lg" && "min-h-10",
           className,
         )}
       >
