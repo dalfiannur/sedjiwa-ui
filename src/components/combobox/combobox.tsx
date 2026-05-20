@@ -84,7 +84,7 @@ function ComboboxImpl<T>(
   );
 
   const [open, setOpen] = React.useState(false);
-  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [rawActiveIndex, setActiveIndex] = React.useState(0);
 
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -217,18 +217,16 @@ function ComboboxImpl<T>(
     return -1;
   }, [items]);
 
-  React.useEffect(() => {
-    if (items.length === 0) {
-      setActiveIndex(0);
-      return;
+  // Derive a clamped activeIndex during render so we never need an effect that
+  // calls setState synchronously (which the react-hooks/set-state-in-effect rule
+  // flags regardless of functional-updater form).
+  const activeIndex = React.useMemo(() => {
+    if (items.length === 0) return 0;
+    if (rawActiveIndex >= items.length || items[rawActiveIndex]?.disabled) {
+      return Math.max(0, findFirstEnabledIndex());
     }
-    setActiveIndex((prev) => {
-      if (prev >= items.length || items[prev]?.disabled) {
-        return Math.max(0, findFirstEnabledIndex());
-      }
-      return prev;
-    });
-  }, [items, findFirstEnabledIndex]);
+    return rawActiveIndex;
+  }, [items, rawActiveIndex, findFirstEnabledIndex]);
 
   const handleSearchKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
