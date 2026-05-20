@@ -13,6 +13,7 @@ const DEFAULT_PLACEHOLDER = "Select…";
 const DEFAULT_EMPTY_MESSAGE = "No results";
 const DEFAULT_SEARCH_PLACEHOLDER = "Search…";
 const DEFAULT_MAX_CHIPS = 3;
+const DEFAULT_LOADING_MESSAGE = "Loading…";
 
 function asArrayValue(v: string | string[] | null | undefined): string[] {
   if (v == null) return [];
@@ -57,6 +58,9 @@ function ComboboxImpl<T>(
     filterFn,
     placeholder = DEFAULT_PLACEHOLDER,
     searchPlaceholder = DEFAULT_SEARCH_PLACEHOLDER,
+    searchDebounceMs = 300,
+    loading = false,
+    loadingMessage = DEFAULT_LOADING_MESSAGE,
     emptyMessage = DEFAULT_EMPTY_MESSAGE,
     maxChips = DEFAULT_MAX_CHIPS,
     renderValue,
@@ -91,10 +95,10 @@ function ComboboxImpl<T>(
   React.useEffect(() => {
     if (!open) return;
     if (!searchable) return;
-    const id = window.requestAnimationFrame(() => {
+    const id = window.setTimeout(() => {
       searchInputRef.current?.focus();
-    });
-    return () => window.cancelAnimationFrame(id);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [open, searchable]);
 
   const listboxId = React.useId();
@@ -181,13 +185,31 @@ function ComboboxImpl<T>(
     [multiple, selectedValues, commitValue],
   );
 
+  const searchDebounceTimer = React.useRef<number | null>(null);
+
   const handleSearchChange = React.useCallback(
     (next: string) => {
       if (!isSearchControlled) setInternalSearchValue(next);
-      onSearchChange?.(next);
       setActiveIndex(0);
+      if (onSearchChange) {
+        if (searchDebounceTimer.current !== null) {
+          window.clearTimeout(searchDebounceTimer.current);
+        }
+        searchDebounceTimer.current = window.setTimeout(() => {
+          onSearchChange(next);
+        }, searchDebounceMs);
+      }
     },
-    [isSearchControlled, onSearchChange],
+    [isSearchControlled, onSearchChange, searchDebounceMs],
+  );
+
+  React.useEffect(
+    () => () => {
+      if (searchDebounceTimer.current !== null) {
+        window.clearTimeout(searchDebounceTimer.current);
+      }
+    },
+    [],
   );
 
   const findNextEnabledIndex = React.useCallback(
@@ -442,6 +464,8 @@ function ComboboxImpl<T>(
           searchPlaceholder={searchPlaceholder}
           searchInputRef={searchInputRef}
           onSearchKeyDown={handleSearchKeyDown}
+          loading={loading}
+          loadingMessage={loadingMessage}
           activeOptionId={
             items.length > 0
               ? `${optionIdPrefix}-${Math.min(activeIndex, items.length - 1)}`

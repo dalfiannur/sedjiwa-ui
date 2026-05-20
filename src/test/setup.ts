@@ -1,6 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
+
+// @testing-library/react's asyncWrapper checks `typeof jest !== 'undefined'` to detect
+// fake timers and advance them. Expose `vi` as `jest` so the detection works with Vitest.
+// Without this, fake-timer tests that go through userEvent will hang indefinitely.
+(globalThis as Record<string, unknown>).jest = vi;
 
 // jsdom does not implement window.matchMedia; provide a minimal stub so
 // libraries like sonner that call it during mount don't throw.

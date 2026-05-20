@@ -319,6 +319,90 @@ describe("<Combobox />", () => {
     });
   });
 
+  describe("server search mode", () => {
+    it("does not filter options locally when onSearchChange is provided", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          onSearchChange={() => {}}
+          searchDebounceMs={0}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "zzz");
+      expect(screen.getAllByRole("option")).toHaveLength(3);
+    });
+
+    it("debounces onSearchChange", async () => {
+      vi.useFakeTimers();
+      try {
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        const onSearchChange = vi.fn();
+        render(
+          <Combobox
+            options={FRUITS}
+            getOptionValue={fruitValue}
+            getOptionLabel={fruitLabel}
+            onSearchChange={onSearchChange}
+            searchDebounceMs={300}
+          />,
+        );
+        await user.click(screen.getByRole("combobox"));
+        await user.type(screen.getByPlaceholderText(/search/i), "ap");
+        expect(onSearchChange).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(300);
+        expect(onSearchChange).toHaveBeenCalledTimes(1);
+        expect(onSearchChange).toHaveBeenLastCalledWith("ap");
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("shows the loading message instead of options when loading and no options", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={[] as typeof FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          onSearchChange={() => {}}
+          loading
+          loadingMessage="Fetching…"
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      expect(screen.getByText(/fetching…/i)).toBeInTheDocument();
+    });
+
+    it("emits the latest query when typing continues past the debounce", async () => {
+      vi.useFakeTimers();
+      try {
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        const onSearchChange = vi.fn();
+        render(
+          <Combobox
+            options={FRUITS}
+            getOptionValue={fruitValue}
+            getOptionLabel={fruitLabel}
+            onSearchChange={onSearchChange}
+            searchDebounceMs={100}
+          />,
+        );
+        await user.click(screen.getByRole("combobox"));
+        await user.type(screen.getByPlaceholderText(/search/i), "a");
+        vi.advanceTimersByTime(100);
+        await user.type(screen.getByPlaceholderText(/search/i), "p");
+        vi.advanceTimersByTime(100);
+        expect(onSearchChange.mock.calls.map((c) => c[0])).toEqual(["a", "ap"]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   describe("multiple select", () => {
     it("renders no chips when empty", () => {
       render(

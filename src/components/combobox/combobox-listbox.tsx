@@ -31,6 +31,8 @@ export type ComboboxListboxProps<T> = {
   onSearchKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   activeOptionId?: string;
   className?: string;
+  loading?: boolean;
+  loadingMessage?: React.ReactNode;
 };
 
 export function ComboboxListbox<T>({
@@ -50,6 +52,8 @@ export function ComboboxListbox<T>({
   onSearchKeyDown,
   activeOptionId,
   className,
+  loading = false,
+  loadingMessage,
 }: ComboboxListboxProps<T>) {
   return (
     <div
@@ -92,7 +96,16 @@ export function ComboboxListbox<T>({
         data-slot="combobox-listbox"
         className="max-h-60 overflow-y-auto p-1"
       >
-        {items.length === 0 ? (
+        {loading && items.length === 0 ? (
+          <li
+            role="status"
+            aria-live="polite"
+            data-slot="combobox-loading"
+            className="px-2 py-1.5 text-sm text-muted-foreground"
+          >
+            {loadingMessage ?? "Loading…"}
+          </li>
+        ) : items.length === 0 ? (
           <li
             data-slot="combobox-empty"
             className="px-2 py-1.5 text-sm text-muted-foreground"
