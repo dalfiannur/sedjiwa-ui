@@ -970,3 +970,61 @@ describe("RHF integration", () => {
     );
   });
 });
+
+describe("polish (final-review fixes)", () => {
+  it("listbox has an accessible name (aria-label)", async () => {
+    const user = userEvent.setup();
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        aria-label="Fruit picker"
+      />,
+    );
+    await user.click(screen.getByRole("combobox", { name: /fruit picker/i }));
+    expect(screen.getByRole("listbox")).toHaveAttribute(
+      "aria-label",
+      "Fruit picker",
+    );
+  });
+
+  it("keyboard navigation works when searchable={false}", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+        searchable={false}
+        onValueChange={onChange}
+      />,
+    );
+    await user.click(screen.getByRole("combobox"));
+    // Listbox should be focusable when searchable=false; ArrowDown should move active.
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getAllByRole("option")[1]).toHaveAttribute(
+      "data-active",
+      "true",
+    );
+    await user.keyboard("{Enter}");
+    expect(onChange).toHaveBeenLastCalledWith("banana");
+  });
+
+  it("focus returns to the trigger after close", async () => {
+    const user = userEvent.setup();
+    render(
+      <Combobox
+        options={FRUITS}
+        getOptionValue={fruitValue}
+        getOptionLabel={fruitLabel}
+      />,
+    );
+    const trigger = screen.getByRole("combobox");
+    await user.click(trigger);
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(trigger).toHaveFocus();
+  });
+});

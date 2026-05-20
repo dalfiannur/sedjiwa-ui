@@ -30,6 +30,7 @@ export type ComboboxListboxProps<T> = {
   searchInputRef?: React.Ref<HTMLInputElement>;
   onSearchKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   activeOptionId?: string;
+  listboxLabel?: string;
   className?: string;
   loading?: boolean;
   loadingMessage?: React.ReactNode;
@@ -53,6 +54,7 @@ export function ComboboxListbox<T>({
   searchInputRef,
   onSearchKeyDown,
   activeOptionId,
+  listboxLabel,
   className,
   loading = false,
   loadingMessage,
@@ -60,6 +62,7 @@ export function ComboboxListbox<T>({
   hasMore = false,
 }: ComboboxListboxProps<T>) {
   const sentinelRef = React.useRef<HTMLLIElement>(null);
+  const listboxRef = React.useRef<HTMLUListElement>(null);
   const onLoadMoreRef = React.useRef(onLoadMore);
   React.useEffect(() => {
     onLoadMoreRef.current = onLoadMore;
@@ -83,6 +86,23 @@ export function ComboboxListbox<T>({
     observer.observe(node);
     return () => observer.disconnect();
   }, [hasMore, loading, items.length]);
+
+  // Scroll active option into view when keyboard nav moves highlight
+  React.useEffect(() => {
+    if (!activeOptionId) return;
+    const el = document.getElementById(activeOptionId);
+    if (!el) return;
+    el.scrollIntoView({ block: "nearest" });
+  }, [activeOptionId]);
+
+  // When not searchable, focus the listbox itself on mount so keyboard nav works
+  React.useEffect(() => {
+    if (searchable) return;
+    const id = window.setTimeout(() => {
+      listboxRef.current?.focus();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [searchable]);
 
   return (
     <div
@@ -119,11 +139,21 @@ export function ComboboxListbox<T>({
         </div>
       ) : null}
       <ul
+        ref={listboxRef}
         id={listboxId}
         role="listbox"
         aria-multiselectable={multiple || undefined}
+        aria-label={listboxLabel}
+        tabIndex={searchable ? -1 : 0}
+        onKeyDown={
+          !searchable
+            ? (onSearchKeyDown as unknown as (
+                e: React.KeyboardEvent<HTMLUListElement>,
+              ) => void)
+            : undefined
+        }
         data-slot="combobox-listbox"
-        className="max-h-60 overflow-y-auto p-1"
+        className="max-h-60 overflow-y-auto p-1 outline-none focus:outline-none"
       >
         {loading && items.length === 0 ? (
           <li

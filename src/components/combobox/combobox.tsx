@@ -484,7 +484,6 @@ function ComboboxImpl<T>(
           align="start"
           sideOffset={4}
           className="w-(--radix-popover-trigger-width) min-w-60 p-0"
-          onCloseAutoFocus={(e) => e.preventDefault()}
         >
           <ComboboxListbox<T>
             listboxId={listboxId}
@@ -508,6 +507,7 @@ function ComboboxImpl<T>(
                 ? `${optionIdPrefix}-${Math.min(activeIndex, items.length - 1)}`
                 : undefined
             }
+            listboxLabel={ariaLabel ?? placeholder}
             onLoadMore={onLoadMore}
             hasMore={hasMore}
           />
