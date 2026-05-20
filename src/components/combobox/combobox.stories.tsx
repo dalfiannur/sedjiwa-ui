@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Combobox } from "./combobox";
-import type { ComboboxProps } from "./combobox.types";
 import type { FieldSurfaceVariants } from "../../lib/field-surface.variants";
 import {
   Form,
