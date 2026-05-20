@@ -332,8 +332,8 @@ function ComboboxImpl<T>(
               className="inline-flex items-center gap-1 rounded-sm bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
             >
               {label}
-              <button
-                type="button"
+              <span
+                role="button"
                 aria-label={`Remove ${label}`}
                 tabIndex={-1}
                 onPointerDown={(e) => {
@@ -345,10 +345,10 @@ function ComboboxImpl<T>(
                   e.stopPropagation();
                   removeValueAt(v);
                 }}
-                className="inline-flex size-3 items-center justify-center rounded-sm text-secondary-foreground/70 hover:text-secondary-foreground"
+                className="inline-flex size-3 cursor-pointer items-center justify-center rounded-sm text-secondary-foreground/70 hover:text-secondary-foreground"
               >
                 <X aria-hidden="true" className="size-3" />
-              </button>
+              </span>
             </span>
           );
         })}
