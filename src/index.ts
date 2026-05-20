@@ -53,6 +53,12 @@ export type {
 export { DatePicker } from "./components/date-picker";
 export type { DatePickerProps } from "./components/date-picker";
 
+export { DateRangePicker } from "./components/date-range-picker";
+export type {
+  DateRangePickerProps,
+  DateRangeValue,
+} from "./components/date-range-picker";
+
 export {
   Popover, PopoverAnchor, PopoverContent, PopoverTrigger,
 } from "./components/popover";
