@@ -83,6 +83,9 @@ export {
 } from "./components/select";
 export { Separator } from "./components/separator";
 
+export { Combobox } from "./components/combobox";
+export type { ComboboxProps } from "./components/combobox";
+
 export {
   Sheet, SheetTrigger, SheetClose, SheetPortal, SheetOverlay,
   SheetContent, SheetHeader, SheetFooter, SheetBody, SheetTitle, SheetDescription,
