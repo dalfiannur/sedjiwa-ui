@@ -1027,4 +1027,197 @@ describe("polish (final-review fixes)", () => {
     await user.keyboard("{Escape}");
     expect(trigger).toHaveFocus();
   });
+
+  describe("creatable", () => {
+    it("shows a create row when the query has no matching option", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "kiwi");
+      const createRow = screen.getByRole("option", { name: /create.*kiwi/i });
+      expect(createRow).toHaveAttribute(
+        "data-slot",
+        "combobox-create-option",
+      );
+    });
+
+    it("does not show the create row when query matches an existing label (case-insensitive)", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "apple");
+      expect(
+        screen.queryByRole("option", { name: /create/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("does not show the create row for an empty/whitespace-only query", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      // no query: no create row
+      expect(
+        screen.queryByRole("option", { name: /create/i }),
+      ).not.toBeInTheDocument();
+      await user.type(screen.getByPlaceholderText(/search/i), "   ");
+      expect(
+        screen.queryByRole("option", { name: /create/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("clicking the create row fires onCreate with the trimmed query", async () => {
+      const user = userEvent.setup();
+      const onCreate = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+          onCreate={onCreate}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "  Kiwi  ");
+      await user.click(screen.getByRole("option", { name: /create.*kiwi/i }));
+      expect(onCreate).toHaveBeenCalledTimes(1);
+      expect(onCreate).toHaveBeenCalledWith("Kiwi");
+    });
+
+    it("Enter on an active create row fires onCreate", async () => {
+      const user = userEvent.setup();
+      const onCreate = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+          onCreate={onCreate}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "zzz");
+      // only the create row remains; it should be the active option
+      await user.keyboard("{Enter}");
+      expect(onCreate).toHaveBeenCalledWith("zzz");
+    });
+
+    it("single-select: closes the popover and clears the search after create", async () => {
+      const user = userEvent.setup();
+      const onCreate = vi.fn();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+          onCreate={onCreate}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "kiwi");
+      await user.click(screen.getByRole("option", { name: /create.*kiwi/i }));
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("multi-select: keeps the popover open and clears the search after create", async () => {
+      const user = userEvent.setup();
+      const onCreate = vi.fn();
+      render(
+        <Combobox
+          multiple
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+          onCreate={onCreate}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      const input = screen.getByPlaceholderText(/search/i) as HTMLInputElement;
+      await user.type(input, "kiwi");
+      await user.click(screen.getByRole("option", { name: /create.*kiwi/i }));
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+      expect(input.value).toBe("");
+    });
+
+    it("respects formatCreateLabel override", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+          formatCreateLabel={(q) => `Add new tag: ${q}`}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "kiwi");
+      expect(
+        screen.getByRole("option", { name: /add new tag: kiwi/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("respects isValidNewOption override (suppresses the create row)", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+          isValidNewOption={() => false}
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "kiwi");
+      expect(
+        screen.queryByRole("option", { name: /create/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText(/no results/i)).toBeInTheDocument();
+    });
+
+    it("places the create row first when createPosition='first'", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          options={FRUITS}
+          getOptionValue={fruitValue}
+          getOptionLabel={fruitLabel}
+          creatable
+          createPosition="first"
+        />,
+      );
+      await user.click(screen.getByRole("combobox"));
+      await user.type(screen.getByPlaceholderText(/search/i), "a");
+      const opts = screen.getAllByRole("option");
+      expect(opts[0]).toHaveAttribute(
+        "data-slot",
+        "combobox-create-option",
+      );
+    });
+  });
 });

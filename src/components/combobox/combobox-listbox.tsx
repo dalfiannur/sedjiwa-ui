@@ -1,15 +1,28 @@
 import * as React from "react";
-import { Check, Search } from "lucide-react";
+import { Check, Plus, Search } from "lucide-react";
 import { cn } from "../../lib/cn";
 import type { ComboboxOptionRenderState } from "./combobox.types";
 
-export type ComboboxListboxItem<T> = {
+export type ComboboxListboxOptionItem<T> = {
+  kind: "option";
   option: T;
   value: string;
   label: string;
   selected: boolean;
   disabled: boolean;
 };
+
+export type ComboboxListboxCreateItem = {
+  kind: "create";
+  value: string;
+  label: React.ReactNode;
+  selected: false;
+  disabled: false;
+};
+
+export type ComboboxListboxItem<T> =
+  | ComboboxListboxOptionItem<T>
+  | ComboboxListboxCreateItem;
 
 export type ComboboxListboxProps<T> = {
   listboxId: string;
@@ -174,6 +187,33 @@ export function ComboboxListbox<T>({
         ) : (
           items.map((item, index) => {
             const active = index === activeIndex;
+            if (item.kind === "create") {
+              return (
+                <li
+                  key={`__create__${item.value}`}
+                  id={`${optionIdPrefix}-${index}`}
+                  role="option"
+                  aria-selected={false}
+                  data-slot="combobox-create-option"
+                  data-active={active || undefined}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                  }}
+                  onClick={() => onSelectIndex(index)}
+                  className={cn(
+                    "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-2 text-sm select-none",
+                    "outline-none",
+                    active && "bg-accent text-accent-foreground",
+                  )}
+                >
+                  <Plus
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-muted-foreground"
+                  />
+                  <span className="flex-1 truncate">{item.label}</span>
+                </li>
+              );
+            }
             return (
               <li
                 key={item.value}

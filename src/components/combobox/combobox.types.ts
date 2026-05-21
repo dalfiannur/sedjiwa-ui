@@ -31,6 +31,12 @@ type ComboboxBaseProps<T> = Omit<
   hasMore?: boolean;
   loading?: boolean;
 
+  creatable?: boolean;
+  onCreate?: (query: string) => void;
+  formatCreateLabel?: (query: string) => React.ReactNode;
+  isValidNewOption?: (query: string, options: T[]) => boolean;
+  createPosition?: "first" | "last";
+
   placeholder?: string;
   searchPlaceholder?: string;
   emptyMessage?: React.ReactNode;

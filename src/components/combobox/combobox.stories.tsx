@@ -522,6 +522,87 @@ export const ServerSearchPlusInfiniteScroll: Story = {
   },
 };
 
+export const Creatable: Story = {
+  render: (args: BaseArgs) => {
+    function CreatableExample() {
+      const [options, setOptions] = useState<Fruit[]>(FRUITS);
+      const [value, setValue] = useState<string | null>(null);
+      return (
+        <div className="w-80">
+          <Combobox<Fruit>
+            size={args.size}
+            state={args.state}
+            disabled={args.disabled}
+            searchable={args.searchable}
+            clearable={args.clearable}
+            options={options}
+            getOptionValue={(o) => o.id}
+            getOptionLabel={(o) => o.name}
+            value={value}
+            onValueChange={setValue}
+            creatable
+            onCreate={(query) => {
+              const id = query.toLowerCase().replace(/\s+/g, "-");
+              if (options.some((o) => o.id === id)) {
+                setValue(id);
+                return;
+              }
+              setOptions((prev) => [...prev, { id, name: query }]);
+              setValue(id);
+            }}
+            placeholder="Pick or create a fruit"
+          />
+        </div>
+      );
+    }
+    return <CreatableExample />;
+  },
+};
+
+export const CreatableMultiple: Story = {
+  args: { multiple: true },
+  render: (args: BaseArgs) => {
+    function CreatableMultiExample() {
+      const [options, setOptions] = useState<Fruit[]>(FRUITS);
+      const [value, setValue] = useState<string[]>([]);
+      return (
+        <div className="w-96">
+          <Combobox<Fruit>
+            multiple
+            size={args.size}
+            state={args.state}
+            disabled={args.disabled}
+            searchable={args.searchable}
+            clearable={args.clearable}
+            options={options}
+            getOptionValue={(o) => o.id}
+            getOptionLabel={(o) => o.name}
+            value={value}
+            onValueChange={setValue}
+            creatable
+            formatCreateLabel={(q) => (
+              <span>
+                Add tag <span className="font-medium">&ldquo;{q}&rdquo;</span>
+              </span>
+            )}
+            onCreate={(query) => {
+              const id = query.toLowerCase().replace(/\s+/g, "-");
+              setOptions((prev) =>
+                prev.some((o) => o.id === id)
+                  ? prev
+                  : [...prev, { id, name: query }],
+              );
+              setValue((prev) => (prev.includes(id) ? prev : [...prev, id]));
+            }}
+            placeholder="Pick or create tags"
+          />
+        </div>
+      );
+    }
+    return <CreatableMultiExample />;
+  },
+};
+
 export const InRHFForm: Story = {
   render: (args: BaseArgs) => {
     function RHFExample() {

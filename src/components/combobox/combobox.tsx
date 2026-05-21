@@ -15,6 +15,25 @@ const DEFAULT_SEARCH_PLACEHOLDER = "Search…";
 const DEFAULT_MAX_CHIPS = 3;
 const DEFAULT_LOADING_MESSAGE = "Loading…";
 
+function defaultFormatCreateLabel(query: string): React.ReactNode {
+  return (
+    <>
+      Create <span className="font-medium">&ldquo;{query}&rdquo;</span>
+    </>
+  );
+}
+
+function defaultIsValidNewOption<T>(
+  query: string,
+  options: T[],
+  getOptionLabel: (o: T) => string,
+): boolean {
+  const trimmed = query.trim();
+  if (!trimmed) return false;
+  const needle = trimmed.toLowerCase();
+  return !options.some((o) => getOptionLabel(o).toLowerCase() === needle);
+}
+
 function asArrayValue(v: string | string[] | null | undefined): string[] {
   if (v == null) return [];
   return Array.isArray(v) ? v : [v];
@@ -63,6 +82,11 @@ function ComboboxImpl<T>(
     hasMore = false,
     loading = false,
     loadingMessage = DEFAULT_LOADING_MESSAGE,
+    creatable = false,
+    onCreate,
+    formatCreateLabel = defaultFormatCreateLabel,
+    isValidNewOption,
+    createPosition = "last",
     emptyMessage = DEFAULT_EMPTY_MESSAGE,
     maxChips = DEFAULT_MAX_CHIPS,
     renderValue,
@@ -124,11 +148,12 @@ function ComboboxImpl<T>(
       const fn = filterFn ?? ((o: T, q: string) => defaultFilter(o, q, getOptionLabel));
       return fn(option, searchValue);
     };
-    return options
+    const optionItems: ComboboxListboxItem<T>[] = options
       .filter(filterPred)
       .map((option) => {
         const optionValue = getOptionValue(option);
         return {
+          kind: "option" as const,
           option,
           value: optionValue,
           label: getOptionLabel(option),
@@ -136,6 +161,25 @@ function ComboboxImpl<T>(
           disabled: isOptionDisabled ? isOptionDisabled(option) : false,
         };
       });
+
+    if (!creatable) return optionItems;
+    const trimmed = searchValue.trim();
+    const validator =
+      isValidNewOption ??
+      ((q: string, opts: T[]) =>
+        defaultIsValidNewOption(q, opts, getOptionLabel));
+    if (!validator(trimmed, options)) return optionItems;
+
+    const createItem: ComboboxListboxItem<T> = {
+      kind: "create",
+      value: trimmed,
+      label: formatCreateLabel(trimmed),
+      selected: false,
+      disabled: false,
+    };
+    return createPosition === "first"
+      ? [createItem, ...optionItems]
+      : [...optionItems, createItem];
   }, [
     options,
     getOptionValue,
@@ -145,6 +189,10 @@ function ComboboxImpl<T>(
     filterFn,
     searchValue,
     isServerMode,
+    creatable,
+    isValidNewOption,
+    formatCreateLabel,
+    createPosition,
   ]);
 
   const commitValue = React.useCallback(
@@ -166,7 +214,15 @@ function ComboboxImpl<T>(
   const handleSelectIndex = React.useCallback(
     (index: number) => {
       const item = items[index];
-      if (!item || item.disabled) return;
+      if (!item) return;
+      if (item.kind === "create") {
+        onCreate?.(item.value);
+        if (!isSearchControlled) setInternalSearchValue("");
+        setActiveIndex(0);
+        if (!multiple) setOpen(false);
+        return;
+      }
+      if (item.disabled) return;
       if (multiple) {
         const next = selectedValues.includes(item.value)
           ? selectedValues.filter((v) => v !== item.value)
@@ -177,7 +233,7 @@ function ComboboxImpl<T>(
         setOpen(false);
       }
     },
-    [items, multiple, selectedValues, commitValue],
+    [items, multiple, selectedValues, commitValue, onCreate, isSearchControlled],
   );
 
   const removeValueAt = React.useCallback(
