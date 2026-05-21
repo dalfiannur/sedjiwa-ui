@@ -1,3 +1,17 @@
+export {
+  AppShell,
+  AppShellRoot, AppShellHeader, AppShellSidebar, AppShellAside,
+  AppShellMain, AppShellFooter,
+  AppShellSidebarTrigger, AppShellAsideTrigger,
+  useAppShell,
+} from "./components/app-shell";
+export type {
+  AppShellRootProps, AppShellHeaderProps, AppShellSidebarProps,
+  AppShellAsideProps, AppShellMainProps, AppShellFooterProps,
+  AppShellSidebarTriggerProps, AppShellAsideTriggerProps,
+  AppShellContextValue,
+} from "./components/app-shell";
+
 export { Button, buttonVariants } from "./components/button";
 export type { ButtonProps, ButtonVariants } from "./components/button";
 
