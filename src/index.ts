@@ -150,3 +150,11 @@ export type {
   UseInputOrderOptions,
   UseInputOrderReturn,
 } from "./hooks/use-input-order";
+
+export { useKeyboardShortcut } from "./hooks/use-keyboard-shortcut";
+export type {
+  KeyboardShortcutEvent,
+  KeyboardShortcutHandler,
+  KeyboardShortcutTarget,
+  UseKeyboardShortcutOptions,
+} from "./hooks/use-keyboard-shortcut";
