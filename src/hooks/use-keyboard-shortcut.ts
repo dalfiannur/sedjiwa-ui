@@ -16,6 +16,12 @@ export type UseKeyboardShortcutOptions = {
   allowInInputs?: boolean;
   target?: KeyboardShortcutTarget;
   event?: KeyboardShortcutEvent;
+  /**
+   * Listen in the capture phase. Defaults to `true` so global shortcuts still
+   * fire when a focused descendant (e.g. a combobox) calls `stopPropagation()`
+   * on the same key. Set `false` to opt into bubble phase.
+   */
+  capture?: boolean;
 };
 
 export type KeyboardShortcutHandler = (event: KeyboardEvent) => void;
@@ -156,6 +162,7 @@ export function useKeyboardShortcut(
     allowInInputs = false,
     target,
     event: eventName = "keydown",
+    capture = true,
   } = options ?? {};
 
   const handlerRef = React.useRef(handler);
@@ -193,9 +200,9 @@ export function useKeyboardShortcut(
       }
     };
 
-    node.addEventListener(eventName, listener);
+    node.addEventListener(eventName, listener, capture);
     return () => {
-      node.removeEventListener(eventName, listener);
+      node.removeEventListener(eventName, listener, capture);
     };
-  }, [enabled, allowInInputs, preventDefault, stopPropagation, eventName, target, combos]);
+  }, [enabled, allowInInputs, preventDefault, stopPropagation, eventName, target, combos, capture]);
 }

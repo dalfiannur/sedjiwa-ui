@@ -217,6 +217,48 @@ describe("useKeyboardShortcut — handler identity", () => {
   });
 });
 
+describe("useKeyboardShortcut — capture phase", () => {
+  it("fires by default even when a focused descendant stopPropagation", async () => {
+    const user = userEvent.setup();
+    const onShortcut = vi.fn();
+    function Fixture() {
+      useKeyboardShortcut("a", onShortcut, { allowInInputs: true, preventDefault: false });
+      return (
+        <input
+          aria-label="text"
+          onKeyDown={(e) => e.stopPropagation()}
+        />
+      );
+    }
+    render(<Fixture />);
+    screen.getByLabelText("text").focus();
+    await user.keyboard("a");
+    expect(onShortcut).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fire when capture: false and a descendant stopPropagation", async () => {
+    const user = userEvent.setup();
+    const onShortcut = vi.fn();
+    function Fixture() {
+      useKeyboardShortcut("a", onShortcut, {
+        allowInInputs: true,
+        preventDefault: false,
+        capture: false,
+      });
+      return (
+        <input
+          aria-label="text"
+          onKeyDown={(e) => e.stopPropagation()}
+        />
+      );
+    }
+    render(<Fixture />);
+    screen.getByLabelText("text").focus();
+    await user.keyboard("a");
+    expect(onShortcut).not.toHaveBeenCalled();
+  });
+});
+
 describe("useKeyboardShortcut — parse errors", () => {
   it("throws on empty shortcut", () => {
     expect(() =>
