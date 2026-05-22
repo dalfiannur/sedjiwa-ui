@@ -132,6 +132,21 @@ export {
 
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/tabs";
 
+export { DynamicTab, DynamicTabPanel, DYNAMIC_TAB_COLORS } from "./components/dynamic-tab";
+export {
+  dynamicTabTriggerVariants,
+  dynamicTabStripVariants,
+  type DynamicTabTriggerVariants,
+  type DynamicTabStripVariants,
+} from "./components/dynamic-tab";
+export type {
+  DynamicTabColor,
+  DynamicTabItem,
+  DynamicTabPanelProps,
+  DynamicTabPosition,
+  DynamicTabProps,
+} from "./components/dynamic-tab";
+
 export {
   Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
 } from "./components/tooltip";
