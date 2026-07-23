@@ -67,6 +67,9 @@ export type {
 export { DatePicker } from "./components/date-picker";
 export type { DatePickerProps } from "./components/date-picker";
 
+export { Calendar } from "./components/date-picker";
+export type { CalendarProps, CalendarDateRange } from "./components/date-picker";
+
 export { DateRangePicker } from "./components/date-range-picker";
 export type {
   DateRangePickerProps,

@@ -105,5 +105,6 @@ describe("<Calendar mode=multiple />", () => {
     // the anchor.
     expect(dayButton(3).dataset.selected).toBe("true");
     expect(dayButton(15).dataset.selected).toBe("true");
+    expect(dayButton(3).dataset.focused).toBe("true");
   });
 });
