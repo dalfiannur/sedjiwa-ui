@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import * as React from "react";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Calendar } from "./calendar";
 
@@ -22,6 +22,10 @@ function dayButton(day: number): HTMLButtonElement {
 const jul = (day: number) => new Date(2026, 6, day);
 
 describe("<Calendar mode=multiple />", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("adds a clicked day to the selection", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
@@ -73,5 +77,33 @@ describe("<Calendar mode=multiple />", () => {
     );
     await user.click(dayButton(25)); // disabled — after max
     expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("jumps the view to the earliest date when selection is seeded after mount", () => {
+    // "Today" is faked to a month far from July 2026 so the assertions below
+    // actually prove the follow-effect moved the view — if `today` genuinely
+    // fell in July 2026 (as it does at the time of writing this suite), the
+    // initial render would already show July 2026 and the test would pass
+    // trivially even with a broken follow-effect.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2020, 0, 15));
+
+    const { rerender } = render(
+      <Calendar mode="multiple" value={[]} onSelect={() => {}} />,
+    );
+    const gridBefore = screen.getByRole("grid");
+    expect(gridBefore.getAttribute("aria-label")).toMatch(/january 2020/i);
+
+    rerender(
+      <Calendar mode="multiple" value={[jul(15), jul(3)]} onSelect={() => {}} />,
+    );
+
+    const gridAfter = screen.getByRole("grid");
+    expect(gridAfter.getAttribute("aria-label")).toMatch(/july 2026/i);
+    // dayButton throws if the day isn't in the now-visible month, and the
+    // follow-effect must sort the unsorted input to pick day 3 (not 15) as
+    // the anchor.
+    expect(dayButton(3).dataset.selected).toBe("true");
+    expect(dayButton(15).dataset.selected).toBe("true");
   });
 });

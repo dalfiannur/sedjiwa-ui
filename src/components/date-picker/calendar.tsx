@@ -141,7 +141,10 @@ function getInitialAnchor(props: CalendarProps): Date {
     return props.value?.from ?? props.value?.to ?? new Date();
   }
   if (props.mode === "multiple") {
-    return props.value?.[0] ?? new Date();
+    const first = props.value?.length
+      ? [...props.value].sort((a, b) => a.getTime() - b.getTime())[0]!
+      : undefined;
+    return first ?? new Date();
   }
   return props.value ?? new Date();
 }
@@ -551,6 +554,7 @@ export function Calendar(props: CalendarProps) {
         <div
           role="grid"
           aria-label={headerLabel}
+          aria-multiselectable={mode === "multiple" ? true : undefined}
           data-slot="calendar-grid"
           onKeyDown={handleKeyDown}
           className="grid grid-cols-7 gap-y-1"
