@@ -30,6 +30,12 @@ type RangeModeProps = {
   onSelect?: (value: DateRange) => void;
 };
 
+type MultipleModeProps = {
+  mode: "multiple";
+  value?: Date[];
+  onSelect?: (value: Date[]) => void;
+};
+
 type SharedProps = {
   /** Disable days before this date (inclusive). */
   min?: Date;
@@ -54,7 +60,8 @@ type SharedProps = {
   autoFocus?: boolean;
 };
 
-export type CalendarProps = (SingleModeProps | RangeModeProps) & SharedProps;
+export type CalendarProps = (SingleModeProps | RangeModeProps | MultipleModeProps) &
+  SharedProps;
 
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -133,6 +140,9 @@ function getInitialAnchor(props: CalendarProps): Date {
   if (props.mode === "range") {
     return props.value?.from ?? props.value?.to ?? new Date();
   }
+  if (props.mode === "multiple") {
+    return props.value?.[0] ?? new Date();
+  }
   return props.value ?? new Date();
 }
 
@@ -192,6 +202,20 @@ export function Calendar(props: CalendarProps) {
     }
     prevRangeFromRef.current = rangeFrom;
   }, [mode, rangeFrom]);
+
+  const multiValue =
+    mode === "multiple" ? (props as MultipleModeProps).value : undefined;
+  const prevMultiCountRef = React.useRef<number>(multiValue?.length ?? 0);
+  React.useEffect(() => {
+    if (mode !== "multiple") return;
+    const count = multiValue?.length ?? 0;
+    if (count > 0 && prevMultiCountRef.current === 0) {
+      const first = [...multiValue!].sort((a, b) => a.getTime() - b.getTime())[0]!;
+      setViewMonth(startOfMonth(first));
+      setFocusedDate(first);
+    }
+    prevMultiCountRef.current = count;
+  }, [mode, multiValue]);
 
   const calendarRef = React.useRef<HTMLDivElement | null>(null);
   const shouldFocusRef = React.useRef(autoFocus);
@@ -275,7 +299,14 @@ export function Calendar(props: CalendarProps) {
     ) {
       setViewMonth(startOfMonth(date));
     }
-    if (mode === "range") {
+    if (mode === "multiple") {
+      const cur = (props as MultipleModeProps).value ?? [];
+      const exists = cur.some((d) => isSameDay(d, date));
+      const next = exists
+        ? cur.filter((d) => !isSameDay(d, date))
+        : [...cur, date].sort((a, b) => a.getTime() - b.getTime());
+      (props as MultipleModeProps).onSelect?.(next);
+    } else if (mode === "range") {
       const cur = (props as RangeModeProps).value ?? { from: null, to: null };
       let next: DateRange;
       if (cur.from && !cur.to) {
@@ -329,6 +360,17 @@ export function Calendar(props: CalendarProps) {
     isInRange: boolean;
     isPreview: boolean;
   } {
+    if (mode === "multiple") {
+      const v = (props as MultipleModeProps).value ?? [];
+      const selected = v.some((d) => isSameDay(d, date));
+      return {
+        selected,
+        isStart: selected,
+        isEnd: selected,
+        isInRange: false,
+        isPreview: false,
+      };
+    }
     if (mode === "single") {
       const v = (props as SingleModeProps).value ?? null;
       const selected = v ? isSameDay(date, v) : false;
