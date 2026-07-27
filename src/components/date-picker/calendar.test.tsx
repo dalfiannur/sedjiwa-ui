@@ -21,6 +21,41 @@ function dayButton(day: number): HTMLButtonElement {
 // is deterministic.
 const jul = (day: number) => new Date(2026, 6, day);
 
+// Controlled wrapper: the anchor for Shift-range lives in the Calendar's own
+// ref, so multi-step interactions (plain click, then Shift-click) need the
+// `value` prop to actually update between clicks.
+function MultipleHarness({
+  initial = [],
+  min,
+  max,
+}: {
+  initial?: Date[];
+  min?: Date;
+  max?: Date;
+}) {
+  const [value, setValue] = React.useState<Date[]>(initial);
+  return (
+    <Calendar
+      mode="multiple"
+      value={value}
+      onSelect={setValue}
+      min={min}
+      max={max}
+    />
+  );
+}
+
+function selectedDays(): number[] {
+  return Array.from(
+    document.querySelectorAll<HTMLButtonElement>(
+      'button[data-slot="calendar-day"][data-selected="true"]',
+    ),
+  )
+    .filter((b) => !b.dataset.outside)
+    .map((b) => Number(b.textContent?.trim()))
+    .sort((a, b) => a - b);
+}
+
 describe("<Calendar mode=multiple />", () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -106,5 +141,69 @@ describe("<Calendar mode=multiple />", () => {
     expect(dayButton(3).dataset.selected).toBe("true");
     expect(dayButton(15).dataset.selected).toBe("true");
     expect(dayButton(3).dataset.focused).toBe("true");
+  });
+});
+
+describe("<Calendar mode=multiple /> Shift-click range", () => {
+  it("selects the inclusive span between a plain click and a Shift-click", async () => {
+    const user = userEvent.setup();
+    render(<MultipleHarness />);
+
+    await user.click(dayButton(10)); // sets the anchor
+    await user.keyboard("{Shift>}");
+    await user.click(dayButton(14));
+    await user.keyboard("{/Shift}");
+
+    expect(selectedDays()).toEqual([10, 11, 12, 13, 14]);
+  });
+
+  it("unions the span with prior non-contiguous selected days", async () => {
+    const user = userEvent.setup();
+    render(<MultipleHarness initial={[jul(3)]} />);
+
+    await user.click(dayButton(10)); // anchor, day 3 stays selected
+    await user.keyboard("{Shift>}");
+    await user.click(dayButton(12));
+    await user.keyboard("{/Shift}");
+
+    expect(selectedDays()).toEqual([3, 10, 11, 12]);
+  });
+
+  it("selects the span when the Shift-click is earlier than the anchor", async () => {
+    const user = userEvent.setup();
+    render(<MultipleHarness />);
+
+    await user.click(dayButton(20)); // anchor
+    await user.keyboard("{Shift>}");
+    await user.click(dayButton(17));
+    await user.keyboard("{/Shift}");
+
+    expect(selectedDays()).toEqual([17, 18, 19, 20]);
+  });
+
+  it("treats a Shift-click with no prior anchor as a plain toggle", async () => {
+    const user = userEvent.setup();
+    render(<MultipleHarness initial={[jul(10)]} />);
+
+    // No plain click happened this session, so there is no anchor yet.
+    await user.keyboard("{Shift>}");
+    await user.click(dayButton(14));
+    await user.keyboard("{/Shift}");
+
+    expect(selectedDays()).toEqual([10, 14]); // no in-between fill
+  });
+
+  it("previews the span while Shift is held over a day", async () => {
+    const user = userEvent.setup();
+    render(<MultipleHarness />);
+
+    await user.click(dayButton(10)); // anchor
+    await user.keyboard("{Shift>}");
+    await user.hover(dayButton(13));
+
+    expect(dayButton(12).dataset.inRange).toBe("true");
+    expect(dayButton(11).dataset.inRange).toBe("true");
+
+    await user.keyboard("{/Shift}");
   });
 });

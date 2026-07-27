@@ -181,6 +181,12 @@ export function Calendar(props: CalendarProps) {
     clampToRange(initialAnchor, min, max),
   );
   const [hoveredDate, setHoveredDate] = React.useState<Date | null>(null);
+  // Anchor for Shift-click range selection in multiple mode: the last plain
+  // (non-Shift) click. Stays fixed so the user can re-extend from the same day.
+  const multiAnchorRef = React.useRef<Date | null>(null);
+  // The day currently hovered while Shift is held in multiple mode, used to
+  // preview the span before committing.
+  const [shiftHover, setShiftHover] = React.useState<Date | null>(null);
 
   // Follow external value changes (controlled mode).
   const singleValue = mode === "single" ? (props as SingleModeProps).value : undefined;
@@ -294,7 +300,7 @@ export function Calendar(props: CalendarProps) {
     moveFocus(next);
   };
 
-  const handleDayClick = (date: Date) => {
+  const handleDayClick = (date: Date, shiftKey = false) => {
     setFocusedDate(date);
     if (
       date < viewMonth ||
@@ -304,11 +310,31 @@ export function Calendar(props: CalendarProps) {
     }
     if (mode === "multiple") {
       const cur = (props as MultipleModeProps).value ?? [];
-      const exists = cur.some((d) => isSameDay(d, date));
-      const next = exists
-        ? cur.filter((d) => !isSameDay(d, date))
-        : [...cur, date].sort((a, b) => a.getTime() - b.getTime());
-      (props as MultipleModeProps).onSelect?.(next);
+      const anchor = multiAnchorRef.current;
+      if (shiftKey && anchor) {
+        // Union the current selection with every in-range day between the
+        // anchor and the Shift-clicked day (inclusive). Anchor is left in
+        // place so the user can Shift-click again to re-extend the span.
+        const lo = startOfDay(anchor <= date ? anchor : date);
+        const hi = startOfDay(anchor <= date ? date : anchor);
+        const merged = [...cur];
+        for (let d = lo; d.getTime() <= hi.getTime(); d = addDays(d, 1)) {
+          if (inRange(d, min, max) && !merged.some((x) => isSameDay(x, d))) {
+            merged.push(startOfDay(d));
+          }
+        }
+        merged.sort((a, b) => a.getTime() - b.getTime());
+        setShiftHover(null);
+        (props as MultipleModeProps).onSelect?.(merged);
+      } else {
+        const exists = cur.some((d) => isSameDay(d, date));
+        const next = exists
+          ? cur.filter((d) => !isSameDay(d, date))
+          : [...cur, date].sort((a, b) => a.getTime() - b.getTime());
+        multiAnchorRef.current = date;
+        setShiftHover(null);
+        (props as MultipleModeProps).onSelect?.(next);
+      }
     } else if (mode === "range") {
       const cur = (props as RangeModeProps).value ?? { from: null, to: null };
       let next: DateRange;
@@ -366,6 +392,21 @@ export function Calendar(props: CalendarProps) {
     if (mode === "multiple") {
       const v = (props as MultipleModeProps).value ?? [];
       const selected = v.some((d) => isSameDay(d, date));
+      const anchor = multiAnchorRef.current;
+      if (shiftHover && anchor) {
+        const lo = startOfDay(anchor <= shiftHover ? anchor : shiftHover).getTime();
+        const hi = startOfDay(anchor <= shiftHover ? shiftHover : anchor).getTime();
+        const dayTs = startOfDay(date).getTime();
+        if (dayTs >= lo && dayTs <= hi) {
+          return {
+            selected,
+            isStart: dayTs === lo,
+            isEnd: dayTs === hi,
+            isInRange: dayTs > lo && dayTs < hi,
+            isPreview: !selected,
+          };
+        }
+      }
       return {
         selected,
         isStart: selected,
@@ -616,12 +657,21 @@ export function Calendar(props: CalendarProps) {
                   aria-current={isToday ? "date" : undefined}
                   disabled={disabled}
                   tabIndex={isFocused ? 0 : -1}
-                  onClick={() => {
+                  onClick={(e) => {
                     if (disabled) return;
-                    handleDayClick(date);
+                    handleDayClick(date, e.shiftKey);
                   }}
                   onMouseEnter={
-                    mode === "range" ? () => setHoveredDate(date) : undefined
+                    mode === "range"
+                      ? () => setHoveredDate(date)
+                      : mode === "multiple"
+                        ? (e) =>
+                            setShiftHover(
+                              e.shiftKey && multiAnchorRef.current
+                                ? date
+                                : null,
+                            )
+                        : undefined
                   }
                   onFocus={
                     mode === "range" ? () => setHoveredDate(date) : undefined
@@ -658,7 +708,13 @@ export function Calendar(props: CalendarProps) {
           : "flex flex-col gap-3",
         className,
       )}
-      onMouseLeave={mode === "range" ? () => setHoveredDate(null) : undefined}
+      onMouseLeave={
+        mode === "range"
+          ? () => setHoveredDate(null)
+          : mode === "multiple"
+            ? () => setShiftHover(null)
+            : undefined
+      }
     >
       {Array.from({ length: numberOfMonths }, (_, i) => renderMonth(i))}
     </div>
