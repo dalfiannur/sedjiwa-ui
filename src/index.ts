@@ -174,6 +174,9 @@ export type { Column, DataTableProps } from "./components/data-table";
 export { CardListTable } from "./components/card-list-table";
 export type { CardListTableProps } from "./components/card-list-table";
 
+export { ResponsiveTable } from "./components/responsive-table";
+export type { ResponsiveTableProps } from "./components/responsive-table";
+
 export { Modal } from "./components/modal";
 export type { ModalProps } from "./components/modal";
 
