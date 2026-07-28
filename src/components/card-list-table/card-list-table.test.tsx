@@ -85,4 +85,22 @@ describe("<CardListTable />", () => {
     expect(value).toHaveClass("text-right");
     expect(value).toHaveClass("font-bold");
   });
+
+  it("marks the container dense and tightens the stack gap when dense", () => {
+    const { container } = render(
+      <CardListTable columns={COLUMNS} rows={PEOPLE} getRowKey={(p) => p.id} dense />
+    );
+    const wrapper = container.querySelector('[data-slot="card-list-table"]');
+    expect(wrapper).toHaveAttribute("data-dense");
+    expect(wrapper).toHaveClass("gap-2");
+  });
+
+  it("uses the roomier default spacing when not dense", () => {
+    const { container } = render(
+      <CardListTable columns={COLUMNS} rows={PEOPLE} getRowKey={(p) => p.id} />
+    );
+    const wrapper = container.querySelector('[data-slot="card-list-table"]');
+    expect(wrapper).not.toHaveAttribute("data-dense");
+    expect(wrapper).toHaveClass("gap-3");
+  });
 });

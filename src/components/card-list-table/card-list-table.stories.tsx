@@ -66,6 +66,26 @@ export const WithTitleAndAction: Story = {
   ),
 };
 
+export const Dense: Story = {
+  render: () => (
+    <div className="w-[24rem]">
+      <CardListTable
+        columns={COLUMNS}
+        rows={ROWS}
+        getRowKey={(r) => r.id}
+        titleKey="status"
+        dense
+        renderAction={() => (
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="outline">Detail</Button>
+            <Button size="sm" variant="outline">Batalkan</Button>
+          </div>
+        )}
+      />
+    </div>
+  ),
+};
+
 export const Empty: Story = {
   render: () => (
     <div className="w-[24rem]">

@@ -11,6 +11,7 @@ export type CardListTableProps<T> = {
   renderAction?: (item: T) => ReactNode;
   onRowClick?: (item: T) => void;
   emptyMessage?: ReactNode;
+  dense?: boolean;
   className?: string;
 };
 
@@ -22,6 +23,7 @@ export function CardListTable<T>({
   renderAction,
   onRowClick,
   emptyMessage = "No data",
+  dense,
   className,
 }: CardListTableProps<T>) {
   if (rows.length === 0) {
@@ -29,7 +31,8 @@ export function CardListTable<T>({
       <div
         data-slot="card-list-table"
         className={cn(
-          "text-muted-foreground py-6 text-center text-sm",
+          "text-muted-foreground text-center text-sm",
+          dense ? "py-4" : "py-6",
           className
         )}
       >
@@ -45,24 +48,36 @@ export function CardListTable<T>({
     ? columns.filter((col) => col.key !== titleColumn.key)
     : columns;
 
+  const pad = dense ? "px-4" : "px-6";
+
   return (
     <div
       data-slot="card-list-table"
-      className={cn("flex flex-col gap-3", className)}
+      data-dense={dense ? "" : undefined}
+      className={cn("flex flex-col", dense ? "gap-2" : "gap-3", className)}
     >
       {rows.map((row) => (
         <Card
           key={getRowKey(row)}
           data-slot="card-list-table-item"
-          className={cn("gap-4 py-4", onRowClick && "cursor-pointer")}
+          className={cn(
+            dense ? "gap-2 py-3" : "gap-4 py-4",
+            onRowClick && "cursor-pointer"
+          )}
           onClick={onRowClick ? () => onRowClick(row) : undefined}
         >
           {titleColumn && (
-            <div className="text-card-foreground px-6 font-medium">
+            <div className={cn("text-card-foreground font-medium", pad)}>
               {titleColumn.render(row)}
             </div>
           )}
-          <dl className="grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-4 gap-y-2 px-6 text-sm">
+          <dl
+            className={cn(
+              "grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-4 text-sm",
+              dense ? "gap-y-1" : "gap-y-2",
+              pad
+            )}
+          >
             {bodyColumns.map((col) => (
               <Fragment key={col.key}>
                 <dt className="text-muted-foreground">{col.header}</dt>
@@ -78,7 +93,7 @@ export function CardListTable<T>({
             ))}
           </dl>
           {renderAction && (
-            <div className="px-6" onClick={(e) => e.stopPropagation()}>
+            <div className={pad} onClick={(e) => e.stopPropagation()}>
               {renderAction(row)}
             </div>
           )}
