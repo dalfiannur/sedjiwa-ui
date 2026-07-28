@@ -3,10 +3,6 @@ import { CircleCheck, EllipsisVertical } from "lucide-react";
 import { SmartTable, type SmartColumn } from "./smart-table";
 import { Avatar, AvatarFallback, AvatarImage } from "../avatar";
 import { Badge } from "../badge";
-import {
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "../dropdown-menu";
 
 type Order = {
   id: string;
@@ -37,22 +33,13 @@ const statusStyles: Record<Order["status"], string> = {
   Called: "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300",
 };
 
-const colMenu = (
-  <>
-    <DropdownMenuItem>Sort ascending</DropdownMenuItem>
-    <DropdownMenuItem>Sort descending</DropdownMenuItem>
-    <DropdownMenuSeparator />
-    <DropdownMenuItem>Hide column</DropdownMenuItem>
-  </>
-);
-
 const COLUMNS: SmartColumn<Order>[] = [
-  { key: "id", header: "Order ID", width: "10rem", headerMenu: colMenu, render: (o) => <span className="text-muted-foreground font-medium">{o.id}</span> },
+  { key: "id", header: "Order ID", width: "10rem", sortAccessor: (o) => o.id, render: (o) => <span className="text-muted-foreground font-medium">{o.id}</span> },
   {
     key: "name",
     header: "Name",
     width: "minmax(0, 1.6fr)",
-    headerMenu: colMenu,
+    sortAccessor: (o) => o.name,
     render: (o) => (
       <div className="flex items-center gap-3">
         <Avatar className="size-9">
@@ -69,7 +56,7 @@ const COLUMNS: SmartColumn<Order>[] = [
   {
     key: "detail",
     header: "Order Details",
-    headerMenu: colMenu,
+    sortAccessor: (o) => o.detail,
     render: (o) => (
       <div className="min-w-0">
         <p className="text-foreground truncate">{o.detail}</p>
@@ -77,11 +64,11 @@ const COLUMNS: SmartColumn<Order>[] = [
       </div>
     ),
   },
-  { key: "phone", header: "Phone", headerMenu: colMenu, render: (o) => <span className="text-muted-foreground">{o.phone}</span> },
+  { key: "phone", header: "Phone", sortAccessor: (o) => o.phone, render: (o) => <span className="text-muted-foreground">{o.phone}</span> },
   {
     key: "schedule",
     header: "Schedule",
-    headerMenu: colMenu,
+    sortAccessor: (o) => o.date,
     render: (o) => (
       <div className="min-w-0">
         <p className="text-foreground truncate">{o.date}</p>
@@ -93,7 +80,7 @@ const COLUMNS: SmartColumn<Order>[] = [
     key: "status",
     header: "Status",
     width: "9rem",
-    headerMenu: colMenu,
+    sortAccessor: (o) => o.status,
     render: (o) => (
       <Badge variant="outline" className={statusStyles[o.status] + " rounded-full px-3 py-1 font-medium"}>
         {o.status}

@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from "react";
-import { EllipsisVertical } from "lucide-react";
+import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, EllipsisVertical } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { CardListTable } from "../card-list-table";
 import {
@@ -11,6 +11,10 @@ import {
   SmartTablePagination,
   type SmartTablePaginationProps,
 } from "./smart-table-pagination";
+import {
+  SmartTableHeaderMenu,
+  type SmartTableMenuLabels,
+} from "./smart-table-header-menu";
 
 export type SmartColumn<T> = {
   key: string;
@@ -20,9 +24,19 @@ export type SmartColumn<T> = {
   /** Grid track for this column (e.g. `"1fr"`, `"minmax(0,1.5fr)"`, `"9rem"`). Defaults to `minmax(0,1fr)`. */
   width?: string;
   className?: string;
-  /** Dropdown content for the column header's ⋮ menu. When set, the ⋮ becomes an interactive trigger. */
+  /**
+   * Enables "Sort ascending/descending" in the column's ⋮ menu; returns the
+   * value to sort by. Sorting is client-side over the rows passed in — with
+   * server pagination it sorts the current page only.
+   */
+  sortAccessor?: (item: T) => string | number | boolean | Date | null | undefined;
+  /** Whether the column offers "Hide column" in its ⋮ menu. Defaults to true. */
+  hideable?: boolean;
+  /** Custom ⋮ menu content. Overrides the built-in sort/hide menu for this column. */
   headerMenu?: ReactNode;
 };
+
+type SortState = { key: string; dir: "asc" | "desc" };
 
 export type SmartTableProps<T> = {
   columns: SmartColumn<T>[];
@@ -49,8 +63,21 @@ export type SmartTableProps<T> = {
   dense?: boolean;
   /** Server-side pagination. When set (and more than one page), a pager footer is shown. */
   pagination?: SmartTablePaginationProps;
+  /** Labels for the built-in column ⋮ menu (sort / hide). Defaults to English. */
+  menuLabels?: Partial<SmartTableMenuLabels>;
   className?: string;
 };
+
+function compareValues(a: unknown, b: unknown): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1; // nulls sort last
+  if (b == null) return -1;
+  if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  if (typeof a === "boolean" && typeof b === "boolean")
+    return a === b ? 0 : a ? 1 : -1;
+  return String(a).localeCompare(String(b));
+}
 
 export function SmartTable<T>({
   columns,
@@ -66,11 +93,44 @@ export function SmartTable<T>({
   cardTitleKey,
   dense,
   pagination,
+  menuLabels,
   className,
 }: SmartTableProps<T>) {
+  const [sort, setSort] = useState<SortState | null>(null);
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+
+  const labels: SmartTableMenuLabels = {
+    sortAsc: menuLabels?.sortAsc ?? "Sort ascending",
+    sortDesc: menuLabels?.sortDesc ?? "Sort descending",
+    hideColumn: menuLabels?.hideColumn ?? "Hide column",
+    showAllColumns: menuLabels?.showAllColumns ?? "Show all columns",
+  };
+
+  const visibleColumns = columns.filter((col) => !hidden.has(col.key));
+  const anyHidden = columns.some((col) => hidden.has(col.key));
+
+  const sortedRows = useMemo(() => {
+    if (!sort) return rows;
+    const col = columns.find((c) => c.key === sort.key);
+    if (!col?.sortAccessor) return rows;
+    const accessor = col.sortAccessor;
+    const factor = sort.dir === "asc" ? 1 : -1;
+    return [...rows].sort(
+      (a, b) => factor * compareValues(accessor(a), accessor(b))
+    );
+  }, [rows, sort, columns]);
+
+  const toggleSort = (key: string, dir: "asc" | "desc") =>
+    setSort((prev) =>
+      prev && prev.key === key && prev.dir === dir ? null : { key, dir }
+    );
+  const hideColumn = (key: string) =>
+    setHidden((prev) => new Set(prev).add(key));
+  const showAllColumns = () => setHidden(new Set());
+
   const template = [
     renderLeading ? "2.75rem" : null,
-    ...columns.map((col) => col.width ?? "minmax(0, 1fr)"),
+    ...visibleColumns.map((col) => col.width ?? "minmax(0, 1fr)"),
     renderAction ? "3rem" : null,
   ]
     .filter(Boolean)
@@ -98,48 +158,75 @@ export function SmartTable<T>({
               {leadingHeader}
             </div>
           )}
-          {columns.map((col, i) => (
-            <div
-              key={col.key}
-              role="columnheader"
-              className={cn(
-                "text-foreground/70 flex items-center gap-2 px-4 py-3.5 text-sm font-medium",
-                i < columns.length - 1 && "border-border/60 border-r",
-                col.align === "right" && "flex-row-reverse"
-              )}
-            >
-              <span className="min-w-0 flex-1 truncate">{col.header}</span>
-              {col.headerMenu ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    aria-label="Column options"
-                    className="text-muted-foreground/60 hover:text-foreground hover:bg-muted focus-visible:ring-ring/50 -mr-1 flex size-6 shrink-0 items-center justify-center rounded-md transition-colors outline-none focus-visible:ring-2"
-                  >
-                    <EllipsisVertical className="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {col.headerMenu}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <EllipsisVertical
-                  aria-hidden
-                  className="text-muted-foreground/40 size-4 shrink-0"
-                />
-              )}
-            </div>
-          ))}
+          {visibleColumns.map((col, i) => {
+            const sortable = !!col.sortAccessor;
+            const hideable = col.hideable !== false;
+            const activeDir = sort?.key === col.key ? sort.dir : null;
+            const hasMenu =
+              col.headerMenu != null || sortable || hideable || anyHidden;
+            return (
+              <div
+                key={col.key}
+                role="columnheader"
+                aria-sort={
+                  activeDir
+                    ? activeDir === "asc"
+                      ? "ascending"
+                      : "descending"
+                    : undefined
+                }
+                className={cn(
+                  "text-foreground/70 flex items-center gap-2 px-4 py-3.5 text-sm font-medium",
+                  i < visibleColumns.length - 1 && "border-border/60 border-r",
+                  col.align === "right" && "flex-row-reverse"
+                )}
+              >
+                <span className="min-w-0 flex-1 truncate">{col.header}</span>
+                {activeDir &&
+                  (activeDir === "asc" ? (
+                    <ArrowUp className="text-muted-foreground size-3.5 shrink-0" />
+                  ) : (
+                    <ArrowDown className="text-muted-foreground size-3.5 shrink-0" />
+                  ))}
+                {col.headerMenu != null ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      aria-label="Column options"
+                      className="text-muted-foreground/60 hover:text-foreground hover:bg-muted focus-visible:ring-ring/50 -mr-1 flex size-6 shrink-0 items-center justify-center rounded-md transition-colors outline-none focus-visible:ring-2"
+                    >
+                      <EllipsisVertical className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {col.headerMenu}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : hasMenu ? (
+                  <SmartTableHeaderMenu
+                    sortable={sortable}
+                    sortDir={activeDir}
+                    onSort={(dir) => toggleSort(col.key, dir)}
+                    hideable={hideable}
+                    canHide={visibleColumns.length > 1}
+                    onHide={() => hideColumn(col.key)}
+                    anyHidden={anyHidden}
+                    onShowAll={showAllColumns}
+                    labels={labels}
+                  />
+                ) : null}
+              </div>
+            );
+          })}
           {renderAction && <div className="py-3.5" />}
         </div>
 
         {/* Body */}
         <div role="rowgroup">
-          {rows.length === 0 ? (
+          {sortedRows.length === 0 ? (
             <div className="text-muted-foreground border-border/70 border-t px-4 py-10 text-center text-sm">
               {emptyMessage}
             </div>
           ) : (
-            rows.map((row) => (
+            sortedRows.map((row) => (
               <div
                 key={getRowKey(row)}
                 role="row"
@@ -159,7 +246,7 @@ export function SmartTable<T>({
                     {renderLeading(row)}
                   </div>
                 )}
-                {columns.map((col) => (
+                {visibleColumns.map((col) => (
                   <div
                     key={col.key}
                     role="cell"
@@ -208,8 +295,8 @@ export function SmartTable<T>({
       {table}
       <CardListTable
         className="md:hidden"
-        columns={columns}
-        rows={rows}
+        columns={visibleColumns}
+        rows={sortedRows}
         getRowKey={getRowKey}
         titleKey={cardTitleKey}
         renderAction={renderAction}
