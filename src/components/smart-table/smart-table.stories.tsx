@@ -124,6 +124,9 @@ export const SmartOrders: Story = {
           rows={ORDERS}
           getRowKey={(o) => o.id}
           minWidth="60rem"
+          responsive
+          cardTitleKey="status"
+          dense
           leadingHeader={<CircleCheck className="text-muted-foreground/60 size-4" />}
           renderLeading={() => <CircleCheck className="text-muted-foreground/50 size-5" strokeWidth={1.75} />}
           renderAction={() => (
