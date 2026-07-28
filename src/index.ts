@@ -171,6 +171,9 @@ export {
 export { DataTable } from "./components/data-table";
 export type { Column, DataTableProps } from "./components/data-table";
 
+export { CardListTable } from "./components/card-list-table";
+export type { CardListTableProps } from "./components/card-list-table";
+
 export { Modal } from "./components/modal";
 export type { ModalProps } from "./components/modal";
 
