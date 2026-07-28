@@ -127,6 +127,13 @@ export const SmartOrders: Story = {
           responsive
           cardTitleKey="status"
           dense
+          pagination={{
+            page: 2,
+            pageSize: 7,
+            total: 43,
+            onPageChange: () => {},
+            renderSummary: ({ from, to, total }) => `Showing ${from}–${to} of ${total}`,
+          }}
           leadingHeader={<CircleCheck className="text-muted-foreground/60 size-4" />}
           renderLeading={() => <CircleCheck className="text-muted-foreground/50 size-5" strokeWidth={1.75} />}
           renderAction={() => (

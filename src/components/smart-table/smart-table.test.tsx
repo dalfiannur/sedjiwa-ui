@@ -129,4 +129,51 @@ describe("<SmartTable />", () => {
       ?.parentElement as HTMLElement;
     expect(tableCard).toHaveClass("md:block");
   });
+
+  it("renders a pager when there is more than one page and navigates", async () => {
+    const onPageChange = vi.fn();
+    render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        pagination={{ page: 1, pageSize: 2, total: 6, onPageChange }}
+      />
+    );
+    expect(screen.getByLabelText("Page 2")).toBeInTheDocument();
+    await userEvent.click(screen.getByLabelText("Next page"));
+    expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it("does not render a pager for a single page", () => {
+    render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        pagination={{ page: 1, pageSize: 10, total: 2, onPageChange: vi.fn() }}
+      />
+    );
+    expect(
+      screen.queryByRole("navigation", { name: "Pagination" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a pagination summary via renderSummary", () => {
+    render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        pagination={{
+          page: 1,
+          pageSize: 2,
+          total: 6,
+          onPageChange: vi.fn(),
+          renderSummary: ({ from, to, total }) => `Show ${from}-${to}/${total}`,
+        }}
+      />
+    );
+    expect(screen.getByText("Show 1-2/6")).toBeInTheDocument();
+  });
 });

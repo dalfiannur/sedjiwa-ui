@@ -7,6 +7,10 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "../dropdown-menu";
+import {
+  SmartTablePagination,
+  type SmartTablePaginationProps,
+} from "./smart-table-pagination";
 
 export type SmartColumn<T> = {
   key: string;
@@ -43,6 +47,8 @@ export type SmartTableProps<T> = {
   cardTitleKey?: string;
   /** Responsive card fallback: compact card spacing. */
   dense?: boolean;
+  /** Server-side pagination. When set (and more than one page), a pager footer is shown. */
+  pagination?: SmartTablePaginationProps;
   className?: string;
 };
 
@@ -59,6 +65,7 @@ export function SmartTable<T>({
   responsive,
   cardTitleKey,
   dense,
+  pagination,
   className,
 }: SmartTableProps<T>) {
   const template = [
@@ -179,6 +186,12 @@ export function SmartTable<T>({
           )}
         </div>
       </div>
+      {pagination && (
+        <SmartTablePagination
+          {...pagination}
+          className="border-border/70 border-t px-4 py-3"
+        />
+      )}
     </div>
   );
 
@@ -204,6 +217,9 @@ export function SmartTable<T>({
         emptyMessage={emptyMessage}
         dense={dense}
       />
+      {pagination && (
+        <SmartTablePagination {...pagination} className="px-1 pt-1 md:hidden" />
+      )}
     </div>
   );
 }
