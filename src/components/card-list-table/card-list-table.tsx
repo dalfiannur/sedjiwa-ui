@@ -12,6 +12,13 @@ export type CardListTableProps<T> = {
   onRowClick?: (item: T) => void;
   emptyMessage?: ReactNode;
   dense?: boolean;
+  /**
+   * How each record's fields are laid out inside its card.
+   * - `"row"` (default): one field per line, label beside value.
+   * - `"column"`: each field is its own column (label above value), laid
+   *   out side-by-side like a mini table for that record.
+   */
+  orientation?: "row" | "column";
   className?: string;
 };
 
@@ -24,6 +31,7 @@ export function CardListTable<T>({
   onRowClick,
   emptyMessage = "No data",
   dense,
+  orientation = "row",
   className,
 }: CardListTableProps<T>) {
   if (rows.length === 0) {
@@ -49,11 +57,13 @@ export function CardListTable<T>({
     : columns;
 
   const pad = dense ? "px-4" : "px-6";
+  const isColumn = orientation === "column";
 
   return (
     <div
       data-slot="card-list-table"
       data-dense={dense ? "" : undefined}
+      data-orientation={orientation}
       className={cn("flex flex-col", dense ? "gap-2" : "gap-3", className)}
     >
       {rows.map((row) => (
@@ -71,27 +81,50 @@ export function CardListTable<T>({
               {titleColumn.render(row)}
             </div>
           )}
-          <dl
-            className={cn(
-              "grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-4 text-sm",
-              dense ? "gap-y-1" : "gap-y-2",
-              pad
-            )}
-          >
-            {bodyColumns.map((col) => (
-              <Fragment key={col.key}>
-                <dt className="text-muted-foreground">{col.header}</dt>
-                <dd
+          {isColumn ? (
+            <dl
+              className={cn(
+                "flex flex-wrap text-sm",
+                dense ? "gap-x-4 gap-y-2" : "gap-x-6 gap-y-3",
+                pad
+              )}
+            >
+              {bodyColumns.map((col) => (
+                <div
+                  key={col.key}
                   className={cn(
-                    col.align === "right" && "text-right",
-                    col.className
+                    "flex min-w-0 flex-col gap-0.5",
+                    col.align === "right" && "items-end text-right"
                   )}
                 >
-                  {col.render(row)}
-                </dd>
-              </Fragment>
-            ))}
-          </dl>
+                  <dt className="text-muted-foreground text-xs">{col.header}</dt>
+                  <dd className={col.className}>{col.render(row)}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <dl
+              className={cn(
+                "grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-4 text-sm",
+                dense ? "gap-y-1" : "gap-y-2",
+                pad
+              )}
+            >
+              {bodyColumns.map((col) => (
+                <Fragment key={col.key}>
+                  <dt className="text-muted-foreground">{col.header}</dt>
+                  <dd
+                    className={cn(
+                      col.align === "right" && "text-right",
+                      col.className
+                    )}
+                  >
+                    {col.render(row)}
+                  </dd>
+                </Fragment>
+              ))}
+            </dl>
+          )}
           {renderAction && (
             <div className={pad} onClick={(e) => e.stopPropagation()}>
               {renderAction(row)}

@@ -103,4 +103,30 @@ describe("<CardListTable />", () => {
     expect(wrapper).not.toHaveAttribute("data-dense");
     expect(wrapper).toHaveClass("gap-3");
   });
+
+  it("defaults to row orientation", () => {
+    const { container } = render(
+      <CardListTable columns={COLUMNS} rows={PEOPLE} getRowKey={(p) => p.id} />
+    );
+    const wrapper = container.querySelector('[data-slot="card-list-table"]');
+    expect(wrapper).toHaveAttribute("data-orientation", "row");
+  });
+
+  it("renders every field's label and value in column orientation", () => {
+    const { container } = render(
+      <CardListTable
+        columns={COLUMNS}
+        rows={PEOPLE}
+        getRowKey={(p) => p.id}
+        orientation="column"
+      />
+    );
+    const wrapper = container.querySelector('[data-slot="card-list-table"]');
+    expect(wrapper).toHaveAttribute("data-orientation", "column");
+    // labels + values still present, one per row (2 cards)
+    expect(screen.getAllByText("Name")).toHaveLength(2);
+    expect(screen.getByText("Ada")).toBeInTheDocument();
+    expect(screen.getByText("Grace")).toBeInTheDocument();
+    expect(screen.getByText("Engineer")).toBeInTheDocument();
+  });
 });
