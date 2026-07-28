@@ -41,14 +41,65 @@ describe("<SmartTable />", () => {
     expect(screen.getByText("lead-504513701")).toBeInTheDocument();
   });
 
-  it("renders an interactive column menu only when headerMenu is provided", () => {
+  it("shows a ⋮ menu on every hideable column (hideable by default)", () => {
+    render(<SmartTable columns={COLUMNS} rows={ORDERS} getRowKey={(o) => o.id} />);
+    expect(screen.getAllByLabelText("Column options")).toHaveLength(3);
+  });
+
+  it("does not offer sorting for a column without a sortAccessor, but offers Hide", async () => {
+    render(<SmartTable columns={COLUMNS} rows={ORDERS} getRowKey={(o) => o.id} />);
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    expect(screen.queryByText("Sort ascending")).not.toBeInTheDocument();
+    expect(screen.getByText("Hide column")).toBeInTheDocument();
+  });
+
+  it("sorts rows client-side when a sortable column's Sort item is clicked", async () => {
     const cols: SmartColumn<Order>[] = [
-      { key: "id", header: "Order ID", render: (o) => o.id, headerMenu: <div>menu</div> },
+      { key: "name", header: "Name", render: (o) => o.name, sortAccessor: (o) => o.name },
+      { key: "phone", header: "Phone", render: (o) => o.phone },
+    ];
+    render(<SmartTable columns={cols} rows={ORDERS} getRowKey={(o) => o.id} />);
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    await userEvent.click(screen.getByText("Sort ascending"));
+    const cells = screen.getAllByRole("cell").map((c) => c.textContent);
+    const krazyIdx = cells.findIndex((t) => t?.startsWith("Krazy"));
+    const lindaIdx = cells.findIndex((t) => t?.startsWith("Linda"));
+    expect(krazyIdx).toBeGreaterThanOrEqual(0);
+    expect(krazyIdx).toBeLessThan(lindaIdx);
+  });
+
+  it("hides a column via its menu and restores it via Show all columns", async () => {
+    render(<SmartTable columns={COLUMNS} rows={ORDERS} getRowKey={(o) => o.id} />);
+    expect(screen.getByText("Name")).toBeInTheDocument();
+    await userEvent.click(screen.getAllByLabelText("Column options")[1]!);
+    await userEvent.click(screen.getByText("Hide column"));
+    expect(screen.queryByText("Name")).not.toBeInTheDocument();
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    await userEvent.click(screen.getByText("Show all columns"));
+    expect(screen.getByText("Name")).toBeInTheDocument();
+  });
+
+  it("localizes the built-in menu via menuLabels", async () => {
+    render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        menuLabels={{ hideColumn: "Sembunyikan kolom" }}
+      />
+    );
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    expect(screen.getByText("Sembunyikan kolom")).toBeInTheDocument();
+  });
+
+  it("renders custom headerMenu content when provided", async () => {
+    const cols: SmartColumn<Order>[] = [
+      { key: "id", header: "Order ID", render: (o) => o.id, headerMenu: <div>custom-menu</div> },
       { key: "name", header: "Name", render: (o) => o.name },
     ];
     render(<SmartTable columns={cols} rows={ORDERS} getRowKey={(o) => o.id} />);
-    const triggers = screen.getAllByLabelText("Column options");
-    expect(triggers).toHaveLength(1);
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    expect(screen.getByText("custom-menu")).toBeInTheDocument();
   });
 
   it("fires row action without triggering onRowClick", async () => {
