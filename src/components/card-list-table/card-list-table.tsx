@@ -19,6 +19,13 @@ export type CardListTableProps<T> = {
    *   out side-by-side like a mini table for that record.
    */
   orientation?: "row" | "column";
+  /**
+   * Column orientation only: render the column labels once as a shared
+   * header row above the cards (table-style), with each card's values
+   * aligned into the same columns below. When enabled, `titleKey` is
+   * ignored — every column becomes an aligned table column.
+   */
+  showHeader?: boolean;
   className?: string;
 };
 
@@ -32,6 +39,7 @@ export function CardListTable<T>({
   emptyMessage = "No data",
   dense,
   orientation = "row",
+  showHeader,
   className,
 }: CardListTableProps<T>) {
   if (rows.length === 0) {
@@ -49,15 +57,22 @@ export function CardListTable<T>({
     );
   }
 
-  const titleColumn = titleKey
-    ? columns.find((col) => col.key === titleKey)
-    : undefined;
+  const pad = dense ? "px-4" : "px-6";
+  const isColumn = orientation === "column";
+  const tableMode = isColumn && showHeader;
+
+  // In table mode every column is an aligned grid column (titleKey ignored).
+  const titleColumn =
+    !tableMode && titleKey
+      ? columns.find((col) => col.key === titleKey)
+      : undefined;
   const bodyColumns = titleColumn
     ? columns.filter((col) => col.key !== titleColumn.key)
     : columns;
 
-  const pad = dense ? "px-4" : "px-6";
-  const isColumn = orientation === "column";
+  const gridStyle = tableMode
+    ? { gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }
+    : undefined;
 
   return (
     <div
@@ -66,6 +81,26 @@ export function CardListTable<T>({
       data-orientation={orientation}
       className={cn("flex flex-col", dense ? "gap-2" : "gap-3", className)}
     >
+      {tableMode && (
+        <div
+          data-slot="card-list-table-header"
+          className={cn(
+            "text-muted-foreground grid gap-x-4 border border-transparent text-xs font-medium",
+            pad
+          )}
+          style={gridStyle}
+        >
+          {columns.map((col) => (
+            <div
+              key={col.key}
+              className={cn("min-w-0", col.align === "right" && "text-right")}
+            >
+              {col.header}
+            </div>
+          ))}
+        </div>
+      )}
+
       {rows.map((row) => (
         <Card
           key={getRowKey(row)}
@@ -81,7 +116,26 @@ export function CardListTable<T>({
               {titleColumn.render(row)}
             </div>
           )}
-          {isColumn ? (
+
+          {tableMode ? (
+            <div
+              className={cn("grid items-center gap-x-4 text-sm", pad)}
+              style={gridStyle}
+            >
+              {columns.map((col) => (
+                <div
+                  key={col.key}
+                  className={cn(
+                    "min-w-0",
+                    col.align === "right" && "text-right",
+                    col.className
+                  )}
+                >
+                  {col.render(row)}
+                </div>
+              ))}
+            </div>
+          ) : isColumn ? (
             <dl
               className={cn(
                 "flex flex-wrap text-sm",
@@ -125,6 +179,7 @@ export function CardListTable<T>({
               ))}
             </dl>
           )}
+
           {renderAction && (
             <div className={pad} onClick={(e) => e.stopPropagation()}>
               {renderAction(row)}

@@ -129,4 +129,55 @@ describe("<CardListTable />", () => {
     expect(screen.getByText("Grace")).toBeInTheDocument();
     expect(screen.getByText("Engineer")).toBeInTheDocument();
   });
+
+  it("renders a single shared header row (labels once) when showHeader in column orientation", () => {
+    const { container } = render(
+      <CardListTable
+        columns={COLUMNS}
+        rows={PEOPLE}
+        getRowKey={(p) => p.id}
+        orientation="column"
+        showHeader
+      />
+    );
+    const header = container.querySelector('[data-slot="card-list-table-header"]');
+    expect(header).toBeInTheDocument();
+    // each column label appears exactly once — in the shared header, not per card
+    expect(screen.getAllByText("Name")).toHaveLength(1);
+    expect(screen.getAllByText("Role")).toHaveLength(1);
+    // values still render for every row
+    expect(screen.getByText("Ada")).toBeInTheDocument();
+    expect(screen.getByText("Grace")).toBeInTheDocument();
+  });
+
+  it("with showHeader, titleKey is ignored so its column stays a table column", () => {
+    render(
+      <CardListTable
+        columns={COLUMNS}
+        rows={PEOPLE}
+        getRowKey={(p) => p.id}
+        orientation="column"
+        showHeader
+        titleKey="status"
+      />
+    );
+    // "Status" label present (in header) and both status values render as cells
+    expect(screen.getByText("Status")).toBeInTheDocument();
+    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText("Away")).toBeInTheDocument();
+  });
+
+  it("renders no shared header when showHeader is absent", () => {
+    const { container } = render(
+      <CardListTable
+        columns={COLUMNS}
+        rows={PEOPLE}
+        getRowKey={(p) => p.id}
+        orientation="column"
+      />
+    );
+    expect(
+      container.querySelector('[data-slot="card-list-table-header"]')
+    ).not.toBeInTheDocument();
+  });
 });
