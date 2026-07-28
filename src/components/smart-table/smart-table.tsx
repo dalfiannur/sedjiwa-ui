@@ -25,18 +25,26 @@ export type SmartColumn<T> = {
   width?: string;
   className?: string;
   /**
-   * Enables "Sort ascending/descending" in the column's ⋮ menu; returns the
-   * value to sort by. Sorting is client-side over the rows passed in — with
-   * server pagination it sorts the current page only.
+   * Client-side sort: returns the value to sort by. Enables "Sort
+   * ascending/descending" in the column's ⋮ menu. With server pagination this
+   * only sorts the current page — prefer `sortField` + controlled `onSortChange`
+   * for full-dataset sorting.
    */
   sortAccessor?: (item: T) => string | number | boolean | Date | null | undefined;
+  /**
+   * Server-side sort key emitted via `onSortChange`. When the table is
+   * controlled (an `onSortChange` handler is set), a column is sortable iff it
+   * has a `sortField`.
+   */
+  sortField?: string;
   /** Whether the column offers "Hide column" in its ⋮ menu. Defaults to true. */
   hideable?: boolean;
   /** Custom ⋮ menu content. Overrides the built-in sort/hide menu for this column. */
   headerMenu?: ReactNode;
 };
 
-type SortState = { key: string; dir: "asc" | "desc" };
+export type SmartTableSort = { key: string; dir: "asc" | "desc" };
+type SortState = SmartTableSort;
 
 export type SmartTableProps<T> = {
   columns: SmartColumn<T>[];
@@ -63,6 +71,15 @@ export type SmartTableProps<T> = {
   dense?: boolean;
   /** Server-side pagination. When set (and more than one page), a pager footer is shown. */
   pagination?: SmartTablePaginationProps;
+  /**
+   * Controlled (server-side) sort. Pass `onSortChange` to take control of
+   * sorting: the table stops sorting client-side, reflects `sortState` in the
+   * header, and calls `onSortChange` when a column's Sort item is clicked
+   * (toggling the same direction off → `null`). Columns are sortable via their
+   * `sortField`.
+   */
+  sortState?: SmartTableSort | null;
+  onSortChange?: (sort: SmartTableSort | null) => void;
   /** Labels for the built-in column ⋮ menu (sort / hide). Defaults to English. */
   menuLabels?: Partial<SmartTableMenuLabels>;
   className?: string;
@@ -93,10 +110,14 @@ export function SmartTable<T>({
   cardTitleKey,
   dense,
   pagination,
+  sortState,
+  onSortChange,
   menuLabels,
   className,
 }: SmartTableProps<T>) {
-  const [sort, setSort] = useState<SortState | null>(null);
+  const controlled = !!onSortChange;
+  const [internalSort, setInternalSort] = useState<SortState | null>(null);
+  const sort = controlled ? (sortState ?? null) : internalSort;
   const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
 
   const labels: SmartTableMenuLabels = {
@@ -110,7 +131,8 @@ export function SmartTable<T>({
   const anyHidden = columns.some((col) => hidden.has(col.key));
 
   const sortedRows = useMemo(() => {
-    if (!sort) return rows;
+    // In controlled mode the server returns already-sorted rows.
+    if (controlled || !sort) return rows;
     const col = columns.find((c) => c.key === sort.key);
     if (!col?.sortAccessor) return rows;
     const accessor = col.sortAccessor;
@@ -118,12 +140,26 @@ export function SmartTable<T>({
     return [...rows].sort(
       (a, b) => factor * compareValues(accessor(a), accessor(b))
     );
-  }, [rows, sort, columns]);
+  }, [controlled, rows, sort, columns]);
 
-  const toggleSort = (key: string, dir: "asc" | "desc") =>
-    setSort((prev) =>
-      prev && prev.key === key && prev.dir === dir ? null : { key, dir }
-    );
+  // The sort state key for a column: its server `sortField` when controlled,
+  // else its client `key`.
+  const columnSortKey = (col: SmartColumn<T>) =>
+    controlled ? col.sortField : col.key;
+  const columnSortable = (col: SmartColumn<T>) =>
+    controlled ? !!col.sortField : !!col.sortAccessor;
+  const columnActiveDir = (col: SmartColumn<T>): "asc" | "desc" | null => {
+    const key = columnSortKey(col);
+    return key && sort?.key === key ? sort.dir : null;
+  };
+  const sortColumn = (col: SmartColumn<T>, dir: "asc" | "desc") => {
+    const key = columnSortKey(col);
+    if (!key) return;
+    const next: SortState | null =
+      sort && sort.key === key && sort.dir === dir ? null : { key, dir };
+    if (controlled) onSortChange!(next);
+    else setInternalSort(next);
+  };
   const hideColumn = (key: string) =>
     setHidden((prev) => new Set(prev).add(key));
   const showAllColumns = () => setHidden(new Set());
@@ -159,9 +195,9 @@ export function SmartTable<T>({
             </div>
           )}
           {visibleColumns.map((col, i) => {
-            const sortable = !!col.sortAccessor;
+            const sortable = columnSortable(col);
             const hideable = col.hideable !== false;
-            const activeDir = sort?.key === col.key ? sort.dir : null;
+            const activeDir = columnActiveDir(col);
             const hasMenu =
               col.headerMenu != null || sortable || hideable || anyHidden;
             return (
@@ -204,7 +240,7 @@ export function SmartTable<T>({
                   <SmartTableHeaderMenu
                     sortable={sortable}
                     sortDir={activeDir}
-                    onSort={(dir) => toggleSort(col.key, dir)}
+                    onSort={(dir) => sortColumn(col, dir)}
                     hideable={hideable}
                     canHide={visibleColumns.length > 1}
                     onHide={() => hideColumn(col.key)}

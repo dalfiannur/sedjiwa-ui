@@ -92,6 +92,68 @@ describe("<SmartTable />", () => {
     expect(screen.getByText("Sembunyikan kolom")).toBeInTheDocument();
   });
 
+  it("controlled sort: emits onSortChange with the column's sortField and does not sort client-side", async () => {
+    const onSortChange = vi.fn();
+    const cols: SmartColumn<Order>[] = [
+      { key: "name", header: "Name", render: (o) => o.name, sortField: "name", sortAccessor: (o) => o.name },
+      { key: "phone", header: "Phone", render: (o) => o.phone },
+    ];
+    render(
+      <SmartTable
+        columns={cols}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        sortState={null}
+        onSortChange={onSortChange}
+      />
+    );
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    await userEvent.click(screen.getByText("Sort ascending"));
+    expect(onSortChange).toHaveBeenCalledWith({ key: "name", dir: "asc" });
+    // rows stay in the given (server) order — no client reorder
+    const cells = screen.getAllByRole("cell").map((c) => c.textContent);
+    const lindaIdx = cells.findIndex((t) => t?.startsWith("Linda"));
+    const krazyIdx = cells.findIndex((t) => t?.startsWith("Krazy"));
+    expect(lindaIdx).toBeLessThan(krazyIdx); // original order preserved
+  });
+
+  it("controlled sort: a column without sortField offers no sorting", async () => {
+    const cols: SmartColumn<Order>[] = [
+      { key: "name", header: "Name", render: (o) => o.name, sortField: "name" },
+      { key: "phone", header: "Phone", render: (o) => o.phone },
+    ];
+    render(
+      <SmartTable
+        columns={cols}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        sortState={null}
+        onSortChange={vi.fn()}
+      />
+    );
+    // phone column (no sortField) → menu has only Hide, no Sort
+    await userEvent.click(screen.getAllByLabelText("Column options")[1]!);
+    expect(screen.queryByText("Sort ascending")).not.toBeInTheDocument();
+    expect(screen.getByText("Hide column")).toBeInTheDocument();
+  });
+
+  it("controlled sort: reflects sortState in the header (aria-sort)", () => {
+    const cols: SmartColumn<Order>[] = [
+      { key: "name", header: "Name", render: (o) => o.name, sortField: "name" },
+    ];
+    const { container } = render(
+      <SmartTable
+        columns={cols}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        sortState={{ key: "name", dir: "desc" }}
+        onSortChange={vi.fn()}
+      />
+    );
+    const header = container.querySelector('[role="columnheader"]');
+    expect(header).toHaveAttribute("aria-sort", "descending");
+  });
+
   it("renders custom headerMenu content when provided", async () => {
     const cols: SmartColumn<Order>[] = [
       { key: "id", header: "Order ID", render: (o) => o.id, headerMenu: <div>custom-menu</div> },
