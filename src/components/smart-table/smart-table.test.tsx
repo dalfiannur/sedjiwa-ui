@@ -100,4 +100,33 @@ describe("<SmartTable />", () => {
     );
     expect(screen.getByText("Belum ada order.")).toBeInTheDocument();
   });
+
+  it("does not render a card fallback by default", () => {
+    const { container } = render(
+      <SmartTable columns={COLUMNS} rows={ORDERS} getRowKey={(o) => o.id} />
+    );
+    expect(
+      container.querySelector('[data-slot="card-list-table"]')
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders a mobile card fallback (and a md-only table) when responsive", () => {
+    const { container } = render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        responsive
+        cardTitleKey="id"
+      />
+    );
+    const cards = container.querySelector('[data-slot="card-list-table"]');
+    expect(cards).toBeInTheDocument();
+    expect(cards).toHaveClass("md:hidden");
+    // table still rendered (CSS-hidden below md)
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    const tableCard = container.querySelector('[role="table"]')
+      ?.parentElement as HTMLElement;
+    expect(tableCard).toHaveClass("md:block");
+  });
 });

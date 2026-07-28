@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { EllipsisVertical } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { CardListTable } from "../card-list-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +34,15 @@ export type SmartTableProps<T> = {
   emptyMessage?: ReactNode;
   /** Minimum grid width before horizontal scroll kicks in. Defaults to `48rem`. */
   minWidth?: string;
+  /**
+   * Below `md`, stack into `CardListTable` cards instead of a horizontally
+   * scrolling table. The table shows at `md` and up.
+   */
+  responsive?: boolean;
+  /** Responsive card fallback: column key used as each card's header (`CardListTable` `titleKey`). */
+  cardTitleKey?: string;
+  /** Responsive card fallback: compact card spacing. */
+  dense?: boolean;
   className?: string;
 };
 
@@ -46,6 +56,9 @@ export function SmartTable<T>({
   onRowClick,
   emptyMessage = "No data",
   minWidth = "48rem",
+  responsive,
+  cardTitleKey,
+  dense,
   className,
 }: SmartTableProps<T>) {
   const template = [
@@ -58,12 +71,11 @@ export function SmartTable<T>({
 
   const gridStyle: CSSProperties = { gridTemplateColumns: template, minWidth };
 
-  return (
+  const table = (
     <div
-      data-slot="smart-table"
       className={cn(
         "bg-card text-card-foreground w-full overflow-x-auto rounded-xl border shadow-sm",
-        className
+        responsive && "hidden md:block"
       )}
     >
       <div role="table" className="w-full">
@@ -167,6 +179,31 @@ export function SmartTable<T>({
           )}
         </div>
       </div>
+    </div>
+  );
+
+  if (!responsive) {
+    return (
+      <div data-slot="smart-table" className={className}>
+        {table}
+      </div>
+    );
+  }
+
+  return (
+    <div data-slot="smart-table" className={className}>
+      {table}
+      <CardListTable
+        className="md:hidden"
+        columns={columns}
+        rows={rows}
+        getRowKey={getRowKey}
+        titleKey={cardTitleKey}
+        renderAction={renderAction}
+        onRowClick={onRowClick}
+        emptyMessage={emptyMessage}
+        dense={dense}
+      />
     </div>
   );
 }
