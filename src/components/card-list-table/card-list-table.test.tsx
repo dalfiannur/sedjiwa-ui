@@ -142,6 +142,8 @@ describe("<CardListTable />", () => {
     );
     const header = container.querySelector('[data-slot="card-list-table-header"]');
     expect(header).toBeInTheDocument();
+    // a divider line separates the header from the cards
+    expect(header).toHaveClass("border-b");
     // each column label appears exactly once — in the shared header, not per card
     expect(screen.getAllByText("Name")).toHaveLength(1);
     expect(screen.getAllByText("Role")).toHaveLength(1);

@@ -85,7 +85,7 @@ export function CardListTable<T>({
         <div
           data-slot="card-list-table-header"
           className={cn(
-            "text-muted-foreground grid gap-x-4 border border-transparent text-xs font-medium",
+            "text-muted-foreground grid gap-x-4 border-x border-x-transparent border-b pb-2 text-xs font-medium",
             pad
           )}
           style={gridStyle}
