@@ -178,7 +178,11 @@ export { ResponsiveTable } from "./components/responsive-table";
 export type { ResponsiveTableProps } from "./components/responsive-table";
 
 export { SmartTable } from "./components/smart-table";
-export type { SmartTableProps, SmartColumn } from "./components/smart-table";
+export type {
+  SmartTableProps,
+  SmartColumn,
+  SmartTableMenuLabels,
+} from "./components/smart-table";
 
 export { Modal } from "./components/modal";
 export type { ModalProps } from "./components/modal";
