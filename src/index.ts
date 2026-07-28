@@ -181,6 +181,7 @@ export { SmartTable } from "./components/smart-table";
 export type {
   SmartTableProps,
   SmartColumn,
+  SmartTableSort,
   SmartTableMenuLabels,
 } from "./components/smart-table";
 
