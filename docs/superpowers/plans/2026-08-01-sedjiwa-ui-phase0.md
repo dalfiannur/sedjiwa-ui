@@ -1039,8 +1039,10 @@ Two constraints when picking an accent, both measurable:
 - its label must reach **4.5:1 against the fill**.
 
 These pull in opposite directions and the usable window is narrow. For an
-indigo panel at `oklch(0.25 0.1 265)`, `oklch(0.55 0.18 265)` is the only
-accent satisfying both (3.24:1 and 5.02:1). See the
+indigo panel at `oklch(0.25 0.1 265)`, `oklch(0.55 0.18 265)` clears both
+(3.24:1 against the panel, 5.02:1 for its white label). The usable window at
+that chroma and hue is roughly L 0.53–0.58 — narrow, so verify your own accent
+against both numbers rather than assuming. See the
 `Components/Sidebar → Retinted via token override` story.
 ```
 
@@ -1068,13 +1070,34 @@ Run each and confirm all pass before touching the version:
 
 ```bash
 bun run contrast
-bun run test
 bun run lint
 bun run typecheck
 bun run build
+bun run test
 ```
 
-Expected: `contrast` prints 8 PASS and exits 0; `test` reports zero failures; `lint` and `typecheck` produce no errors; `build` completes and writes `dist/`.
+Expected: `contrast` prints **16** PASS (8 subtle + 8 solid) and exits 0; `lint` reports 0 errors
+(3 pre-existing `react-refresh` warnings in `form.tsx`, `sidebar.tsx`, `use-input-order.tsx` are
+expected); `typecheck` produces no output; `build` completes and writes `dist/`.
+
+**`bun run test` will not be fully green in this environment, for two pre-existing reasons that
+Phase 0 neither caused nor touches. Do not claim a green suite — record what actually ran.**
+
+1. `vitest.config.ts` defines a second `storybook` project that runs stories in Playwright
+   chromium. The matching browser build (1217, pinned by playwright 1.59.1) is not installed
+   locally, and the whole command aborts with `Tests no tests` before any project runs. Fixing
+   it requires `node node_modules/playwright/cli.js install chromium` — note the *project's own*
+   CLI, since `bunx playwright install` resolves a newer playwright and fetches the wrong build.
+2. `src/components/app-shell/app-shell.test.tsx` fails 22/22 with Node's native `localStorage`
+   shim (`localStorage is not available because --localstorage-file was not provided`). This is
+   an environment/runtime issue, not a code defect. Verified pre-existing: this branch changes
+   no `app-shell` file.
+
+To run the unit project in isolation, write a temporary jsdom-only vitest config **inside the
+repo** (a config outside it cannot resolve `node_modules`), run
+`bunx vitest run -c <config>`, then delete it. Current result on this branch:
+**436 passed, 22 failed (458), 39 of 40 files green** — the 22 being the pre-existing app-shell
+set above.
 
 - [ ] **Step 2: Confirm the built CSS carries the new tokens**
 
