@@ -1,4 +1,5 @@
-// Gates every semantic subtle/text token pair in src/styles/tokens.css at WCAG AA (4.5:1).
+// Gates every semantic subtle/text pair AND solid foreground/fill pair in
+// src/styles/tokens.css at WCAG AA (4.5:1).
 // Run: bun run scripts/contrast.mjs
 import { readFileSync } from "node:fs";
 
@@ -91,7 +92,31 @@ for (const [theme, tokens] of THEMES) {
     const ok = ratio >= THRESHOLD;
     if (!ok) failures++;
     console.log(
-      `${ok ? "PASS" : "FAIL"} ${ratio.toFixed(2).padStart(6)}:1  --${fgName} on --${bgName} (${theme})`
+      `${ok ? "PASS" : "FAIL"} ${ratio.toFixed(2).padStart(6)}:1  subtle --${fgName} on --${bgName} (${theme})`
+    );
+  }
+}
+
+// Solid pairs: --<tone>-foreground on --<tone> (e.g. solid Badge variants).
+// Distinct from the subtle pairs above — a token can pass one and fail the
+// other, as success/info/destructive did here (near-white foreground on a
+// mid-lightness solid fill measured ~3.32:1 before being darkened).
+for (const [theme, tokens] of THEMES) {
+  for (const tone of TONES) {
+    const fgName = `${tone}-foreground`;
+    const bgName = tone;
+    const fg = tokens[fgName];
+    const bg = tokens[bgName];
+    if (!fg || !bg) {
+      console.log(`MISSING  --${fgName} / --${bgName} (${theme})`);
+      failures++;
+      continue;
+    }
+    const ratio = contrast(fg, bg);
+    const ok = ratio >= THRESHOLD;
+    if (!ok) failures++;
+    console.log(
+      `${ok ? "PASS" : "FAIL"} ${ratio.toFixed(2).padStart(6)}:1  solid  --${fgName} on --${bgName} (${theme})`
     );
   }
 }
