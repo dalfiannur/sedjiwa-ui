@@ -41,11 +41,17 @@ function contrast(fg, bg) {
 // rather than matching the first "\n}" (a lazy match runs past a selector's own
 // close and into whatever follows if the file is ever indented/nested, e.g.
 // wrapped in `@layer base { :root {...} .dark {...} }`).
+// Only returns the FIRST occurrence's body — callers that need every
+// occurrence (e.g. a selector repeated inside multiple `@media` blocks) must
+// use `findAllBlockBodies` instead.
 function findBlockBody(css, selector, label) {
-  const re = new RegExp(`${selector}\\s*\\{`);
+  const re = new RegExp(`${escapeRegExp(selector)}\\s*\\{`);
   const match = re.exec(css);
   if (!match) throw new Error(`Could not find "${label}" block`);
-  const start = match.index + match[0].length;
+  return extractBody(css, match.index + match[0].length, label);
+}
+
+function extractBody(css, start, label) {
   let depth = 1;
   let i = start;
   for (; i < css.length && depth > 0; i++) {
@@ -54,6 +60,23 @@ function findBlockBody(css, selector, label) {
   }
   if (depth !== 0) throw new Error(`Unbalanced braces in "${label}" block`);
   return css.slice(start, i - 1);
+}
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Finds every occurrence of `selector` (e.g. `:root` can appear again inside
+// `@media print { :root { ... } }`) and returns each body in document order.
+function findAllBlockBodies(css, selector, label) {
+  const re = new RegExp(`${escapeRegExp(selector)}\\s*\\{`, "g");
+  const bodies = [];
+  let match;
+  while ((match = re.exec(css)) !== null) {
+    bodies.push(extractBody(css, match.index + match[0].length, label));
+  }
+  if (bodies.length === 0) throw new Error(`Could not find "${label}" block`);
+  return bodies;
 }
 
 function parseTokens(body) {
@@ -66,14 +89,18 @@ function parseTokens(body) {
   return tokens;
 }
 
+// Merges every occurrence of `selector` in document order so later
+// declarations win, matching the CSS cascade (e.g. a `:root` block re-opened
+// inside `@media print` further down the file overrides earlier values).
 function parseBlock(css, selector) {
-  return parseTokens(findBlockBody(css, selector, selector));
+  const bodies = findAllBlockBodies(css, selector, selector);
+  return Object.assign({}, ...bodies.map(parseTokens));
 }
 
 const css = readFileSync(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
 const THEMES = [
   ["light", parseBlock(css, ":root")],
-  ["dark", parseBlock(css, "\\.dark")],
+  ["dark", parseBlock(css, ".dark")],
 ];
 
 let failures = 0;
@@ -125,11 +152,16 @@ for (const [theme, tokens] of THEMES) {
 // transparent-on-transparent if nobody mapped it into `@theme inline` in
 // base.css — Tailwind only generates `bg-success-subtle` etc. for mapped vars.
 const baseCss = readFileSync(new URL("../src/styles/base.css", import.meta.url), "utf8");
-const themeInlineBody = findBlockBody(baseCss, "@theme inline", "@theme inline");
+const themeInlineBodyRaw = findBlockBody(baseCss, "@theme inline", "@theme inline");
+// Strip /* ... */ comments so a commented-out mapping (e.g.
+// `/* --color-info-text: var(--info-text); */`) isn't mistaken for a live one
+// by a substring check.
+const themeInlineBody = themeInlineBodyRaw.replace(/\/\*[\s\S]*?\*\//g, "");
 for (const tone of TONES) {
   for (const suffix of ["subtle", "text"]) {
     const varName = `--color-${tone}-${suffix}`;
-    if (!themeInlineBody.includes(varName)) {
+    const declRe = new RegExp(`${escapeRegExp(varName)}\\s*:`);
+    if (!declRe.test(themeInlineBody)) {
       console.log(`UNMAPPED ${varName} missing from @theme inline`);
       failures++;
     }
