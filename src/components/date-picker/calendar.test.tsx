@@ -207,3 +207,30 @@ describe("<Calendar mode=multiple /> Shift-click range", () => {
     await user.keyboard("{/Shift}");
   });
 });
+
+describe("<Calendar /> headerVariant", () => {
+  // The month/year SelectTriggers pass their own data-slot ("calendar-month-select" /
+  // "calendar-year-select") which lands after the internal data-slot="select-trigger" in the
+  // prop spread, overriding it — so `[data-slot="select-trigger"]` never matches here. Detect
+  // the dropdowns by their actual slots instead.
+  const dropdownSelector = '[data-slot="calendar-month-select"], [data-slot="calendar-year-select"]';
+
+  it("renders month and year dropdowns by default", () => {
+    const { container } = render(<Calendar mode="single" value={new Date(2028, 0, 10)} />);
+    expect(container.querySelectorAll(dropdownSelector).length).toBeGreaterThan(0);
+  });
+
+  it("renders a static label instead of dropdowns when headerVariant is label", () => {
+    const { container } = render(
+      <Calendar mode="single" value={new Date(2028, 0, 10)} headerVariant="label" />
+    );
+    expect(container.querySelectorAll(dropdownSelector).length).toBe(0);
+    expect(container.querySelector('[data-slot="calendar-label"]')).toHaveTextContent("January 2028");
+  });
+
+  it("keeps month navigation in label mode", () => {
+    render(<Calendar mode="single" value={new Date(2028, 0, 10)} headerVariant="label" />);
+    expect(screen.getByLabelText("Previous month")).toBeInTheDocument();
+    expect(screen.getByLabelText("Next month")).toBeInTheDocument();
+  });
+});

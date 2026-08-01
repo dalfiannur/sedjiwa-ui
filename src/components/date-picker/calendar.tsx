@@ -58,6 +58,12 @@ type SharedProps = {
   className?: string;
   /** Auto-focus the first focusable day after mount (used when opening in a popover). */
   autoFocus?: boolean;
+  /**
+   * Header presentation. `"dropdowns"` (default) renders month and year
+   * Selects for jumping directly to a month. `"label"` renders a static
+   * "January 2028" label with only the prev/next arrows.
+   */
+  headerVariant?: "dropdowns" | "label";
 };
 
 export type CalendarProps = (SingleModeProps | RangeModeProps | MultipleModeProps) &
@@ -161,6 +167,7 @@ export function Calendar(props: CalendarProps) {
     showOutsideDays: showOutsideDaysProp,
     className,
     autoFocus = false,
+    headerVariant = "dropdowns",
   } = props;
   const mode = props.mode ?? "single";
   const showOutsideDays = showOutsideDaysProp ?? numberOfMonths === 1;
@@ -504,77 +511,85 @@ export function Calendar(props: CalendarProps) {
             <span className="sr-only" aria-live="polite">
               {headerLabel}
             </span>
-            <Select
-              value={String(monthIdx)}
-              onValueChange={(v) => {
-                const desired = new Date(monthYear, Number(v), 1);
-                setViewMonth(
-                  clampViewMonth(
-                    desired.getFullYear(),
-                    desired.getMonth() - offset,
-                    min,
-                    max,
-                  ),
-                );
-              }}
-            >
-              <SelectTrigger
-                size="sm"
-                data-slot="calendar-month-select"
-                aria-label={
-                  numberOfMonths > 1
-                    ? offset === 0
-                      ? "Start month"
-                      : "End month"
-                    : "Month"
-                }
-                className="h-7 w-[7.5rem] gap-1 px-2 text-xs capitalize"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {monthNames.map((name, i) => (
-                  <SelectItem
-                    key={i}
-                    value={String(i)}
-                    disabled={isMonthDisabled(i)}
-                    className="capitalize"
+            {headerVariant === "label" ? (
+              <span className="text-sm font-medium capitalize" aria-hidden="true">
+                {headerLabel}
+              </span>
+            ) : (
+              <>
+                <Select
+                  value={String(monthIdx)}
+                  onValueChange={(v) => {
+                    const desired = new Date(monthYear, Number(v), 1);
+                    setViewMonth(
+                      clampViewMonth(
+                        desired.getFullYear(),
+                        desired.getMonth() - offset,
+                        min,
+                        max,
+                      ),
+                    );
+                  }}
+                >
+                  <SelectTrigger
+                    size="sm"
+                    data-slot="calendar-month-select"
+                    aria-label={
+                      numberOfMonths > 1
+                        ? offset === 0
+                          ? "Start month"
+                          : "End month"
+                        : "Month"
+                    }
+                    className="h-7 w-[7.5rem] gap-1 px-2 text-xs capitalize"
                   >
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={String(monthYear)}
-              onValueChange={(v) =>
-                setViewMonth(
-                  clampViewMonth(Number(v), monthIdx - offset, min, max),
-                )
-              }
-            >
-              <SelectTrigger
-                size="sm"
-                data-slot="calendar-year-select"
-                aria-label={
-                  numberOfMonths > 1
-                    ? offset === 0
-                      ? "Start year"
-                      : "End year"
-                    : "Year"
-                }
-                className="h-7 w-[4.5rem] gap-1 px-2 text-xs"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {years.map((y) => (
-                  <SelectItem key={y} value={String(y)}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {monthNames.map((name, i) => (
+                      <SelectItem
+                        key={i}
+                        value={String(i)}
+                        disabled={isMonthDisabled(i)}
+                        className="capitalize"
+                      >
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={String(monthYear)}
+                  onValueChange={(v) =>
+                    setViewMonth(
+                      clampViewMonth(Number(v), monthIdx - offset, min, max),
+                    )
+                  }
+                >
+                  <SelectTrigger
+                    size="sm"
+                    data-slot="calendar-year-select"
+                    aria-label={
+                      numberOfMonths > 1
+                        ? offset === 0
+                          ? "Start year"
+                          : "End year"
+                        : "Year"
+                    }
+                    className="h-7 w-[4.5rem] gap-1 px-2 text-xs"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {years.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
           </div>
           {isRight ? (
             <button
