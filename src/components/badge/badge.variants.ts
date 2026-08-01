@@ -20,9 +20,37 @@ export const badgeVariants = cva(
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       },
+      appearance: {
+        solid: "",
+        subtle: "border-transparent",
+      },
     },
+    compoundVariants: [
+      {
+        variant: "success",
+        appearance: "subtle",
+        class: "bg-success-subtle text-success-text [a&]:hover:bg-success-subtle/80",
+      },
+      {
+        variant: "warning",
+        appearance: "subtle",
+        class: "bg-warning-subtle text-warning-text [a&]:hover:bg-warning-subtle/80",
+      },
+      {
+        variant: "info",
+        appearance: "subtle",
+        class: "bg-info-subtle text-info-text [a&]:hover:bg-info-subtle/80",
+      },
+      {
+        variant: "destructive",
+        appearance: "subtle",
+        class:
+          "bg-destructive-subtle text-destructive-text dark:bg-destructive-subtle [a&]:hover:bg-destructive-subtle/80",
+      },
+    ],
     defaultVariants: {
       variant: "default",
+      appearance: "solid",
     },
   }
 );

@@ -9,6 +9,7 @@ export type BadgeProps = React.ComponentProps<"span"> &
 export function Badge({
   className,
   variant,
+  appearance,
   asChild = false,
   ...props
 }: BadgeProps) {
@@ -16,7 +17,9 @@ export function Badge({
   return (
     <Comp
       data-slot="badge"
-      className={cn(badgeVariants({ variant }), className)}
+      data-variant={variant ?? "default"}
+      data-appearance={appearance ?? "solid"}
+      className={cn(badgeVariants({ variant, appearance }), className)}
       {...props}
     />
   );
