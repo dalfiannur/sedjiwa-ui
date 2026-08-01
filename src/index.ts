@@ -90,6 +90,9 @@ export type {
   DateRangeValue,
 } from "./components/date-range-picker";
 
+export { DateTimePicker } from "./components/date-time-picker";
+export type { DateTimePickerProps } from "./components/date-time-picker";
+
 export {
   Popover, PopoverAnchor, PopoverContent, PopoverTrigger,
 } from "./components/popover";
