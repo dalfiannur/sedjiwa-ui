@@ -49,8 +49,10 @@ Two constraints when picking an accent, both measurable:
 These pull in opposite directions and the usable window is narrow. For an
 indigo panel at `oklch(0.25 0.1 265)`, `oklch(0.55 0.18 265)` clears both
 (3.24:1 against the panel, 5.02:1 for its white label). The usable window at
-that chroma and hue is roughly L 0.53–0.58 — narrow, so verify your own
-accent against both numbers rather than assuming. See the
+that chroma and hue is L 0.54–0.57 — narrow, and both constraints are minimums,
+so verify your own accent against both numbers rather than interpolating from
+this example. (L 0.53 misses the panel floor at 2.97:1; L 0.58 misses the label
+floor at 4.42:1.) See the
 `Components/Sidebar → Retinted via token override` story.
 
 `--sidebar-*` is independent of `--background` and `--card` — retinting the
@@ -74,3 +76,9 @@ current consumers. If your `--sidebar` and `--background` diverge sharply
 (e.g. a dark indigo panel on a light app), these two will visibly stand out
 against the panel. `SidebarInset` is not in this list — it is the main
 content area, not the panel, so `bg-background` is correct there.
+
+**Changed in 0.29.0:** `SidebarMenuButton variant="outline"` now draws its 1px
+`--sidebar-border` ring. It previously wrapped the token in `hsl(...)`, which
+is invalid for an `oklch()` value, so the ring silently never rendered. Expect
+it to become visible in light mode; in dark mode `--sidebar-border` is
+`oklch(1 0 0 / 8%)` and stays subtle.
