@@ -36,14 +36,35 @@ describe("<DateTimePicker />", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("snaps an off-grid incoming time to the nearest step", async () => {
+  it("snaps an off-grid incoming time down to the nearest step", async () => {
     const onApply = vi.fn();
-    // 09:41 with the default 30-minute step rounds to 09:30
+    // 09:41 with the default 30-minute step is nearer 09:30 than 10:00
     render(
       <DateTimePicker open onOpenChange={noop} onApply={onApply} value="2028-01-10T09:41" />,
     );
     await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T09:30");
+  });
+
+  it("snaps UP when the nearest step is the later one", async () => {
+    const onApply = vi.fn();
+    // 09:50 is nearer 10:00. This case is what distinguishes rounding to the
+    // NEAREST step from merely truncating — 09:41 alone passes either way.
+    render(
+      <DateTimePicker open onOpenChange={noop} onApply={onApply} value="2028-01-10T09:50" />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    expect(onApply).toHaveBeenCalledWith("2028-01-10T10:00");
+  });
+
+  it("never snaps past the end of the day", async () => {
+    const onApply = vi.fn();
+    // 23:59 must not round up to 24:00, which is not a valid option.
+    render(
+      <DateTimePicker open onOpenChange={noop} onApply={onApply} value="2028-01-10T23:59" />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    expect(onApply).toHaveBeenCalledWith("2028-01-10T23:30");
   });
 
   it("does not fire onApply merely from opening", () => {
