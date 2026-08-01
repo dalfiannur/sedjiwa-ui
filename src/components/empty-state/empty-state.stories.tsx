@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CalendarX2, Inbox } from "lucide-react";
+import { CalendarX2, CheckCircle2, Inbox, SearchX, Truck } from "lucide-react";
 import {
   Empty,
   EmptyHeader,
@@ -53,6 +53,53 @@ export const TitleOnly: Story = {
   render: (args) => (
     <div className="w-[28rem]">
       <EmptyState {...args} />
+    </div>
+  ),
+};
+
+export const ToneCreate: Story = {
+  name: "Archetype: nothing created yet",
+  render: () => (
+    <div className="w-[28rem]">
+      <EmptyState
+        icon={<Truck />}
+        title="Belum ada kendaraan"
+        description="Kendaraan yang Anda tambahkan akan muncul sebagai pilihan saat karyawan mengajukan booking."
+        action={<Button size="sm">Tambah Kendaraan</Button>}
+      />
+    </div>
+  ),
+};
+
+export const ToneClear: Story = {
+  name: "Archetype: empty is good news",
+  render: () => (
+    <div className="w-[28rem]">
+      <EmptyState
+        tone="success"
+        icon={<CheckCircle2 />}
+        title="Semua request sudah diproses"
+        description="Tidak ada pengajuan yang menunggu persetujuan."
+      />
+    </div>
+  ),
+};
+
+export const ToneFiltered: Story = {
+  name: "Archetype: filter matched nothing",
+  render: () => (
+    <div className="w-[28rem]">
+      <EmptyState
+        tone="muted"
+        icon={<SearchX />}
+        title="Tidak ada hasil"
+        description="Tidak ada booking berstatus Ditolak pada rentang tanggal ini."
+        action={
+          <Button size="sm" variant="outline">
+            Reset filter
+          </Button>
+        }
+      />
     </div>
   ),
 };

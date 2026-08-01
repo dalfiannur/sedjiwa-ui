@@ -6,11 +6,26 @@ export const emptyMediaVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
-        icon: "bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg:not([class*='size-'])]:size-6",
+        icon: "flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg:not([class*='size-'])]:size-6",
+      },
+      tone: {
+        default: "",
+        success: "",
+        muted: "",
       },
     },
+    compoundVariants: [
+      { variant: "icon", tone: "default", class: "bg-muted text-foreground" },
+      {
+        variant: "icon",
+        tone: "success",
+        class: "bg-success-subtle text-success-text",
+      },
+      { variant: "icon", tone: "muted", class: "bg-muted text-muted-foreground" },
+    ],
     defaultVariants: {
       variant: "default",
+      tone: "default",
     },
   }
 );
