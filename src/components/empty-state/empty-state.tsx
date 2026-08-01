@@ -31,16 +31,20 @@ function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** `tone` only has a visual effect when `variant="icon"`; the bare `default`
+ *  media slot stays transparent whatever tone is passed. */
 function EmptyMedia({
   className,
   variant = "default",
+  tone = "default",
   ...props
 }: React.ComponentProps<"div"> & EmptyMediaVariants) {
   return (
     <div
       data-slot="empty-media"
       data-variant={variant}
-      className={cn(emptyMediaVariants({ variant, className }))}
+      data-tone={tone}
+      className={cn(emptyMediaVariants({ variant, tone, className }))}
       {...props}
     />
   );
@@ -89,6 +93,11 @@ export type EmptyStateProps = Omit<React.ComponentProps<"div">, "title"> & {
   description?: React.ReactNode;
   /** Optional call-to-action(s) rendered below the description. */
   action?: React.ReactNode;
+  /**
+   * Media tone. `default` for "nothing created yet", `success` for "empty
+   * because everything is resolved", `muted` for "a filter matched nothing".
+   */
+  tone?: EmptyMediaVariants["tone"];
 };
 
 /**
@@ -101,12 +110,17 @@ function EmptyState({
   title,
   description,
   action,
+  tone,
   ...props
 }: EmptyStateProps) {
   return (
     <Empty {...props}>
       <EmptyHeader>
-        {icon != null && <EmptyMedia variant="icon">{icon}</EmptyMedia>}
+        {icon != null && (
+          <EmptyMedia variant="icon" tone={tone ?? "default"}>
+            {icon}
+          </EmptyMedia>
+        )}
         <EmptyTitle>{title}</EmptyTitle>
         {description != null && (
           <EmptyDescription>{description}</EmptyDescription>

@@ -97,3 +97,54 @@ describe("<EmptyState />", () => {
     expect(screen.getByTestId("root")).toHaveClass("custom");
   });
 });
+
+describe("<EmptyState /> tone", () => {
+  it("renders title and description", () => {
+    render(<EmptyState title="Belum ada kendaraan" description="Tambahkan satu." />);
+    expect(screen.getByText("Belum ada kendaraan")).toBeInTheDocument();
+    expect(screen.getByText("Tambahkan satu.")).toBeInTheDocument();
+  });
+
+  it("omits the media slot when no icon is given", () => {
+    const { container } = render(<EmptyState title="x" />);
+    expect(container.querySelector('[data-slot="empty-media"]')).toBeNull();
+  });
+
+  it("defaults the media tone to default", () => {
+    const { container } = render(<EmptyState title="x" icon={<svg />} />);
+    const media = container.querySelector('[data-slot="empty-media"]');
+    expect(media).toHaveAttribute("data-tone", "default");
+    expect(media).toHaveClass("bg-muted");
+    expect(media).toHaveClass("text-foreground");
+  });
+
+  it("applies the success tone for resolved-state emptiness", () => {
+    const { container } = render(
+      <EmptyState title="x" icon={<svg />} tone="success" />
+    );
+    const media = container.querySelector('[data-slot="empty-media"]');
+    expect(media).toHaveAttribute("data-tone", "success");
+    expect(media).toHaveClass("bg-success-subtle");
+    expect(media).toHaveClass("text-success-text");
+  });
+
+  it("applies the muted tone for filtered-to-nothing emptiness", () => {
+    const { container } = render(
+      <EmptyState title="x" icon={<svg />} tone="muted" />
+    );
+    const media = container.querySelector('[data-slot="empty-media"]');
+    expect(media).toHaveAttribute("data-tone", "muted");
+    expect(media).toHaveClass("bg-muted");
+    expect(media).toHaveClass("text-muted-foreground");
+  });
+
+  it("does not tone the default media variant", () => {
+    const { container } = render(
+      <EmptyMedia data-testid="m" tone="success">
+        <svg />
+      </EmptyMedia>
+    );
+    const media = container.querySelector('[data-slot="empty-media"]');
+    expect(media).not.toHaveClass("bg-success-subtle");
+  });
+});
