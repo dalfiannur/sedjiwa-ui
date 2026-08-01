@@ -113,4 +113,16 @@ describe("<Badge />", () => {
       expect(screen.getByTestId("b")).toHaveClass("border-transparent");
     }
   );
+
+  it("uses the destructive foreground token rather than literal white", () => {
+    render(<Badge data-testid="b" variant="destructive">Ditolak</Badge>);
+    const el = screen.getByTestId("b");
+    expect(el).toHaveClass("text-destructive-foreground");
+    expect(el).not.toHaveClass("text-white");
+  });
+
+  it("does not dilute the destructive fill in dark mode", () => {
+    render(<Badge data-testid="b" variant="destructive">Ditolak</Badge>);
+    expect(screen.getByTestId("b")).not.toHaveClass("dark:bg-destructive/60");
+  });
 });

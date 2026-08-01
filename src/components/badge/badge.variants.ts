@@ -10,7 +10,7 @@ export const badgeVariants = cva(
         secondary:
           "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         success:
           "border-transparent bg-success text-success-foreground [a&]:hover:bg-success/90",
         warning:
@@ -49,14 +49,7 @@ export const badgeVariants = cva(
       {
         variant: "destructive",
         appearance: "subtle",
-        // The `dark:bg-destructive-subtle` below is required, not defensive:
-        // twMerge cannot cancel a `dark:`-scoped class with an unscoped one, so
-        // `dark:bg-destructive/60` from the variant slot survives unless it is
-        // explicitly overridden at the same modifier scope. Without it a subtle
-        // destructive badge carries two backgrounds in dark mode and the winner
-        // depends on generated stylesheet order. Verified by removal.
-        class:
-          "bg-destructive-subtle text-destructive-text dark:bg-destructive-subtle [a&]:hover:bg-destructive-subtle/80",
+        class: "bg-destructive-subtle text-destructive-text [a&]:hover:bg-destructive-subtle/80",
       },
     ],
     defaultVariants: {
