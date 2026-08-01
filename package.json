@@ -28,7 +28,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "contrast": "bun run scripts/contrast.mjs"
   },
   "peerDependencies": {
     "@dnd-kit/core": "^6.1.0",
