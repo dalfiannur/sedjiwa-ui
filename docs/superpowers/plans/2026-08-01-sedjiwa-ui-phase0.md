@@ -1100,14 +1100,18 @@ git tag v0.29.0
 
 - [ ] **Step 5: Hand off to the user for publishing**
 
-Publishing is manual and is the user's step. Tell them:
+Publishing is the user's step. Tell them:
 
-> 0.29.0 is committed and tagged. Publishing is manual — run `bun publish` in
-> `sedjiwa-portal/ui` when ready. Tag-push CI does not publish. Once it is on
-> the registry, the app can bump to `@qyubit/sedjiwa-ui@0.29.0` and Phase 1
-> can start.
+> 0.29.0 is committed and tagged locally. Run `bun publish` in
+> `sedjiwa-portal/ui` when ready. Once it is on the registry, the app can bump
+> to `@qyubit/sedjiwa-ui@0.29.0` and Phase 1 can start.
 
 Do not run `bun publish` yourself.
+
+**Do not push the tag.** `.github/workflows/ci.yml` defines a `publish` job gated on
+`refs/tags/v*` that runs `bun publish`. Whether it fires depends on a server-side runner that
+cannot be checked from the clone. Creating a tag locally is inert; pushing it may publish
+unattended. Leave the push to the user.
 
 ---
 
