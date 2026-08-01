@@ -29,4 +29,25 @@ describe("<Badge />", () => {
     render(<Badge data-testid="b" className="custom">x</Badge>);
     expect(screen.getByTestId("b")).toHaveClass("custom");
   });
+
+  it("renders the success variant with success tokens", () => {
+    render(<Badge data-testid="b" variant="success">Aktif</Badge>);
+    const el = screen.getByTestId("b");
+    expect(el).toHaveClass("bg-success");
+    expect(el).toHaveClass("text-success-foreground");
+  });
+
+  it("renders the warning variant with warning tokens", () => {
+    render(<Badge data-testid="b" variant="warning">Menunggu</Badge>);
+    const el = screen.getByTestId("b");
+    expect(el).toHaveClass("bg-warning");
+    expect(el).toHaveClass("text-warning-foreground");
+  });
+
+  it("renders the info variant with info tokens", () => {
+    render(<Badge data-testid="b" variant="info">Disetujui</Badge>);
+    const el = screen.getByTestId("b");
+    expect(el).toHaveClass("bg-info");
+    expect(el).toHaveClass("text-info-foreground");
+  });
 });
