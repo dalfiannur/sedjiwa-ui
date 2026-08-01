@@ -19,6 +19,13 @@ Same shape for `--warning`, `--info` and `--destructive`.
 that lands between 2.02:1 and 3.77:1 — below AA. Use the `-text` token, which
 is measured against its `-subtle` partner.
 
+**The `-text` token is also the right choice for coloured text on an ordinary
+surface** — `--card`, `--background`, or anything else. The solid tone is a
+*fill*; as body text it is marginal at best. For example `--destructive` as text
+measures 4.78:1 on a white card and only 4.32:1 on a slightly sunken background,
+while `--destructive-text` is 10.7–11.9:1 on both. Reach for `--<tone>-text`
+whenever you want coloured words, and reserve `--<tone>` for filled shapes.
+
 `bun run contrast` gates all 16 pairs (8 solid, 8 subtle) at 4.5:1, parses
 `src/styles/tokens.css` directly, and runs in CI. It fails the build if a token
 is edited below threshold.
