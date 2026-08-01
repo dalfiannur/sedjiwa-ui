@@ -59,8 +59,8 @@ export const Default: Story = {
 /**
  * Retinting is done purely by overriding `--sidebar-*` in a scope that wraps
  * the sidebar. No component classes change. The active fill below is
- * oklch(0.55 0.18 265), the only value clearing both 3:1 against the panel
- * and 4.5:1 for its white label.
+ * oklch(0.55 0.18 265), which clears both 3:1 against the panel and 4.5:1
+ * for its white label (see docs/theming.md for the full usable range).
  */
 export const Retinted: Story = {
   name: "Retinted via token override",
@@ -74,6 +74,7 @@ export const Retinted: Story = {
             "--sidebar-accent": "oklch(0.55 0.18 265)",
             "--sidebar-accent-foreground": "oklch(1 0 0)",
             "--sidebar-border": "oklch(0.32 0.09 265)",
+            "--sidebar-ring": "oklch(0.55 0.18 265)",
           } as CSSProperties
         }
       >

@@ -45,6 +45,8 @@ The library exposes shadcn-shaped CSS variables: `--background`, `--foreground`,
 
 Override any token in your own `:root { ... }` and `.dark { ... }` blocks **after** importing the library stylesheet.
 
+See [`docs/theming.md`](./docs/theming.md) for the full token contract, including the semantic colour pairs' contrast guarantees and the `--sidebar-*` retinting rules.
+
 ## Dark mode
 
 Toggle the `.dark` class on `<html>` (or any ancestor of your app):

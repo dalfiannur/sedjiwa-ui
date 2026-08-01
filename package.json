@@ -6,6 +6,7 @@
   "license": "UNLICENSED",
   "files": [
     "dist",
+    "docs/theming.md",
     "README.md"
   ],
   "exports": {
