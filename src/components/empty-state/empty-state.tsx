@@ -31,6 +31,8 @@ function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** `tone` only has a visual effect when `variant="icon"`; the bare `default`
+ *  media slot stays transparent whatever tone is passed. */
 function EmptyMedia({
   className,
   variant = "default",

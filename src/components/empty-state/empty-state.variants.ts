@@ -8,6 +8,19 @@ export const emptyMediaVariants = cva(
         default: "bg-transparent",
         icon: "flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg:not([class*='size-'])]:size-6",
       },
+      /**
+       * These slots are intentionally empty, and `variant.icon` above carries no
+       * colour. Every background/foreground class lives in the gated
+       * compoundVariants below, so exactly one ever matches and there is never a
+       * second colour class for twMerge to reconcile.
+       *
+       * Do NOT fold `bg-muted text-foreground` back into `variant.icon` — it looks
+       * redundant with the `tone: "default"` compound, but moving it there makes
+       * the slot additive: a toned compound would then have to override a colour
+       * the variant already applied. Badge took that shape and it produced two
+       * bugs (a variant's border silently stripped, and a `dark:`-scoped class an
+       * unscoped one could not cancel).
+       */
       tone: {
         default: "",
         success: "",
