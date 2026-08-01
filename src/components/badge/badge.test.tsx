@@ -90,4 +90,27 @@ describe("<Badge />", () => {
     expect(el).toHaveClass("text-destructive-text");
     expect(el).not.toHaveClass("dark:bg-destructive/60");
   });
+
+  it("keeps the outline variant's border when subtle is selected", () => {
+    render(
+      <Badge data-testid="b" variant="outline" appearance="subtle">
+        Draf
+      </Badge>
+    );
+    const el = screen.getByTestId("b");
+    expect(el).toHaveClass("border");
+    expect(el).not.toHaveClass("border-transparent");
+  });
+
+  it.each(["success", "warning", "info", "destructive"] as const)(
+    "keeps border-transparent on the %s variant when subtle",
+    (variant) => {
+      render(
+        <Badge data-testid="b" variant={variant} appearance="subtle">
+          x
+        </Badge>
+      );
+      expect(screen.getByTestId("b")).toHaveClass("border-transparent");
+    }
+  );
 });

@@ -21,8 +21,13 @@ export const badgeVariants = cva(
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       },
       appearance: {
+        // Deliberately empty. `border-transparent` must NOT live here: it would
+        // also apply to `outline`, whose entire visual identity is its border,
+        // silently rendering an outline+subtle badge as unstyled floating text.
+        // The four toned variants already supply `border-transparent` from
+        // their own variant slot, so the subtle compounds inherit it for free.
         solid: "",
-        subtle: "border-transparent",
+        subtle: "",
       },
     },
     compoundVariants: [
@@ -44,6 +49,12 @@ export const badgeVariants = cva(
       {
         variant: "destructive",
         appearance: "subtle",
+        // The `dark:bg-destructive-subtle` below is required, not defensive:
+        // twMerge cannot cancel a `dark:`-scoped class with an unscoped one, so
+        // `dark:bg-destructive/60` from the variant slot survives unless it is
+        // explicitly overridden at the same modifier scope. Without it a subtle
+        // destructive badge carries two backgrounds in dark mode and the winner
+        // depends on generated stylesheet order. Verified by removal.
         class:
           "bg-destructive-subtle text-destructive-text dark:bg-destructive-subtle [a&]:hover:bg-destructive-subtle/80",
       },

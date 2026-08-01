@@ -35,12 +35,21 @@ export const Solid: Story = {
 
 export const Subtle: Story = {
   render: () => (
-    <div className="flex flex-wrap gap-2">
-      {(["destructive", "success", "warning", "info"] as const).map((v) => (
-        <Badge key={v} variant={v} appearance="subtle">
-          {v}
-        </Badge>
-      ))}
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-2">
+        {VARIANTS.map((v) => (
+          <Badge key={v} variant={v} appearance="subtle">
+            {v}
+          </Badge>
+        ))}
+      </div>
+      <p className="text-muted-foreground max-w-sm text-xs">
+        <code>appearance=&quot;subtle&quot;</code> only changes the four toned
+        variants (destructive, success, warning, info). The remaining variants
+        are unaffected and must still render exactly as they do in{" "}
+        <strong>Solid</strong> — in particular <code>outline</code> must keep
+        its visible border.
+      </p>
     </div>
   ),
 };
