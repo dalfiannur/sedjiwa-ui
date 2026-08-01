@@ -37,6 +37,10 @@
   --success-subtle: oklch(0.93 0.06 155);
   --success-text: oklch(0.36 0.09 155);
 
+  /* warning-text intentionally shifts hue from warning-subtle (55 vs 70 here,
+     80 vs 70 below) to stay legible — a straight hue match reads muddy/brown
+     at these lightness levels for amber. Every other tone holds hue constant;
+     do not "fix" this to match. */
   --warning-subtle: oklch(0.93 0.07 70);
   --warning-text: oklch(0.43 0.12 55);
 

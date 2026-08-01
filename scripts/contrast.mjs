@@ -36,17 +36,37 @@ function contrast(fg, bg) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-function parseBlock(css, selector) {
-  const re = new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`);
-  const match = css.match(re);
-  if (!match) throw new Error(`Could not find "${selector}" block in tokens.css`);
+// Finds `selector`'s opening "{" and brace-counts forward to its matching "}",
+// rather than matching the first "\n}" (a lazy match runs past a selector's own
+// close and into whatever follows if the file is ever indented/nested, e.g.
+// wrapped in `@layer base { :root {...} .dark {...} }`).
+function findBlockBody(css, selector, label) {
+  const re = new RegExp(`${selector}\\s*\\{`);
+  const match = re.exec(css);
+  if (!match) throw new Error(`Could not find "${label}" block`);
+  const start = match.index + match[0].length;
+  let depth = 1;
+  let i = start;
+  for (; i < css.length && depth > 0; i++) {
+    if (css[i] === "{") depth++;
+    else if (css[i] === "}") depth--;
+  }
+  if (depth !== 0) throw new Error(`Unbalanced braces in "${label}" block`);
+  return css.slice(start, i - 1);
+}
+
+function parseTokens(body) {
   const tokens = {};
   const tokenRe = /--([\w-]+):\s*oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\)/g;
   let m;
-  while ((m = tokenRe.exec(match[1])) !== null) {
+  while ((m = tokenRe.exec(body)) !== null) {
     tokens[m[1]] = [Number(m[2]), Number(m[3]), Number(m[4])];
   }
   return tokens;
+}
+
+function parseBlock(css, selector) {
+  return parseTokens(findBlockBody(css, selector, selector));
 }
 
 const css = readFileSync(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
@@ -73,6 +93,21 @@ for (const [theme, tokens] of THEMES) {
     console.log(
       `${ok ? "PASS" : "FAIL"} ${ratio.toFixed(2).padStart(6)}:1  --${fgName} on --${bgName} (${theme})`
     );
+  }
+}
+
+// A subtle/text pair can be perfectly accessible in tokens.css and still render
+// transparent-on-transparent if nobody mapped it into `@theme inline` in
+// base.css — Tailwind only generates `bg-success-subtle` etc. for mapped vars.
+const baseCss = readFileSync(new URL("../src/styles/base.css", import.meta.url), "utf8");
+const themeInlineBody = findBlockBody(baseCss, "@theme inline", "@theme inline");
+for (const tone of TONES) {
+  for (const suffix of ["subtle", "text"]) {
+    const varName = `--color-${tone}-${suffix}`;
+    if (!themeInlineBody.includes(varName)) {
+      console.log(`UNMAPPED ${varName} missing from @theme inline`);
+      failures++;
+    }
   }
 }
 
