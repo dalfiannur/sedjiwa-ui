@@ -74,6 +74,7 @@ export function DateTimePicker({
   timeLabel = "Time",
   className,
 }: DateTimePickerProps) {
+  const timeLabelId = React.useId();
   const parsed = parseValue(value);
   const [draftDate, setDraftDate] = React.useState<Date>(() => parsed?.date ?? new Date());
   const [draftMinutes, setDraftMinutes] = React.useState<number>(() =>
@@ -149,12 +150,20 @@ export function DateTimePicker({
         />
 
         <div className="flex items-center justify-between gap-4 border-t pt-4">
-          <span className="text-foreground text-sm font-medium">{timeLabel}</span>
+          <span id={timeLabelId} className="text-foreground text-sm font-medium">
+            {timeLabel}
+          </span>
           <Select
             value={String(draftMinutes)}
             onValueChange={(v) => setDraftMinutes(Number(v))}
           >
-            <SelectTrigger className="w-[9rem]" data-slot="date-time-picker-time">
+            {/* The visible "Time" text is the trigger's accessible name.
+                Without this the combobox has none at all — axe button-name. */}
+            <SelectTrigger
+              className="w-[9rem]"
+              data-slot="date-time-picker-time"
+              aria-labelledby={timeLabelId}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

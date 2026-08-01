@@ -615,16 +615,25 @@ export function Calendar(props: CalendarProps) {
           onKeyDown={handleKeyDown}
           className="grid grid-cols-7 gap-y-1"
         >
-          {weekdayLabels.map((label) => (
-            <div
-              key={label}
-              role="columnheader"
-              className="text-center text-[0.7rem] font-medium text-muted-foreground uppercase"
-            >
-              {label}
-            </div>
-          ))}
-          {days.map(({ date, outside }) => {
+          {/* `contents` keeps the row out of the layout so the parent's
+              grid-cols-7 still lays out the cells directly, while ARIA still
+              sees the grid > row > cell structure it requires. Without these
+              rows axe reports aria-required-children on the grid and
+              aria-required-parent on every cell. */}
+          <div role="row" className="contents">
+            {weekdayLabels.map((label) => (
+              <div
+                key={label}
+                role="columnheader"
+                className="text-center text-[0.7rem] font-medium text-muted-foreground uppercase"
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+          {Array.from({ length: Math.ceil(days.length / 7) }, (_, weekIndex) => (
+            <div role="row" className="contents" key={weekIndex}>
+              {days.slice(weekIndex * 7, weekIndex * 7 + 7).map(({ date, outside }) => {
             const disabled = !inRange(date, min, max);
             const isToday = isSameDay(date, today);
             const isFocused = isSameDay(date, focusedDate);
@@ -646,6 +655,9 @@ export function Calendar(props: CalendarProps) {
               <div
                 role="gridcell"
                 key={date.toISOString()}
+                // aria-selected belongs here, not on the inner button — it is
+                // not an allowed attribute on role=button.
+                aria-selected={dayState.selected || undefined}
                 className={cn(
                   "relative text-center",
                   (dayState.isInRange || dayState.isPreview) &&
@@ -668,7 +680,6 @@ export function Calendar(props: CalendarProps) {
                   data-range-start={dayState.isStart || undefined}
                   data-range-end={dayState.isEnd || undefined}
                   data-preview={dayState.isPreview || undefined}
-                  aria-selected={dayState.selected || undefined}
                   aria-current={isToday ? "date" : undefined}
                   disabled={disabled}
                   tabIndex={isFocused ? 0 : -1}
@@ -705,7 +716,9 @@ export function Calendar(props: CalendarProps) {
                 </button>
               </div>
             );
-          })}
+              })}
+            </div>
+          ))}
         </div>
       </div>
     );

@@ -234,3 +234,51 @@ describe("<Calendar /> headerVariant", () => {
     expect(screen.getByLabelText("Next month")).toBeInTheDocument();
   });
 });
+
+describe("<Calendar /> grid semantics", () => {
+  // ARIA requires grid > row > gridcell|columnheader. Without the row layer,
+  // axe reports aria-required-children on the grid and aria-required-parent on
+  // every single cell.
+  it("puts every columnheader inside a row", () => {
+    const { container } = render(<Calendar mode="single" value={new Date(2028, 0, 10)} />);
+    const headers = [...container.querySelectorAll('[role="columnheader"]')];
+    expect(headers).toHaveLength(7);
+    for (const h of headers) {
+      expect(h.parentElement).toHaveAttribute("role", "row");
+    }
+  });
+
+  it("puts every gridcell inside a row", () => {
+    const { container } = render(<Calendar mode="single" value={new Date(2028, 0, 10)} />);
+    const cells = [...container.querySelectorAll('[role="gridcell"]')];
+    expect(cells.length).toBeGreaterThan(27);
+    for (const c of cells) {
+      expect(c.parentElement).toHaveAttribute("role", "row");
+    }
+  });
+
+  it("puts every row directly inside the grid", () => {
+    const { container } = render(<Calendar mode="single" value={new Date(2028, 0, 10)} />);
+    const rows = [...container.querySelectorAll('[role="row"]')];
+    expect(rows.length).toBeGreaterThan(1);
+    for (const r of rows) {
+      expect(r.parentElement).toHaveAttribute("role", "grid");
+    }
+  });
+
+  it("gives each row exactly seven children", () => {
+    const { container } = render(<Calendar mode="single" value={new Date(2028, 0, 10)} />);
+    for (const r of container.querySelectorAll('[role="row"]')) {
+      expect(r.children).toHaveLength(7);
+    }
+  });
+
+  // aria-selected is not allowed on role=button; it belongs on the gridcell.
+  it("puts aria-selected on the gridcell, not the day button", () => {
+    const { container } = render(<Calendar mode="single" value={new Date(2028, 0, 10)} />);
+    const selectedCell = container.querySelector('[role="gridcell"][aria-selected="true"]');
+    expect(selectedCell).not.toBeNull();
+    expect(selectedCell).toHaveTextContent("10");
+    expect(container.querySelector("button[aria-selected]")).toBeNull();
+  });
+});

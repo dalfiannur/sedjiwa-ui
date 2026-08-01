@@ -73,6 +73,13 @@ describe("<DateTimePicker />", () => {
     expect(onApply).not.toHaveBeenCalled();
   });
 
+  it("gives the time combobox an accessible name from its visible label", () => {
+    render(<DateTimePicker open onOpenChange={noop} onApply={noop} />);
+    // Without aria-labelledby the trigger renders as a combobox with no name
+    // at all, which axe reports as a critical button-name violation.
+    expect(screen.getByRole("combobox", { name: "Time" })).toBeInTheDocument();
+  });
+
   it("accepts overridden labels", () => {
     render(
       <DateTimePicker
