@@ -73,11 +73,145 @@ describe("<DateTimePicker />", () => {
     expect(onApply).not.toHaveBeenCalled();
   });
 
-  it("gives the time combobox an accessible name from its visible label", () => {
-    render(<DateTimePicker open onOpenChange={noop} onApply={noop} />);
-    // Without aria-labelledby the trigger renders as a combobox with no name
-    // at all, which axe reports as a critical button-name violation.
-    expect(screen.getByRole("combobox", { name: "Time" })).toBeInTheDocument();
+  it("names each time dropdown, and groups them under the visible label", () => {
+    render(<DateTimePicker open onOpenChange={noop} onApply={noop} locale="en-US" />);
+    // Every combobox needs its own name — the visible "Time" text cannot name
+    // two or three of them at once, and a nameless one is a critical axe
+    // button-name violation.
+    expect(screen.getByRole("combobox", { name: "Hour" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Minute" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Time" })).toBeInTheDocument();
+  });
+
+  it("shows an AM/PM dropdown in a 12-hour locale", () => {
+    render(<DateTimePicker open onOpenChange={noop} onApply={noop} locale="en-US" />);
+    expect(screen.getByRole("combobox", { name: "AM/PM" })).toBeInTheDocument();
+  });
+
+  it("omits the AM/PM dropdown in a 24-hour locale", () => {
+    render(<DateTimePicker open onOpenChange={noop} onApply={noop} locale="id-ID" />);
+    expect(screen.queryByRole("combobox", { name: "AM/PM" })).toBeNull();
+    expect(screen.getByRole("combobox", { name: "Hour" })).toBeInTheDocument();
+  });
+
+  it("shows the hour in 24-hour form for a 24-hour locale", () => {
+    render(
+      <DateTimePicker
+        open
+        onOpenChange={noop}
+        onApply={noop}
+        locale="id-ID"
+        value="2028-01-10T21:30"
+      />,
+    );
+    expect(screen.getByRole("combobox", { name: "Hour" })).toHaveTextContent("21");
+  });
+
+  it("shows the hour in 12-hour form, with the period, for a 12-hour locale", () => {
+    render(
+      <DateTimePicker
+        open
+        onOpenChange={noop}
+        onApply={noop}
+        locale="en-US"
+        value="2028-01-10T21:30"
+      />,
+    );
+    expect(screen.getByRole("combobox", { name: "Hour" })).toHaveTextContent("9");
+    expect(screen.getByRole("combobox", { name: "AM/PM" })).toHaveTextContent(/PM/i);
+  });
+
+  it("renders midnight as 12 AM rather than 0", () => {
+    render(
+      <DateTimePicker
+        open
+        onOpenChange={noop}
+        onApply={noop}
+        locale="en-US"
+        value="2028-01-10T00:30"
+      />,
+    );
+    expect(screen.getByRole("combobox", { name: "Hour" })).toHaveTextContent("12");
+    expect(screen.getByRole("combobox", { name: "AM/PM" })).toHaveTextContent(/AM/i);
+  });
+
+  it("keeps PM when the hour is changed in a 12-hour locale", async () => {
+    const onApply = vi.fn();
+    render(
+      <DateTimePicker
+        open
+        onOpenChange={noop}
+        onApply={onApply}
+        locale="en-US"
+        value="2028-01-10T21:30"
+      />,
+    );
+    // Picking "11" while PM is selected must mean 23:00, not 11:00. Reading
+    // initial state alone cannot catch a dropped PM offset here.
+    await userEvent.click(screen.getByRole("combobox", { name: "Hour" }));
+    await userEvent.click(screen.getByRole("option", { name: "11" }));
+    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    expect(onApply).toHaveBeenCalledWith("2028-01-10T23:30");
+  });
+
+  it("flips between AM and PM without changing the displayed hour", async () => {
+    const onApply = vi.fn();
+    render(
+      <DateTimePicker
+        open
+        onOpenChange={noop}
+        onApply={onApply}
+        locale="en-US"
+        value="2028-01-10T21:30"
+      />,
+    );
+    await userEvent.click(screen.getByRole("combobox", { name: "AM/PM" }));
+    await userEvent.click(screen.getByRole("option", { name: /AM/i }));
+    expect(screen.getByRole("combobox", { name: "Hour" })).toHaveTextContent("9");
+    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    expect(onApply).toHaveBeenCalledWith("2028-01-10T09:30");
+  });
+
+  it("changes the minute without disturbing the hour", async () => {
+    const onApply = vi.fn();
+    render(
+      <DateTimePicker
+        open
+        onOpenChange={noop}
+        onApply={onApply}
+        locale="id-ID"
+        timeStep={15}
+        value="2028-01-10T21:30"
+      />,
+    );
+    await userEvent.click(screen.getByRole("combobox", { name: "Minute" }));
+    await userEvent.click(screen.getByRole("option", { name: "45" }));
+    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    expect(onApply).toHaveBeenCalledWith("2028-01-10T21:45");
+  });
+
+  it("offers minute options at the configured step", async () => {
+    render(
+      <DateTimePicker open onOpenChange={noop} onApply={noop} locale="id-ID" timeStep={15} />,
+    );
+    await userEvent.click(screen.getByRole("combobox", { name: "Minute" }));
+    const opts = screen.getAllByRole("option").map((o) => o.textContent);
+    expect(opts).toEqual(["00", "15", "30", "45"]);
+  });
+
+  it("commits the 24-hour value even when displayed in 12-hour form", async () => {
+    const onApply = vi.fn();
+    render(
+      <DateTimePicker
+        open
+        onOpenChange={noop}
+        onApply={onApply}
+        locale="en-US"
+        value="2028-01-10T21:30"
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    expect(onApply).toHaveBeenCalledWith("2028-01-10T21:30");
   });
 
   it("accepts overridden labels", () => {
