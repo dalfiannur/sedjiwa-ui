@@ -64,6 +64,15 @@ type SharedProps = {
    * "January 2028" label with only the prev/next arrows.
    */
   headerVariant?: "dropdowns" | "label";
+  /** Day cell shape. `"rounded"` (default) or `"circle"`. */
+  dayShape?: "rounded" | "circle";
+  /** Weekday heading case. `"upper"` (default, SUN) or `"title"` (Sun). */
+  weekdayCase?: "upper" | "title";
+  /**
+   * Where the prev/next month arrows sit. `"edges"` (default) pushes them to
+   * either side of the header; `"grouped"` puts both together on the right.
+   */
+  navPlacement?: "edges" | "grouped";
 };
 
 export type CalendarProps = (SingleModeProps | RangeModeProps | MultipleModeProps) &
@@ -168,6 +177,9 @@ export function Calendar(props: CalendarProps) {
     className,
     autoFocus = false,
     headerVariant = "dropdowns",
+    dayShape = "rounded",
+    weekdayCase = "upper",
+    navPlacement = "edges",
   } = props;
   const mode = props.mode ?? "single";
   const showOutsideDays = showOutsideDaysProp ?? numberOfMonths === 1;
@@ -506,7 +518,10 @@ export function Calendar(props: CalendarProps) {
               aria-label="Previous month"
               disabled={prevDisabled}
               onClick={() => setViewMonth((m) => addMonths(m, -1))}
-              className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4"
+              className={cn(
+                "inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4",
+                navPlacement === "grouped" && "order-2",
+              )}
             >
               <ChevronLeft />
             </button>
@@ -514,7 +529,10 @@ export function Calendar(props: CalendarProps) {
             <span aria-hidden className="size-7 shrink-0" />
           )}
           <div
-            className="flex flex-1 items-center justify-center gap-1"
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1",
+              navPlacement === "grouped" && "order-1 justify-center",
+            )}
             data-slot="calendar-label"
           >
             <span className="sr-only" aria-live="polite">
@@ -617,7 +635,10 @@ export function Calendar(props: CalendarProps) {
               aria-label="Next month"
               disabled={nextDisabled}
               onClick={() => setViewMonth((m) => addMonths(m, 1))}
-              className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4"
+              className={cn(
+                "inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4",
+                navPlacement === "grouped" && "order-3",
+              )}
             >
               <ChevronRight />
             </button>
@@ -698,7 +719,10 @@ export function Calendar(props: CalendarProps) {
               <div
                 key={label}
                 role="columnheader"
-                className="text-center text-[0.7rem] font-medium text-muted-foreground uppercase"
+                className={cn(
+                  "text-center text-[0.7rem] font-medium text-muted-foreground",
+                  weekdayCase === "upper" && "uppercase",
+                )}
               >
                 {label}
               </div>
@@ -776,7 +800,8 @@ export function Calendar(props: CalendarProps) {
                     mode === "range" ? () => setHoveredDate(date) : undefined
                   }
                   className={cn(
-                    "inline-flex size-8 items-center justify-center rounded-md text-sm font-normal transition-colors",
+                    "inline-flex size-8 items-center justify-center text-sm font-normal transition-colors",
+                    dayShape === "circle" ? "rounded-full" : "rounded-md",
                     "hover:bg-accent hover:text-accent-foreground",
                     "focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]",
                     "data-[outside]:text-muted-foreground/50",

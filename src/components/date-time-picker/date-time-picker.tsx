@@ -208,6 +208,9 @@ export function DateTimePicker({
         <Calendar
           mode="single"
           headerVariant="label"
+          dayShape="circle"
+          weekdayCase="title"
+          navPlacement="grouped"
           value={draftDate}
           onSelect={setDraftDate}
           min={min ? new Date(`${min}T00:00`) : undefined}

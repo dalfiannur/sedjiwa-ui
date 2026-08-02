@@ -323,6 +323,46 @@ describe("<Calendar /> label-mode month/year chooser", () => {
   });
 });
 
+describe("<Calendar /> cosmetic variants", () => {
+  const dayFor = (container: HTMLElement, label: string) =>
+    [...container.querySelectorAll('[data-slot="calendar-day"]')].find(
+      (b) => b.textContent === label,
+    );
+
+  it("defaults to rounded days, uppercase weekdays and edge-placed arrows", () => {
+    const { container } = render(<Calendar mode="single" value={new Date(2028, 0, 10)} />);
+    expect(dayFor(container, "10")).toHaveClass("rounded-md");
+    expect(dayFor(container, "10")).not.toHaveClass("rounded-full");
+    expect(container.querySelector('[role="columnheader"]')).toHaveClass("uppercase");
+    expect(container.querySelector('[data-slot="calendar-prev"]')).not.toHaveClass("order-2");
+  });
+
+  it("renders circular days when asked", () => {
+    const { container } = render(
+      <Calendar mode="single" value={new Date(2028, 0, 10)} dayShape="circle" />,
+    );
+    expect(dayFor(container, "10")).toHaveClass("rounded-full");
+    expect(dayFor(container, "10")).not.toHaveClass("rounded-md");
+  });
+
+  it("renders title-case weekdays when asked", () => {
+    const { container } = render(
+      <Calendar mode="single" value={new Date(2028, 0, 10)} weekdayCase="title" />,
+    );
+    expect(container.querySelector('[role="columnheader"]')).not.toHaveClass("uppercase");
+  });
+
+  it("groups the arrows after the label when asked", () => {
+    const { container } = render(
+      <Calendar mode="single" value={new Date(2028, 0, 10)} navPlacement="grouped" />,
+    );
+    // Flex order puts label, then prev, then next — both arrows end up right.
+    expect(container.querySelector('[data-slot="calendar-label"]')).toHaveClass("order-1");
+    expect(container.querySelector('[data-slot="calendar-prev"]')).toHaveClass("order-2");
+    expect(container.querySelector('[data-slot="calendar-next"]')).toHaveClass("order-3");
+  });
+});
+
 describe("<Calendar /> grid semantics", () => {
   // ARIA requires grid > row > gridcell|columnheader. Without the row layer,
   // axe reports aria-required-children on the grid and aria-required-parent on
