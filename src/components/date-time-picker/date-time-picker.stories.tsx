@@ -148,3 +148,52 @@ export const Bounded: Story = {
     return <BoundedExample />;
   },
 };
+
+// Inline mode: a DatePicker-style field trigger with a Popover. No Apply —
+// every change commits immediately. This is the shape to use inside dialogs,
+// where the modal variant would stack an overlay on an overlay.
+export const Inline: Story = {
+  render: () => {
+    function InlineExample() {
+      const [value, setValue] = useState<string | null>(null);
+      return (
+        <div className="flex w-72 flex-col items-start gap-3">
+          <DateTimePicker mode="inline" value={value} onValueChange={setValue} />
+          <p className="text-sm text-muted-foreground">
+            Current value: <code>{value ?? "null"}</code>
+          </p>
+        </div>
+      );
+    }
+    return <InlineExample />;
+  },
+};
+
+// Inline with a value already set, in a 24-hour locale with Indonesian labels.
+export const InlineWithValue: Story = {
+  render: () => {
+    function InlineWithValueExample() {
+      const [value, setValue] = useState<string | null>("2028-01-10T09:30");
+      return (
+        <div className="flex w-72 flex-col items-start gap-3">
+          <DateTimePicker
+            mode="inline"
+            value={value}
+            onValueChange={setValue}
+            locale="id-ID"
+            weekStartsOn={1}
+            placeholder="Pilih tanggal & waktu"
+            todayLabel="Hari ini"
+            timeLabel="Waktu"
+            hourLabel="Jam"
+            minuteLabel="Menit"
+          />
+          <p className="text-sm text-muted-foreground">
+            Current value: <code>{value ?? "null"}</code>
+          </p>
+        </div>
+      );
+    }
+    return <InlineWithValueExample />;
+  },
+};
