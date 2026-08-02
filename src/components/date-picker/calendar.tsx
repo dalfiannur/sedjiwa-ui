@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/cn";
 import {
   Select,
@@ -187,6 +187,14 @@ export function Calendar(props: CalendarProps) {
   const [focusedDate, setFocusedDate] = React.useState<Date>(() =>
     clampToRange(initialAnchor, min, max),
   );
+  // Label-mode month/year chooser. The label header has no year control of its
+  // own, so without this a mouse user can only reach another year by clicking
+  // the month arrow twelve times. `pickerYear` is the year being browsed,
+  // which is not yet the selected one.
+  const [monthPickerOpen, setMonthPickerOpen] = React.useState(false);
+  const [pickerYear, setPickerYear] = React.useState<number>(() =>
+    startOfMonth(initialAnchor).getFullYear(),
+  );
   const [hoveredDate, setHoveredDate] = React.useState<Date | null>(null);
   // Anchor for Shift-click range selection in multiple mode: the last plain
   // (non-Shift) click. Stays fixed so the user can re-extend from the same day.
@@ -373,11 +381,12 @@ export function Calendar(props: CalendarProps) {
     fromYear ?? min?.getFullYear() ?? today.getFullYear() - 100;
   const yearToResolved =
     toYear ?? max?.getFullYear() ?? today.getFullYear() + 50;
-  const years = React.useMemo(() => {
-    const lo = Math.min(yearFromResolved, yearToResolved);
-    const hi = Math.max(yearFromResolved, yearToResolved);
-    return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
-  }, [yearFromResolved, yearToResolved]);
+  const yearLo = Math.min(yearFromResolved, yearToResolved);
+  const yearHi = Math.max(yearFromResolved, yearToResolved);
+  const years = React.useMemo(
+    () => Array.from({ length: yearHi - yearLo + 1 }, (_, i) => yearLo + i),
+    [yearLo, yearHi],
+  );
 
   // Computes day-cell state for range mode.
   const rangeValue =
@@ -512,9 +521,19 @@ export function Calendar(props: CalendarProps) {
               {headerLabel}
             </span>
             {headerVariant === "label" ? (
-              <span className="text-sm font-medium capitalize" aria-hidden="true">
+              <button
+                type="button"
+                data-slot="calendar-label-trigger"
+                aria-expanded={monthPickerOpen}
+                onClick={() => {
+                  setPickerYear(monthAtOffset.getFullYear());
+                  setMonthPickerOpen((o) => !o);
+                }}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium capitalize transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] [&_svg]:size-4"
+              >
                 {headerLabel}
-              </span>
+                <ChevronDown aria-hidden />
+              </button>
             ) : (
               <>
                 <Select
@@ -607,6 +626,60 @@ export function Calendar(props: CalendarProps) {
           )}
         </div>
 
+        {monthPickerOpen ? (
+          <div data-slot="calendar-month-picker" className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                aria-label="Previous year"
+                disabled={pickerYear <= yearLo}
+                onClick={() => setPickerYear((y) => y - 1)}
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4"
+              >
+                <ChevronLeft />
+              </button>
+              <span aria-live="polite" className="text-sm font-medium">
+                {pickerYear}
+              </span>
+              <button
+                type="button"
+                aria-label="Next year"
+                disabled={pickerYear >= yearHi}
+                onClick={() => setPickerYear((y) => y + 1)}
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4"
+              >
+                <ChevronRight />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              {monthNames.map((name, i) => {
+                // A month is reachable if any part of it falls inside min/max.
+                const monthEnd = addDays(startOfMonth(new Date(pickerYear, i + 1, 1)), -1);
+                const outOfRange =
+                  (min && monthEnd < startOfMonth(min)) ||
+                  (max && new Date(pickerYear, i, 1) > max);
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    data-slot="calendar-month-option"
+                    data-selected={
+                      (i === monthIdx && pickerYear === monthYear) || undefined
+                    }
+                    disabled={outOfRange || undefined}
+                    onClick={() => {
+                      setViewMonth(clampViewMonth(pickerYear, i - offset, min, max));
+                      setMonthPickerOpen(false);
+                    }}
+                    className="rounded-md px-2 py-2 text-sm capitalize transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] data-[selected]:bg-primary data-[selected]:text-primary-foreground disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
         <div
           role="grid"
           aria-label={headerLabel}
@@ -720,6 +793,7 @@ export function Calendar(props: CalendarProps) {
             </div>
           ))}
         </div>
+        )}
       </div>
     );
   }

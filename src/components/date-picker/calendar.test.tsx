@@ -235,6 +235,94 @@ describe("<Calendar /> headerVariant", () => {
   });
 });
 
+describe("<Calendar /> label-mode month/year chooser", () => {
+  const openChooser = async (value = new Date(2028, 0, 10)) => {
+    const utils = render(
+      <Calendar mode="single" value={value} headerVariant="label" />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /January 2028/i }));
+    return utils;
+  };
+
+  it("does not show the chooser until the label is clicked", () => {
+    const { container } = render(
+      <Calendar mode="single" value={new Date(2028, 0, 10)} headerVariant="label" />,
+    );
+    expect(container.querySelector('[data-slot="calendar-month-picker"]')).toBeNull();
+    expect(container.querySelector('[data-slot="calendar-grid"]')).not.toBeNull();
+  });
+
+  it("replaces the day grid with the chooser when the label is clicked", async () => {
+    const { container } = await openChooser();
+    expect(container.querySelector('[data-slot="calendar-month-picker"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="calendar-grid"]')).toBeNull();
+  });
+
+  it("changes year without leaving the chooser", async () => {
+    await openChooser();
+    await userEvent.click(screen.getByLabelText("Next year"));
+    expect(screen.getByText("2029")).toBeInTheDocument();
+    // Still browsing — the header must not have committed yet.
+    expect(screen.getByRole("button", { name: /January 2028/i })).toBeInTheDocument();
+  });
+
+  it("commits the chosen month and year, and returns to the day grid", async () => {
+    const { container } = await openChooser();
+    await userEvent.click(screen.getByLabelText("Next year"));
+    await userEvent.click(screen.getByRole("button", { name: "March" }));
+    expect(container.querySelector('[data-slot="calendar-month-picker"]')).toBeNull();
+    expect(container.querySelector('[data-slot="calendar-label"]')).toHaveTextContent(
+      "March 2029",
+    );
+  });
+
+  it("marks the current month as selected", async () => {
+    const { container } = await openChooser();
+    const selected = container.querySelector(
+      '[data-slot="calendar-month-option"][data-selected]',
+    );
+    expect(selected).toHaveTextContent("January");
+  });
+
+  it("does not offer a chooser in dropdowns mode", () => {
+    const { container } = render(
+      <Calendar mode="single" value={new Date(2028, 0, 10)} />,
+    );
+    expect(container.querySelector('[data-slot="calendar-label-trigger"]')).toBeNull();
+  });
+
+  it("stops at the year bounds", async () => {
+    render(
+      <Calendar
+        mode="single"
+        value={new Date(2028, 0, 10)}
+        headerVariant="label"
+        fromYear={2028}
+        toYear={2028}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /January 2028/i }));
+    expect(screen.getByLabelText("Previous year")).toBeDisabled();
+    expect(screen.getByLabelText("Next year")).toBeDisabled();
+  });
+
+  it("disables months outside min/max", async () => {
+    render(
+      <Calendar
+        mode="single"
+        value={new Date(2028, 5, 10)}
+        headerVariant="label"
+        min={new Date(2028, 3, 1)}
+        max={new Date(2028, 7, 31)}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /June 2028/i }));
+    expect(screen.getByRole("button", { name: "February" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "May" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "October" })).toBeDisabled();
+  });
+});
+
 describe("<Calendar /> grid semantics", () => {
   // ARIA requires grid > row > gridcell|columnheader. Without the row layer,
   // axe reports aria-required-children on the grid and aria-required-parent on
