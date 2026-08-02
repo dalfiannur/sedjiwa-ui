@@ -91,7 +91,17 @@ export type {
 } from "./components/date-range-picker";
 
 export { DateTimePicker } from "./components/date-time-picker";
-export type { DateTimePickerProps } from "./components/date-time-picker";
+export type {
+  DateTimePickerProps,
+  DateTimePickerModalProps,
+  DateTimePickerInlineProps,
+} from "./components/date-time-picker";
+
+export { DateTimeRangePicker } from "./components/date-time-range-picker";
+export type {
+  DateTimeRangePickerProps,
+  DateTimeRangeValue,
+} from "./components/date-time-range-picker";
 
 export {
   Popover, PopoverAnchor, PopoverContent, PopoverTrigger,
