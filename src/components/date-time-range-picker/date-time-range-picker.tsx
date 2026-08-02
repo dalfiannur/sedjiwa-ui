@@ -324,6 +324,14 @@ export const DateTimeRangePicker = React.forwardRef<
             locale={locale}
             weekStartsOn={weekStartsOn}
             numberOfMonths={numberOfMonths}
+            // Match DateTimePicker exactly. These two are siblings and may sit
+            // on the same screen; differing headers, weekday case and day
+            // shapes would read as two unrelated date UIs. Year navigation is
+            // preserved by the label header's month/year chooser.
+            headerVariant="label"
+            dayShape="circle"
+            weekdayCase="title"
+            navPlacement="grouped"
             autoFocus
           />
 
