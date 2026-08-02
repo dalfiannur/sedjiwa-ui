@@ -337,6 +337,29 @@ describe("<Calendar /> cosmetic variants", () => {
     expect(container.querySelector('[data-slot="calendar-prev"]')).not.toHaveClass("order-2");
   });
 
+  it("does not paint a cell background behind a single-mode selection", () => {
+    // The cell background is the range-connecting band. In single mode it
+    // shows through around a circular day button as a second, square backdrop.
+    const { container } = render(
+      <Calendar mode="single" value={new Date(2028, 0, 10)} dayShape="circle" />,
+    );
+    const cell = container.querySelector('[role="gridcell"][aria-selected="true"]');
+    expect(cell).not.toHaveClass("bg-accent");
+  });
+
+  it("still paints the band between the ends of a range", () => {
+    const { container } = render(
+      <Calendar
+        mode="range"
+        value={{ from: new Date(2028, 0, 10), to: new Date(2028, 0, 14) }}
+      />,
+    );
+    const banded = [...container.querySelectorAll('[role="gridcell"]')].filter((c) =>
+      c.className.includes("bg-accent"),
+    );
+    expect(banded.length).toBeGreaterThan(0);
+  });
+
   it("renders circular days when asked", () => {
     const { container } = render(
       <Calendar mode="single" value={new Date(2028, 0, 10)} dayShape="circle" />,

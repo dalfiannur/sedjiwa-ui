@@ -757,13 +757,20 @@ export function Calendar(props: CalendarProps) {
                 aria-selected={dayState.selected || undefined}
                 className={cn(
                   "relative text-center",
-                  (dayState.isInRange || dayState.isPreview) &&
-                    "bg-accent first:rounded-l-md last:rounded-r-md",
-                  dayState.isStart && "rounded-l-md bg-accent",
-                  dayState.isEnd && "rounded-r-md bg-accent",
-                  dayState.isPreview &&
-                    !dayState.isInRange &&
-                    "bg-accent/60",
+                  // The cell background is the connecting band between the ends
+                  // of a range. Single mode has no band — it reports
+                  // isStart/isEnd on the one selected day purely so the range
+                  // styling hooks stay consistent — and painting it there puts
+                  // a second, differently-shaped background behind the day
+                  // button. Invisible while both were rounded-md; obvious the
+                  // moment the button became a circle.
+                  mode !== "single" && [
+                    (dayState.isInRange || dayState.isPreview) &&
+                      "bg-accent first:rounded-l-md last:rounded-r-md",
+                    dayState.isStart && "rounded-l-md bg-accent",
+                    dayState.isEnd && "rounded-r-md bg-accent",
+                    dayState.isPreview && !dayState.isInRange && "bg-accent/60",
+                  ],
                 )}
               >
                 <button
