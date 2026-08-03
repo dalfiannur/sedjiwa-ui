@@ -122,6 +122,45 @@ describe("<CardListTable />", () => {
     expect(screen.getByText("Act Ada")).toBeInTheDocument();
   });
 
+  it("with hideLabels, leads each field with its icon instead of the text label", () => {
+    const cols: Column<Person>[] = [
+      { key: "name", header: "Name", render: (p) => p.name, icon: <svg data-testid="i-name" /> },
+      { key: "role", header: "Role", render: (p) => p.role, icon: <svg data-testid="i-role" /> },
+    ];
+    render(<CardListTable columns={cols} rows={PEOPLE} getRowKey={(p) => p.id} hideLabels />);
+    expect(screen.getAllByTestId("i-name")).toHaveLength(2);
+    // Every remaining "Name" is screen-reader-only: no visible text label is
+    // left, but the label still reaches assistive tech, because an icon only
+    // conveys meaning to people who can see it.
+    const labels = screen.getAllByText("Name");
+    expect(labels).toHaveLength(2);
+    labels.forEach((label) => expect(label).toHaveClass("sr-only"));
+  });
+
+  it("keeps the text label for a column that has no icon, even with hideLabels", () => {
+    // The fallback is the safety net: "2 org" without "Penumpang" is meaningless,
+    // so a column nobody gave an icon must not be silently stripped.
+    const cols: Column<Person>[] = [
+      { key: "name", header: "Name", render: (p) => p.name, icon: <svg data-testid="i-name" /> },
+      { key: "role", header: "Role", render: (p) => p.role },
+    ];
+    render(<CardListTable columns={cols} rows={PEOPLE} getRowKey={(p) => p.id} hideLabels />);
+    expect(screen.getAllByText("Role")[0]).toBeVisible();
+    expect(screen.getAllByText("Role")[0]).not.toHaveClass("sr-only");
+  });
+
+  it("only narrows the label column when every field actually shows an icon", () => {
+    const mixed: Column<Person>[] = [
+      { key: "name", header: "Name", render: (p) => p.name, icon: <svg /> },
+      { key: "role", header: "Role", render: (p) => p.role },
+    ];
+    const { container } = render(
+      <CardListTable columns={mixed} rows={PEOPLE} getRowKey={(p) => p.id} hideLabels />
+    );
+    // A mix still needs room for the text that fell back.
+    expect(container.querySelector("dl")).toHaveClass("grid-cols-[minmax(6rem,auto)_1fr]");
+  });
+
   it("sizes the label a step below the value so the pair stays legible when both are muted", () => {
     // A column rendered as tier-2 in the table arrives already muted, so colour
     // alone leaves label and value identical. Size carries the distinction.

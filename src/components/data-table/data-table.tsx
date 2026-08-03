@@ -15,6 +15,15 @@ export type Column<T> = {
   render: (item: T) => ReactNode;
   align?: "left" | "right";
   className?: string;
+  /**
+   * Stands in for `header` when `CardListTable` runs label-less (`hideLabels`).
+   * Ignored by the table itself, which always shows the text header.
+   *
+   * A column with no icon keeps its text label even in label-less mode — the
+   * fallback is deliberate, so dropping labels can never silently strip meaning
+   * from a value that needed one ("2 org" says nothing without "Penumpang").
+   */
+  icon?: ReactNode;
 };
 
 export type DataTableProps<T> = {

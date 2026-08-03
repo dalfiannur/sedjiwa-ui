@@ -26,6 +26,15 @@ export type CardListTableProps<T> = {
    * ignored — every column becomes an aligned table column.
    */
   showHeader?: boolean;
+  /**
+   * Row orientation only: drop the text labels and lead each field with its
+   * `column.icon` instead. Repeating "Keperluan / Kendaraan / Tujuan / Jadwal"
+   * on every card is most of the card's height on a phone.
+   *
+   * Columns without an icon keep their text label, so a value that genuinely
+   * needs one is never left bare.
+   */
+  hideLabels?: boolean;
   className?: string;
 };
 
@@ -40,6 +49,7 @@ export function CardListTable<T>({
   dense,
   orientation = "row",
   showHeader,
+  hideLabels,
   className,
 }: CardListTableProps<T>) {
   if (rows.length === 0) {
@@ -73,6 +83,9 @@ export function CardListTable<T>({
   const gridStyle = tableMode
     ? { gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }
     : undefined;
+
+  const allIcons =
+    !!hideLabels && bodyColumns.length > 0 && bodyColumns.every((col) => col.icon);
 
   return (
     <div
@@ -173,19 +186,36 @@ export function CardListTable<T>({
           ) : (
             <dl
               className={cn(
-                "grid grid-cols-[minmax(6rem,auto)_1fr] items-baseline gap-x-4 text-sm",
+                "grid items-baseline text-sm",
+                // Only collapse the label column to icon width when *every*
+                // field is actually showing an icon. With a mix, the columns
+                // that fell back to text still need room to sit on one line.
+                allIcons
+                  ? "grid-cols-[1.25rem_1fr] gap-x-2.5"
+                  : "grid-cols-[minmax(6rem,auto)_1fr] gap-x-4",
                 dense ? "gap-y-1" : "gap-y-2",
                 pad
               )}
             >
               {bodyColumns.map((col) => (
                 <Fragment key={col.key}>
-                  {/* One size smaller than the value. Colour alone cannot carry
-                      the label/value distinction here: a column rendered as
-                      tier-2 in the table arrives already muted, landing the
-                      same colour and weight as its own label. The column
-                      orientation below has always done this. */}
-                  <dt className="text-muted-foreground text-xs">{col.header}</dt>
+                  {hideLabels && col.icon ? (
+                    // The icon carries the label's job. It stays in the label
+                    // column so values keep a common left edge, and it is
+                    // aria-hidden with the header text kept for screen readers
+                    // — an icon is only unambiguous to people who can see it.
+                    <dt className="text-muted-foreground flex h-5 items-center [&_svg]:size-3.5">
+                      <span aria-hidden="true">{col.icon}</span>
+                      <span className="sr-only">{col.header}</span>
+                    </dt>
+                  ) : (
+                    // One size smaller than the value. Colour alone cannot carry
+                    // the label/value distinction here: a column rendered as
+                    // tier-2 in the table arrives already muted, landing the
+                    // same colour and weight as its own label. The column
+                    // orientation below has always done this.
+                    <dt className="text-muted-foreground text-xs">{col.header}</dt>
+                  )}
                   {/* col.align is deliberately not applied. Right-alignment is a
                       table concern — in a two-column label/value list it drags
                       one value to the far edge, away from its label and out of
