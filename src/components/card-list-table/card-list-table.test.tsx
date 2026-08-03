@@ -75,15 +75,58 @@ describe("<CardListTable />", () => {
     expect(screen.getByText("Nothing here")).toBeInTheDocument();
   });
 
-  it("applies align:right and col.className to the value cell", () => {
+  it("applies col.className but NOT align:right to the value cell", () => {
+    // align is a table concern. In a two-column label/value list, honouring it
+    // drags one value to the far card edge — away from its own label and out
+    // of line with every other value ("Penumpang ........ 2 org").
     const cols: Column<Person>[] = [
       { key: "name", header: "Name", render: (p) => p.name },
       { key: "role", header: "Role", render: (p) => p.role, align: "right", className: "font-bold" },
     ];
     render(<CardListTable columns={cols} rows={PEOPLE} getRowKey={(p) => p.id} />);
     const value = screen.getByText("Engineer");
-    expect(value).toHaveClass("text-right");
+    expect(value).not.toHaveClass("text-right");
     expect(value).toHaveClass("font-bold");
+  });
+
+  it("puts the action on the title's line, not in a block below the fields", () => {
+    const { container } = render(
+      <CardListTable
+        columns={COLUMNS}
+        rows={PEOPLE}
+        getRowKey={(p) => p.id}
+        titleKey="status"
+        renderAction={(p) => <button>Act {p.name}</button>}
+      />
+    );
+    const card = container.querySelector('[data-slot="card-list-table-item"]')!;
+    const action = screen.getByText("Act Ada");
+    const title = screen.getByText("Active");
+    // Same header row as the title...
+    const header = title.closest("div")!.parentElement!;
+    expect(header.contains(action)).toBe(true);
+    // ...and that row comes before the field list, not after it.
+    const dl = card.querySelector("dl")!;
+    expect(header.compareDocumentPosition(dl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("renders the action even with no titleKey", () => {
+    render(
+      <CardListTable
+        columns={COLUMNS}
+        rows={PEOPLE}
+        getRowKey={(p) => p.id}
+        renderAction={(p) => <button>Act {p.name}</button>}
+      />
+    );
+    expect(screen.getByText("Act Ada")).toBeInTheDocument();
+  });
+
+  it("sizes the label a step below the value so the pair stays legible when both are muted", () => {
+    // A column rendered as tier-2 in the table arrives already muted, so colour
+    // alone leaves label and value identical. Size carries the distinction.
+    render(<CardListTable columns={COLUMNS} rows={PEOPLE} getRowKey={(p) => p.id} />);
+    expect(screen.getAllByText("Role")[0]).toHaveClass("text-xs");
   });
 
   it("marks the container dense and tightens the stack gap when dense", () => {

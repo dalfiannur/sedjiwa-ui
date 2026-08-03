@@ -111,9 +111,23 @@ export function CardListTable<T>({
           )}
           onClick={onRowClick ? () => onRowClick(row) : undefined}
         >
-          {titleColumn && (
-            <div className={cn("text-card-foreground font-medium", pad)}>
-              {titleColumn.render(row)}
+          {(titleColumn || renderAction) && (
+            // The action shares the title's line instead of sitting in a block
+            // of its own below the fields. At the bottom it read as belonging
+            // to nothing — a lone icon button under a run of label/value rows,
+            // far from the record it acts on.
+            <div className={cn("flex items-start justify-between gap-2", pad)}>
+              <div className="text-card-foreground min-w-0 flex-1 font-medium">
+                {titleColumn?.render(row)}
+              </div>
+              {renderAction && (
+                <div
+                  className="-mr-1 shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {renderAction(row)}
+                </div>
+              )}
             </div>
           )}
 
@@ -159,31 +173,27 @@ export function CardListTable<T>({
           ) : (
             <dl
               className={cn(
-                "grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-4 text-sm",
+                "grid grid-cols-[minmax(6rem,auto)_1fr] items-baseline gap-x-4 text-sm",
                 dense ? "gap-y-1" : "gap-y-2",
                 pad
               )}
             >
               {bodyColumns.map((col) => (
                 <Fragment key={col.key}>
-                  <dt className="text-muted-foreground">{col.header}</dt>
-                  <dd
-                    className={cn(
-                      col.align === "right" && "text-right",
-                      col.className
-                    )}
-                  >
-                    {col.render(row)}
-                  </dd>
+                  {/* One size smaller than the value. Colour alone cannot carry
+                      the label/value distinction here: a column rendered as
+                      tier-2 in the table arrives already muted, landing the
+                      same colour and weight as its own label. The column
+                      orientation below has always done this. */}
+                  <dt className="text-muted-foreground text-xs">{col.header}</dt>
+                  {/* col.align is deliberately not applied. Right-alignment is a
+                      table concern — in a two-column label/value list it drags
+                      one value to the far edge, away from its label and out of
+                      line with every other value. */}
+                  <dd className={col.className}>{col.render(row)}</dd>
                 </Fragment>
               ))}
             </dl>
-          )}
-
-          {renderAction && (
-            <div className={pad} onClick={(e) => e.stopPropagation()}>
-              {renderAction(row)}
-            </div>
           )}
         </Card>
       ))}
