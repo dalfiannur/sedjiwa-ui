@@ -26,6 +26,25 @@ describe("<SmartTable />", () => {
     expect(screen.getAllByRole("row")).toHaveLength(ORDERS.length + 1); // + header
   });
 
+  it("right-aligns a right-aligned column's header, not just its cells", () => {
+    // The fixture has always had a right-aligned column, but nothing asserted
+    // on its header — so the header rendering hard left above right-aligned
+    // values shipped unnoticed until it was seen against real rows.
+    const { container } = render(
+      <SmartTable columns={COLUMNS} rows={ORDERS} getRowKey={(o) => o.id} />,
+    );
+    const headers = container.querySelectorAll('[role="columnheader"]');
+    const phoneHeader = Array.from(headers).find((h) =>
+      h.textContent?.includes("Phone"),
+    )!;
+
+    expect(phoneHeader.querySelector(".text-right")).not.toBeNull();
+    // and the cells under it agree
+    expect(
+      screen.getByText("(303) 555-0105").closest(".text-right"),
+    ).not.toBeNull();
+  });
+
   it("renders a leading cell per row and the leading header when renderLeading is set", () => {
     render(
       <SmartTable

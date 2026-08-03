@@ -217,7 +217,19 @@ export function SmartTable<T>({
                   col.align === "right" && "flex-row-reverse"
                 )}
               >
-                <span className="min-w-0 flex-1 truncate">{col.header}</span>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 truncate",
+                    // flex-row-reverse only mirrors the *order* of the header
+                    // parts; the label still sits in a flex-1 box and stays
+                    // left-aligned inside it, so a right-aligned numeric column
+                    // rendered its header hard left while every value under it
+                    // sat hard right. DataTable already does this.
+                    col.align === "right" && "text-right",
+                  )}
+                >
+                  {col.header}
+                </span>
                 {activeDir &&
                   (activeDir === "asc" ? (
                     <ArrowUp className="text-muted-foreground size-3.5 shrink-0" />
