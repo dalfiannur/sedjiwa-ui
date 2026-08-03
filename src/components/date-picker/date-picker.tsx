@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { DEFAULT_LOCALE } from "../../lib/locale";
 import {
   fieldSurfaceVariants,
   type FieldSurfaceVariants,
@@ -74,7 +75,7 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
       min,
       max,
       placeholder = DEFAULT_PLACEHOLDER,
-      locale,
+      locale = DEFAULT_LOCALE,
       weekStartsOn = 1,
       formatLabel,
       fromYear,

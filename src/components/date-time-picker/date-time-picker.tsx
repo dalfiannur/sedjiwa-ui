@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Calendar as CalendarIcon, Check, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { DEFAULT_LOCALE } from "../../lib/locale";
 import {
   fieldSurfaceVariants,
   type FieldSurfaceVariants,
@@ -114,7 +115,7 @@ function DateTimePickerModal({
   timeStep = 30,
   min,
   max,
-  locale,
+  locale = DEFAULT_LOCALE,
   weekStartsOn = 0,
   applyLabel = "Terapkan",
   todayLabel = "Hari Ini",
@@ -218,7 +219,7 @@ function DateTimePickerInline({
   timeStep = 30,
   min,
   max,
-  locale,
+  locale = DEFAULT_LOCALE,
   weekStartsOn = 0,
   todayLabel = "Hari Ini",
   timeLabel = "Waktu",

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { DEFAULT_LOCALE } from "../../lib/locale";
 import {
   Select,
   SelectContent,
@@ -169,7 +170,7 @@ export function Calendar(props: CalendarProps) {
     min,
     max,
     weekStartsOn = 1,
-    locale,
+    locale = DEFAULT_LOCALE,
     fromYear,
     toYear,
     numberOfMonths = 1,

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { DEFAULT_LOCALE } from "../../lib/locale";
 import {
   fieldSurfaceVariants,
   type FieldSurfaceVariants,
@@ -143,7 +144,7 @@ export const DateTimeRangePicker = React.forwardRef<
     max,
     placeholder = DEFAULT_PLACEHOLDER,
     pendingSuffix = DEFAULT_PENDING_SUFFIX,
-    locale,
+    locale = DEFAULT_LOCALE,
     weekStartsOn = 1,
     numberOfMonths = 1,
     startTimeLabel = "Mulai",
