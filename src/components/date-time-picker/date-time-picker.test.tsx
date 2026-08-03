@@ -8,14 +8,14 @@ const noop = () => {};
 describe("<DateTimePicker />", () => {
   it("renders nothing when closed", () => {
     render(<DateTimePicker open={false} onOpenChange={noop} onApply={noop} />);
-    expect(screen.queryByText("Apply")).toBeNull();
+    expect(screen.queryByText("Terapkan")).toBeNull();
   });
 
   it("shows the title, today shortcut and time control when open", () => {
     render(<DateTimePicker open onOpenChange={noop} onApply={noop} title="Filter Activity Date" />);
     expect(screen.getByText("Filter Activity Date")).toBeInTheDocument();
-    expect(screen.getByText("Today")).toBeInTheDocument();
-    expect(screen.getByText("Time")).toBeInTheDocument();
+    expect(screen.getByText("Hari Ini")).toBeInTheDocument();
+    expect(screen.getByText("Waktu")).toBeInTheDocument();
   });
 
   it("commits date and time together as local ISO on Apply", async () => {
@@ -23,7 +23,7 @@ describe("<DateTimePicker />", () => {
     render(
       <DateTimePicker open onOpenChange={noop} onApply={onApply} value="2028-01-10T09:30" />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T09:30");
   });
 
@@ -32,7 +32,7 @@ describe("<DateTimePicker />", () => {
     render(
       <DateTimePicker open onOpenChange={onOpenChange} onApply={noop} value="2028-01-10T09:30" />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
@@ -42,7 +42,7 @@ describe("<DateTimePicker />", () => {
     render(
       <DateTimePicker open onOpenChange={noop} onApply={onApply} value="2028-01-10T09:41" />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T09:30");
   });
 
@@ -53,7 +53,7 @@ describe("<DateTimePicker />", () => {
     render(
       <DateTimePicker open onOpenChange={noop} onApply={onApply} value="2028-01-10T09:50" />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T10:00");
   });
 
@@ -63,7 +63,7 @@ describe("<DateTimePicker />", () => {
     render(
       <DateTimePicker open onOpenChange={noop} onApply={onApply} value="2028-01-10T23:59" />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T23:30");
   });
 
@@ -75,12 +75,12 @@ describe("<DateTimePicker />", () => {
 
   it("names each time dropdown, and groups them under the visible label", () => {
     render(<DateTimePicker open onOpenChange={noop} onApply={noop} locale="en-US" />);
-    // Every combobox needs its own name — the visible "Time" text cannot name
+    // Every combobox needs its own name — the visible "Waktu" text cannot name
     // two or three of them at once, and a nameless one is a critical axe
     // button-name violation.
     expect(screen.getByRole("combobox", { name: "Hour" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Minute" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Time" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Waktu" })).toBeInTheDocument();
   });
 
   it("shows an AM/PM dropdown in a 12-hour locale", () => {
@@ -150,7 +150,7 @@ describe("<DateTimePicker />", () => {
     // initial state alone cannot catch a dropped PM offset here.
     await userEvent.click(screen.getByRole("combobox", { name: "Hour" }));
     await userEvent.click(screen.getByRole("option", { name: "11" }));
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T23:30");
   });
 
@@ -168,7 +168,7 @@ describe("<DateTimePicker />", () => {
     await userEvent.click(screen.getByRole("combobox", { name: "AM/PM" }));
     await userEvent.click(screen.getByRole("option", { name: /AM/i }));
     expect(screen.getByRole("combobox", { name: "Hour" })).toHaveTextContent("9");
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T09:30");
   });
 
@@ -186,7 +186,7 @@ describe("<DateTimePicker />", () => {
     );
     await userEvent.click(screen.getByRole("combobox", { name: "Minute" }));
     await userEvent.click(screen.getByRole("option", { name: "45" }));
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T21:45");
   });
 
@@ -210,7 +210,7 @@ describe("<DateTimePicker />", () => {
         value="2028-01-10T21:30"
       />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /Apply/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Terapkan/i }));
     expect(onApply).toHaveBeenCalledWith("2028-01-10T21:30");
   });
 
@@ -275,7 +275,7 @@ describe('<DateTimePicker mode="inline" />', () => {
     expect(screen.queryByRole("grid")).toBeNull();
     await userEvent.click(getInlineTrigger());
     expect(screen.getByRole("grid")).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Time" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Waktu" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Hour" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Minute" })).toBeInTheDocument();
   });
@@ -315,7 +315,7 @@ describe('<DateTimePicker mode="inline" />', () => {
   it("renders no Apply button in inline mode", async () => {
     render(<DateTimePicker mode="inline" locale="en-US" value="2028-01-10T09:30" />);
     await userEvent.click(getInlineTrigger());
-    expect(screen.queryByRole("button", { name: /Apply/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Terapkan/i })).toBeNull();
     expect(
       document.querySelector('[data-slot="date-time-picker-apply"]'),
     ).toBeNull();
@@ -324,7 +324,7 @@ describe('<DateTimePicker mode="inline" />', () => {
   it("still renders Apply in the modal branch", () => {
     // The reverse guard: the union must not strip the modal footer.
     render(<DateTimePicker open onOpenChange={noop} onApply={noop} />);
-    expect(screen.getByRole("button", { name: /Apply/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Terapkan/i })).toBeInTheDocument();
   });
 
   it("defaults to the modal branch when mode is omitted", () => {

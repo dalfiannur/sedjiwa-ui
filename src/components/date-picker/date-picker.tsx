@@ -63,7 +63,7 @@ export type DatePickerProps = Omit<
   className?: string;
 };
 
-const DEFAULT_PLACEHOLDER = "Pick a date";
+const DEFAULT_PLACEHOLDER = "Pilih tanggal";
 
 export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
   function DatePicker(props, ref) {

@@ -116,7 +116,7 @@ export type DateTimeRangePickerProps = Omit<
   className?: string;
 };
 
-const DEFAULT_PLACEHOLDER = "Pick a date & time range";
+const DEFAULT_PLACEHOLDER = "Pilih rentang tanggal & waktu";
 const DEFAULT_PENDING_SUFFIX = "→ …";
 
 /**
@@ -146,8 +146,8 @@ export const DateTimeRangePicker = React.forwardRef<
     locale,
     weekStartsOn = 1,
     numberOfMonths = 1,
-    startTimeLabel = "Start",
-    endTimeLabel = "End",
+    startTimeLabel = "Mulai",
+    endTimeLabel = "Selesai",
     hourLabel = "Hour",
     minuteLabel = "Minute",
     periodLabel = "AM/PM",

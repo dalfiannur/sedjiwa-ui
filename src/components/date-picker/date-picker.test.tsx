@@ -14,7 +14,7 @@ import {
 } from "../form";
 
 function getTrigger(): HTMLButtonElement {
-  return screen.getByRole("button", { name: /pick a date|.+/i }) as HTMLButtonElement;
+  return screen.getByRole("button", { name: /pilih tanggal|.+/i }) as HTMLButtonElement;
 }
 
 function getDayButton(day: number): HTMLButtonElement {
@@ -35,7 +35,7 @@ describe("<DatePicker />", () => {
     it("renders a trigger button with the default placeholder", () => {
       render(<DatePicker />);
       expect(
-        screen.getByRole("button", { name: /pick a date/i }),
+        screen.getByRole("button", { name: /pilih tanggal/i }),
       ).toBeInTheDocument();
     });
 

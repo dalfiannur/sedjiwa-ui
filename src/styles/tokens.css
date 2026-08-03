@@ -19,6 +19,14 @@
   --muted: oklch(0.96 0.008 265);
   --muted-foreground: oklch(0.5 0.018 265);
 
+  /* Adjacent-month days in Calendar. These stay clickable, so they are
+     interactive text and need 4.5:1 — not the disabled-control exemption.
+     Dimming --muted-foreground with an alpha cannot get there: /50 measures
+     2.14:1 light and 2.74:1 dark, and the alpha would have to reach 88%/75%
+     before it passed, by which point it no longer reads as dimmed. Hence an
+     opaque token. Worst surface is --background (light) / --popover (dark). */
+  --calendar-outside: oklch(0.55 0.018 265);
+
   --accent: oklch(0.95 0.03 265);
   --accent-foreground: oklch(0.3 0.08 265);
 
@@ -92,6 +100,10 @@
 
   --muted: oklch(0.26 0.018 265);
   --muted-foreground: oklch(0.72 0.015 265);
+
+  /* See the light-mode note. Dark needs a *darker* L than --muted-foreground
+     to dim, where light needs a lighter one — the direction flips. */
+  --calendar-outside: oklch(0.62 0.015 265);
 
   --accent: oklch(0.32 0.06 265);
   --accent-foreground: oklch(0.96 0.005 265);

@@ -30,8 +30,8 @@ function thisMonth(day: number): string {
 }
 
 const startGroup = () =>
-  within(screen.getByRole("group", { name: "Start" }));
-const endGroup = () => within(screen.getByRole("group", { name: "End" }));
+  within(screen.getByRole("group", { name: "Mulai" }));
+const endGroup = () => within(screen.getByRole("group", { name: "Selesai" }));
 
 describe("<DateTimeRangePicker />", () => {
   it("shows the placeholder in the trigger when empty", () => {
@@ -184,8 +184,8 @@ describe("<DateTimeRangePicker />", () => {
       />,
     );
     await userEvent.click(getTrigger());
-    expect(screen.getByRole("group", { name: "Start" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "End" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Mulai" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Selesai" })).toBeInTheDocument();
     for (const group of [startGroup(), endGroup()]) {
       expect(group.getByRole("combobox", { name: "Hour" })).toBeInTheDocument();
       expect(

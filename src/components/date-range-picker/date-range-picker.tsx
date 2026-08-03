@@ -130,7 +130,7 @@ export type DateRangePickerProps = Omit<
   className?: string;
 };
 
-const DEFAULT_PLACEHOLDER = "Pick a date range";
+const DEFAULT_PLACEHOLDER = "Pilih rentang tanggal";
 const DEFAULT_PENDING_SUFFIX = "→ …";
 
 export const DateRangePicker = React.forwardRef<

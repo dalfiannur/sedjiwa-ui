@@ -33,7 +33,7 @@ describe("<DateRangePicker />", () => {
     it("renders the placeholder when value is empty", () => {
       render(<DateRangePicker />);
       expect(
-        screen.getByRole("button", { name: /pick a date range/i }),
+        screen.getByRole("button", { name: /pilih rentang tanggal/i }),
       ).toBeInTheDocument();
     });
 
@@ -223,7 +223,7 @@ describe("<DateRangePicker />", () => {
               name="vacation"
               rules={{
                 validate: (v) =>
-                  v.from && v.to ? true : "Pick a date range",
+                  v.from && v.to ? true : "Pilih rentang tanggal",
               }}
               render={({ field }) => (
                 <FormItem>
