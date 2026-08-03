@@ -18,6 +18,13 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run typecheck
+      # `bun run test` runs two Vitest projects: jsdom unit tests and the
+      # Storybook project, which drives a real Chromium via Playwright. Without
+      # a browser the launch throws an *unhandled* error that aborts the entire
+      # run — reporting "Tests no tests", so the unit suite never executed and
+      # CI had never actually verified any of it.
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
       - run: bun run test
       - run: bun run contrast
       - run: bun run build
