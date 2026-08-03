@@ -41,6 +41,12 @@ export type SmartColumn<T> = {
   hideable?: boolean;
   /** Custom ⋮ menu content. Overrides the built-in sort/hide menu for this column. */
   headerMenu?: ReactNode;
+  /**
+   * Stands in for `header` in the responsive card fallback when
+   * `cardHideLabels` is set. The table itself always shows the text header.
+   * A column with no icon keeps its text label there.
+   */
+  icon?: ReactNode;
 };
 
 export type SmartTableSort = { key: string; dir: "asc" | "desc" };
@@ -67,6 +73,11 @@ export type SmartTableProps<T> = {
   responsive?: boolean;
   /** Responsive card fallback: column key used as each card's header (`CardListTable` `titleKey`). */
   cardTitleKey?: string;
+  /**
+   * Responsive card fallback: drop the repeated text labels and lead each field
+   * with its `column.icon`. Columns without an icon keep their label.
+   */
+  cardHideLabels?: boolean;
   /** Responsive card fallback: compact card spacing. */
   dense?: boolean;
   /** Server-side pagination. When set (and more than one page), a pager footer is shown. */
@@ -108,6 +119,7 @@ export function SmartTable<T>({
   minWidth = "48rem",
   responsive,
   cardTitleKey,
+  cardHideLabels,
   dense,
   pagination,
   sortState,
@@ -217,7 +229,19 @@ export function SmartTable<T>({
                   col.align === "right" && "flex-row-reverse"
                 )}
               >
-                <span className="min-w-0 flex-1 truncate">{col.header}</span>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 truncate",
+                    // flex-row-reverse only mirrors the *order* of the header
+                    // parts; the label still sits in a flex-1 box and stays
+                    // left-aligned inside it, so a right-aligned numeric column
+                    // rendered its header hard left while every value under it
+                    // sat hard right. DataTable already does this.
+                    col.align === "right" && "text-right",
+                  )}
+                >
+                  {col.header}
+                </span>
                 {activeDir &&
                   (activeDir === "asc" ? (
                     <ArrowUp className="text-muted-foreground size-3.5 shrink-0" />
@@ -335,6 +359,7 @@ export function SmartTable<T>({
         rows={sortedRows}
         getRowKey={getRowKey}
         titleKey={cardTitleKey}
+        hideLabels={cardHideLabels}
         renderAction={renderAction}
         onRowClick={onRowClick}
         emptyMessage={emptyMessage}

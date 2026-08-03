@@ -126,6 +126,35 @@ for (const [theme, tokens] of THEMES) {
   }
 }
 
+// One-off pairs that don't follow the <tone>-subtle / <tone>-text convention.
+// --calendar-outside is the dimmed adjacent-month day in Calendar. Those days
+// stay clickable, so they are interactive text (4.5:1), and a Calendar can be
+// rendered on any of three surfaces depending on whether the picker is modal,
+// inline in a dialog, or inline on a page — so all three are gated, not just
+// the one the default story happens to use.
+const EXPLICIT_PAIRS = [
+  ["calendar-outside", "background"],
+  ["calendar-outside", "card"],
+  ["calendar-outside", "popover"],
+];
+for (const [theme, tokens] of THEMES) {
+  for (const [fgName, bgName] of EXPLICIT_PAIRS) {
+    const fg = tokens[fgName];
+    const bg = tokens[bgName];
+    if (!fg || !bg) {
+      console.log(`MISSING  --${fgName} / --${bgName} (${theme})`);
+      failures++;
+      continue;
+    }
+    const ratio = contrastRatio(fg, bg);
+    const ok = ratio >= THRESHOLD;
+    if (!ok) failures++;
+    console.log(
+      `${ok ? "PASS" : "FAIL"} ${ratio.toFixed(2).padStart(6)}:1  on     --${fgName} on --${bgName} (${theme})`
+    );
+  }
+}
+
 // A subtle/text pair can be perfectly accessible in tokens.css and still render
 // transparent-on-transparent if nobody mapped it into `@theme inline` in
 // base.css — Tailwind only generates `bg-success-subtle` etc. for mapped vars.
@@ -135,14 +164,15 @@ const themeInlineBodyRaw = findBlockBody(baseCss, "@theme inline", "@theme inlin
 // `/* --color-info-text: var(--info-text); */`) isn't mistaken for a live one
 // by a substring check.
 const themeInlineBody = themeInlineBodyRaw.replace(/\/\*[\s\S]*?\*\//g, "");
-for (const tone of TONES) {
-  for (const suffix of ["subtle", "text"]) {
-    const varName = `--color-${tone}-${suffix}`;
-    const declRe = new RegExp(`${escapeRegExp(varName)}\\s*:`);
-    if (!declRe.test(themeInlineBody)) {
-      console.log(`UNMAPPED ${varName} missing from @theme inline`);
-      failures++;
-    }
+const MUST_BE_MAPPED = [
+  ...TONES.flatMap((tone) => [`--color-${tone}-subtle`, `--color-${tone}-text`]),
+  "--color-calendar-outside",
+];
+for (const varName of MUST_BE_MAPPED) {
+  const declRe = new RegExp(`${escapeRegExp(varName)}\\s*:`);
+  if (!declRe.test(themeInlineBody)) {
+    console.log(`UNMAPPED ${varName} missing from @theme inline`);
+    failures++;
   }
 }
 

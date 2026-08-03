@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { DEFAULT_LOCALE } from "../../lib/locale";
 import {
   fieldSurfaceVariants,
   type FieldSurfaceVariants,
@@ -116,7 +117,7 @@ export type DateTimeRangePickerProps = Omit<
   className?: string;
 };
 
-const DEFAULT_PLACEHOLDER = "Pick a date & time range";
+const DEFAULT_PLACEHOLDER = "Pilih rentang tanggal & waktu";
 const DEFAULT_PENDING_SUFFIX = "→ …";
 
 /**
@@ -143,11 +144,11 @@ export const DateTimeRangePicker = React.forwardRef<
     max,
     placeholder = DEFAULT_PLACEHOLDER,
     pendingSuffix = DEFAULT_PENDING_SUFFIX,
-    locale,
+    locale = DEFAULT_LOCALE,
     weekStartsOn = 1,
     numberOfMonths = 1,
-    startTimeLabel = "Start",
-    endTimeLabel = "End",
+    startTimeLabel = "Mulai",
+    endTimeLabel = "Selesai",
     hourLabel = "Hour",
     minuteLabel = "Minute",
     periodLabel = "AM/PM",

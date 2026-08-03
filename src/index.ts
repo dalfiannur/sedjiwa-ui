@@ -73,6 +73,9 @@ export type {
   InputActionProps,
 } from "./components/input";
 
+export { FileInput } from "./components/file-input";
+export type { FileInputProps } from "./components/file-input";
+
 export { CurrencyInput, CURRENCY_PRESETS } from "./components/currency-input";
 export type {
   CurrencyInputProps, CurrencyConfig, CurrencyPresetKey,

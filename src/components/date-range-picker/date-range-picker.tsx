@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { DEFAULT_LOCALE } from "../../lib/locale";
 import {
   fieldSurfaceVariants,
   type FieldSurfaceVariants,
@@ -130,7 +131,7 @@ export type DateRangePickerProps = Omit<
   className?: string;
 };
 
-const DEFAULT_PLACEHOLDER = "Pick a date range";
+const DEFAULT_PLACEHOLDER = "Pilih rentang tanggal";
 const DEFAULT_PENDING_SUFFIX = "→ …";
 
 export const DateRangePicker = React.forwardRef<
@@ -145,7 +146,7 @@ export const DateRangePicker = React.forwardRef<
     max,
     placeholder = DEFAULT_PLACEHOLDER,
     pendingSuffix = DEFAULT_PENDING_SUFFIX,
-    locale,
+    locale = DEFAULT_LOCALE,
     weekStartsOn = 1,
     fromYear,
     toYear,

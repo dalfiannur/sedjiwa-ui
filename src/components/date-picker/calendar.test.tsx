@@ -17,7 +17,7 @@ function dayButton(day: number): HTMLButtonElement {
   return match;
 }
 
-// Anchor all tests to July 2026 via the initial value so the visible month
+// Anchor all tests to Juli 2026 via the initial value so the visible month
 // is deterministic.
 const jul = (day: number) => new Date(2026, 6, day);
 
@@ -55,6 +55,21 @@ function selectedDays(): number[] {
     .map((b) => Number(b.textContent?.trim()))
     .sort((a, b) => a - b);
 }
+
+describe("<Calendar /> default locale", () => {
+  it("formats in Indonesian when no locale prop is given", () => {
+    // Without a default, Intl falls back to the *browser's* locale, so this
+    // rendered an English calendar inside an Indonesian app on any call site
+    // that forgot the prop — and only for visitors whose browser was set that
+    // way, which is why it survived every local check until Laporan was opened.
+    const { container } = render(
+      <Calendar mode="single" value={new Date(2026, 6, 15)} onSelect={() => {}} />,
+    );
+    expect(container.querySelector('[data-slot="calendar-label"]')).toHaveTextContent(
+      "Juli 2026",
+    );
+  });
+});
 
 describe("<Calendar mode=multiple />", () => {
   afterEach(() => {
@@ -115,10 +130,10 @@ describe("<Calendar mode=multiple />", () => {
   });
 
   it("jumps the view to the earliest date when selection is seeded after mount", () => {
-    // "Today" is faked to a month far from July 2026 so the assertions below
+    // "Today" is faked to a month far from Juli 2026 so the assertions below
     // actually prove the follow-effect moved the view — if `today` genuinely
-    // fell in July 2026 (as it does at the time of writing this suite), the
-    // initial render would already show July 2026 and the test would pass
+    // fell in Juli 2026 (as it does at the time of writing this suite), the
+    // initial render would already show Juli 2026 and the test would pass
     // trivially even with a broken follow-effect.
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2020, 0, 15));
@@ -127,14 +142,14 @@ describe("<Calendar mode=multiple />", () => {
       <Calendar mode="multiple" value={[]} onSelect={() => {}} />,
     );
     const gridBefore = screen.getByRole("grid");
-    expect(gridBefore.getAttribute("aria-label")).toMatch(/january 2020/i);
+    expect(gridBefore.getAttribute("aria-label")).toMatch(/januari 2020/i);
 
     rerender(
       <Calendar mode="multiple" value={[jul(15), jul(3)]} onSelect={() => {}} />,
     );
 
     const gridAfter = screen.getByRole("grid");
-    expect(gridAfter.getAttribute("aria-label")).toMatch(/july 2026/i);
+    expect(gridAfter.getAttribute("aria-label")).toMatch(/juli 2026/i);
     // dayButton throws if the day isn't in the now-visible month, and the
     // follow-effect must sort the unsorted input to pick day 3 (not 15) as
     // the anchor.
@@ -225,7 +240,7 @@ describe("<Calendar /> headerVariant", () => {
       <Calendar mode="single" value={new Date(2028, 0, 10)} headerVariant="label" />
     );
     expect(container.querySelectorAll(dropdownSelector).length).toBe(0);
-    expect(container.querySelector('[data-slot="calendar-label"]')).toHaveTextContent("January 2028");
+    expect(container.querySelector('[data-slot="calendar-label"]')).toHaveTextContent("Januari 2028");
   });
 
   it("keeps month navigation in label mode", () => {
@@ -240,7 +255,7 @@ describe("<Calendar /> label-mode month/year chooser", () => {
     const utils = render(
       <Calendar mode="single" value={value} headerVariant="label" />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /January 2028/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Januari 2028/i }));
     return utils;
   };
 
@@ -263,16 +278,16 @@ describe("<Calendar /> label-mode month/year chooser", () => {
     await userEvent.click(screen.getByLabelText("Next year"));
     expect(screen.getByText("2029")).toBeInTheDocument();
     // Still browsing — the header must not have committed yet.
-    expect(screen.getByRole("button", { name: /January 2028/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Januari 2028/i })).toBeInTheDocument();
   });
 
   it("commits the chosen month and year, and returns to the day grid", async () => {
     const { container } = await openChooser();
     await userEvent.click(screen.getByLabelText("Next year"));
-    await userEvent.click(screen.getByRole("button", { name: "March" }));
+    await userEvent.click(screen.getByRole("button", { name: "Maret" }));
     expect(container.querySelector('[data-slot="calendar-month-picker"]')).toBeNull();
     expect(container.querySelector('[data-slot="calendar-label"]')).toHaveTextContent(
-      "March 2029",
+      "Maret 2029",
     );
   });
 
@@ -281,7 +296,7 @@ describe("<Calendar /> label-mode month/year chooser", () => {
     const selected = container.querySelector(
       '[data-slot="calendar-month-option"][data-selected]',
     );
-    expect(selected).toHaveTextContent("January");
+    expect(selected).toHaveTextContent("Januari");
   });
 
   it("does not offer a chooser in dropdowns mode", () => {
@@ -301,7 +316,7 @@ describe("<Calendar /> label-mode month/year chooser", () => {
         toYear={2028}
       />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /January 2028/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Januari 2028/i }));
     expect(screen.getByLabelText("Previous year")).toBeDisabled();
     expect(screen.getByLabelText("Next year")).toBeDisabled();
   });
@@ -316,10 +331,10 @@ describe("<Calendar /> label-mode month/year chooser", () => {
         max={new Date(2028, 7, 31)}
       />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /June 2028/i }));
-    expect(screen.getByRole("button", { name: "February" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "May" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "October" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: /Juni 2028/i }));
+    expect(screen.getByRole("button", { name: "Februari" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Mei" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Oktober" })).toBeDisabled();
   });
 });
 

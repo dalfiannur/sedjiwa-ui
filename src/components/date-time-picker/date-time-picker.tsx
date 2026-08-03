@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Calendar as CalendarIcon, Check, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { DEFAULT_LOCALE } from "../../lib/locale";
 import {
   fieldSurfaceVariants,
   type FieldSurfaceVariants,
@@ -88,7 +89,7 @@ function parseValue(value: string | null | undefined) {
   };
 }
 
-const DEFAULT_INLINE_PLACEHOLDER = "Pick a date & time";
+const DEFAULT_INLINE_PLACEHOLDER = "Pilih tanggal & waktu";
 
 /**
  * Date + time in one control.
@@ -110,15 +111,15 @@ function DateTimePickerModal({
   onOpenChange,
   value,
   onApply,
-  title = "Select date & time",
+  title = "Pilih tanggal & waktu",
   timeStep = 30,
   min,
   max,
-  locale,
+  locale = DEFAULT_LOCALE,
   weekStartsOn = 0,
-  applyLabel = "Apply",
-  todayLabel = "Today",
-  timeLabel = "Time",
+  applyLabel = "Terapkan",
+  todayLabel = "Hari Ini",
+  timeLabel = "Waktu",
   hourLabel = "Hour",
   minuteLabel = "Minute",
   periodLabel = "AM/PM",
@@ -218,10 +219,10 @@ function DateTimePickerInline({
   timeStep = 30,
   min,
   max,
-  locale,
+  locale = DEFAULT_LOCALE,
   weekStartsOn = 0,
-  todayLabel = "Today",
-  timeLabel = "Time",
+  todayLabel = "Hari Ini",
+  timeLabel = "Waktu",
   hourLabel = "Hour",
   minuteLabel = "Minute",
   periodLabel = "AM/PM",

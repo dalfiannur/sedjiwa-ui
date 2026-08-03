@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { DEFAULT_LOCALE } from "../../lib/locale";
 import {
   Select,
   SelectContent,
@@ -169,7 +170,7 @@ export function Calendar(props: CalendarProps) {
     min,
     max,
     weekStartsOn = 1,
-    locale,
+    locale = DEFAULT_LOCALE,
     fromYear,
     toYear,
     numberOfMonths = 1,
@@ -811,7 +812,10 @@ export function Calendar(props: CalendarProps) {
                     dayShape === "circle" ? "rounded-full" : "rounded-md",
                     "hover:bg-accent hover:text-accent-foreground",
                     "focus-visible:outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-                    "data-[outside]:text-muted-foreground/50",
+                    // Not muted-foreground/50: outside days remain clickable,
+                    // so they are interactive text at 4.5:1, and no alpha that
+                    // still reads as "dimmed" clears that. See --calendar-outside.
+                    "data-[outside]:text-calendar-outside",
                     "data-[today]:underline data-[today]:underline-offset-4",
                     "data-[selected]:bg-primary data-[selected]:text-primary-foreground data-[selected]:hover:bg-primary data-[selected]:hover:text-primary-foreground",
                     "disabled:pointer-events-none disabled:opacity-30 disabled:line-through",
