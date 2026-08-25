@@ -90,19 +90,31 @@ for the people upgrading: what changed, and whether anything they rely on moves.
 1. Land the work on `main` the usual way (branch, then merge).
 2. Bump `version` in `package.json` and commit **directly on `main`** as
    `chore(release): X.Y.Z`, with a body describing the release.
-3. Tag `vX.Y.Z` and push both the commit and the tag. CI publishes on any `v*`
-   tag: `verify` runs lint, typecheck, the full test suite (including the
-   Storybook project against a real Chromium) and `bun publish --dry-run`, and
-   only then does `publish` run `bun publish`.
+3. Tag `vX.Y.Z` and push the commit and the tag.
+4. **Run the gates and publish by hand** — see below for why:
+   `bun run lint && bun run typecheck && bun run test && bun run contrast && bun run build`,
+   then `bun publish --dry-run`, then `bun publish`.
 
-Do not publish by hand. Publishing outside the tag path skips every gate in
-`verify`, and it leaves no tag, so nobody can tell later what shipped.
+**CI does not publish today, whatever `.github/workflows/ci.yml` says.**
+Actions is enabled on the repo, but the Gitea instance has **no runners
+registered** — `/api/v1/repos/Qyubit/sedjiwa-ui/actions/runners` returns zero,
+and the workflow-run list is empty. Nothing in that workflow has ever
+executed: not lint, not typecheck, not the test suite, not the publish job.
 
-**Why that warning exists.** `publishConfig.registry` pointed at
-`https://npm.qyubit.io/` for a while, and that host does not answer — so the
-tag path could not publish at all. 0.33.0 and 0.34.0 went out by hand as a
-result: no `chore(release)` commit, no tag, and no CI verification. The
-registry now points at the Gitea package registry the consumers actually pull
-from, so the documented path works again. If a release ever fails at the
-publish step, check that `publishConfig.registry` still matches the `@qyubit`
-registry in your `~/.npmrc` before working around it.
+That is the whole explanation for the release history. 0.33.0 and 0.34.0 have
+no `chore(release)` commit and no tag because the tag path publishes nothing;
+they went out by hand. `publishConfig.registry` pointed at
+`https://npm.qyubit.io/`, a host that does not answer, and nobody noticed
+because the `bun publish --dry-run` step that would have caught it never ran.
+
+So until a runner exists, **you are the CI**. Run every gate in step 4 yourself
+before publishing; skipping them is skipping them entirely, not deferring them
+to a machine. One gate cannot be run everywhere: `bun run test` includes the
+Storybook project, which drives a real Chromium through Playwright
+(`bunx playwright install chromium` first). If that browser will not install on
+your machine, say so in the release commit rather than implying the suite was
+green.
+
+Once a runner is registered, delete step 4 and this section's warning — the
+workflow already does the right thing, it has simply never had anything to run
+it.
