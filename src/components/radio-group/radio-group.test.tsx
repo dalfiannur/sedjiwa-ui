@@ -50,7 +50,8 @@ describe("<RadioGroup />", () => {
     );
     const item = screen.getByRole("radio");
     expect(item).toHaveAttribute("data-size", "sm");
-    expect(item).toHaveClass("size-3.5");
+    // Kit scale: sm is a 16px box. See checkbox.test.tsx for the full table.
+    expect(item).toHaveClass("size-4");
   });
 
   it("state='error' on group propagates destructive border to items", () => {
@@ -107,4 +108,16 @@ describe("<RadioGroup />", () => {
     expect(groupRef.current).toBeInstanceOf(HTMLDivElement);
     expect(itemRef.current).toBeInstanceOf(HTMLButtonElement);
   });
+
+  // See checkbox.test.tsx. A radio never fills its own box, so both states
+  // take the accent wash rather than an opacity softening.
+  it("carries the hover class", () => {
+    render(
+      <RadioGroup aria-label="choice">
+        <RadioGroupItem value="a" aria-label="a" />
+      </RadioGroup>,
+    );
+    expect(screen.getByRole("radio")).toHaveClass("enabled:hover:bg-accent");
+  });
+
 });

@@ -8,7 +8,7 @@ const meta: Meta<RadioGroupProps> = {
   tags: ["autodocs"],
   parameters: { layout: "centered" },
   argTypes: {
-    size: { control: "select", options: ["sm", "default"] },
+    size: { control: "select", options: ["sm", "default", "lg"] },
     state: {
       control: "select",
       options: ["default", "error", "success", "warning"],
@@ -83,6 +83,17 @@ export const Sizes: Story = {
         <div className="flex items-center gap-2">
           <RadioGroupItem id="rs-d-b" value="b" />
           <Label htmlFor="rs-d-b">Option B</Label>
+        </div>
+      </RadioGroup>
+      <RadioGroup {...args} size="lg" defaultValue="a">
+        <Label className="text-xs uppercase tracking-wider">Large</Label>
+        <div className="flex items-center gap-2">
+          <RadioGroupItem id="rs-lg-a" value="a" />
+          <Label htmlFor="rs-lg-a">Option A</Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <RadioGroupItem id="rs-lg-b" value="b" />
+          <Label htmlFor="rs-lg-b">Option B</Label>
         </div>
       </RadioGroup>
     </div>

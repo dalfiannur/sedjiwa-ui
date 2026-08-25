@@ -47,4 +47,24 @@ describe("<Tabs />", () => {
     );
     expect(screen.getByRole("tab", { name: "A" })).toHaveAttribute("data-slot", "tabs-trigger");
   });
+
+  // See checkbox.test.tsx. Only inactive triggers hover — they hint at the
+  // surface the active one already has. disabled:pointer-events-none is
+  // already present, so no enabled: guard is needed here.
+  it("gives inactive triggers a hover surface", () => {
+    render(
+      <Tabs defaultValue="a">
+        <TabsList>
+          <TabsTrigger value="a">A</TabsTrigger>
+          <TabsTrigger value="b">B</TabsTrigger>
+        </TabsList>
+        <TabsContent value="a">first</TabsContent>
+        <TabsContent value="b">second</TabsContent>
+      </Tabs>,
+    );
+    expect(screen.getByRole("tab", { name: "B" })).toHaveClass(
+      "data-[state=inactive]:hover:bg-background/50",
+    );
+  });
+
 });

@@ -9,12 +9,21 @@ export const checkboxVariants = cva(
     "data-[state=indeterminate]:bg-primary data-[state=indeterminate]:border-primary data-[state=indeterminate]:text-primary-foreground",
     "disabled:opacity-50 disabled:cursor-not-allowed",
     "dark:data-[state=unchecked]:bg-input/30",
+    // Hover. Deliberately tone-agnostic: rather than restating a /90 fill for
+    // each of the four state tones, an unchecked box picks up the same faint
+    // accent wash the Input action button uses, and a filled box (any tone)
+    // simply softens. `enabled:` keeps this off disabled controls, where it
+    // would otherwise fight disabled:opacity-50.
+    "data-[state=unchecked]:enabled:hover:bg-accent",
+    "data-[state=checked]:enabled:hover:opacity-90",
+    "data-[state=indeterminate]:enabled:hover:opacity-90",
   ].join(" "),
   {
     variants: {
       size: {
-        sm: "size-3.5",
-        default: "size-4",
+        sm: "size-4",
+        default: "size-5",
+        lg: "size-6",
       },
       state: {
         default: "border-input focus-visible:border-ring focus-visible:ring-ring/40",
@@ -35,8 +44,9 @@ export const checkboxIndicatorIconVariants = cva(
   {
     variants: {
       size: {
-        sm: "size-2.5",
-        default: "size-3",
+        sm: "size-3",
+        default: "size-3.5",
+        lg: "size-4",
       },
     },
     defaultVariants: { size: "default" },
