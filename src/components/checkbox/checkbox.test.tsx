@@ -33,6 +33,11 @@ describe("<Checkbox />", () => {
     render(<Checkbox aria-label="agree" checked="indeterminate" />);
     const cb = screen.getByRole("checkbox");
     expect(cb).toHaveAttribute("data-state", "indeterminate");
+    // What a screen reader actually announces. data-state is ours and styles
+    // the box; aria-checked="mixed" is what reaches the user, and it is the
+    // one thing the spec names for this state. The checked test above asserts
+    // aria-checked="true" — this state was the gap.
+    expect(cb).toHaveAttribute("aria-checked", "mixed");
     // Indicator renders the Minus icon
     expect(cb.querySelector("svg")).not.toBeNull();
   });
