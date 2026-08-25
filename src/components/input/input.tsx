@@ -130,7 +130,23 @@ function InputRoot({
     );
   }
 
-  let renderedChildren: React.ReactNode = children;
+  // childArr, not `children`. Both branches below must hand React the same
+  // children with the same keys, and these two values do not: React.Children
+  // .toArray() assigns keys like ".0", while a single raw child carries a null
+  // key. Starting from `children` and reassigning to a childArr-derived array
+  // therefore changes the input's key the moment a trailing extra appears --
+  // React reads that as a different element, unmounts the <input> and mounts a
+  // fresh one. Focus falls to the nearest focusable ancestor and every
+  // keystroke after that is swallowed.
+  //
+  // The trigger is the most common thing a form does: a field crossing the
+  // valid/invalid boundary, since that is exactly when the state icon is
+  // injected. Measured downstream in metaprint before it was patched there --
+  // typing into a code field after a failed submit let a single character
+  // through.
+  //
+  // childArr is already computed above, unconditionally, so this costs nothing.
+  let renderedChildren: React.ReactNode = childArr;
   if (trailingExtras.length > 0) {
     const actionIndex = childArr.findIndex(
       (c) =>
