@@ -57,9 +57,18 @@ components live, and a root-level `scripts/` would collide with `contrast.mjs`.
 
 `design-kit/CLAUDE.md` is the kit's own instruction surface. Paths inside it
 (`tokens/*.json`, `components/*`, `scripts/*`) are relative to `design-kit/`,
-not to the repo root. It also carries its own gates — note that `contrast.py`
-there overlaps with the existing `scripts/contrast.mjs`; pick one before wiring
-either into CI.
+not to the repo root.
+
+**The two contrast tools do different jobs — do not swap one for the other.**
+`scripts/contrast.mjs` is the gate: it parses `src/styles/tokens.css`, checks
+all 16 semantic pairs (8 solid, 8 subtle) across light and dark at 4.5:1, and
+runs in CI via `bun run contrast`. Its oklch maths comes from
+`src/lib/contrast.ts`, which the library itself uses and which is unit-tested.
+`design-kit/scripts/contrast.py` is a hand-run calculator: give it two hex
+colours, it prints the ratio and AA/AAA verdict. It reads no files, and it
+understands hex only — it cannot parse an oklch token at all. Keep it for
+one-off "what is the ratio between these two" questions while designing; it is
+not a substitute for the gate, and the gate is not a substitute for it.
 
 **Where it does and does not override the rules above.** The shadcn/ui rule
 stands: new components still start from `bunx shadcn@latest add <component>`
