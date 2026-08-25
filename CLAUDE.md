@@ -43,3 +43,32 @@ New components MUST start from shadcn/ui as the base — do not build from scrat
      existing components (e.g. `button/`).
 3. Export the component from `src/index.ts`.
 4. Add tests and a Storybook story before considering it done.
+
+## Design system material (`design-kit/`)
+
+Design tokens, component specs, accessibility rules, framework adapters and 138
+named design-system references live in `design-kit/`. It ships **no runtime
+code** — 174 markdown files and 14 JSON token files. It is reference material
+that shapes what you build here; it is not a library you can import.
+
+It sits in one directory rather than at the repo root on purpose: a root-level
+`components/` full of markdown would shadow `src/components/`, where the 40 real
+components live, and a root-level `scripts/` would collide with `contrast.mjs`.
+
+`design-kit/CLAUDE.md` is the kit's own instruction surface. Paths inside it
+(`tokens/*.json`, `components/*`, `scripts/*`) are relative to `design-kit/`,
+not to the repo root. It also carries its own gates — note that `contrast.py`
+there overlaps with the existing `scripts/contrast.mjs`; pick one before wiring
+either into CI.
+
+**Where it does and does not override the rules above.** The shadcn/ui rule
+stands: new components still start from `bunx shadcn@latest add <component>`
+and are refactored into this repo's file layout. The kit does not replace that
+structural base. What it governs is everything layered on top — token mapping,
+the eight states, accessibility criteria, and visual direction. If
+`design-kit/CLAUDE.md` reads as telling you to generate a component from a spec
+instead of from shadcn, this file wins.
+
+**Visual direction: the calm tone stays.** The consuming apps read as quiet
+admin panels today, and that is deliberate. Any redesign driven from
+`design-kit/` moves token values, not character.
