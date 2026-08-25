@@ -81,3 +81,28 @@ instead of from shadcn, this file wins.
 **Visual direction: the calm tone stays.** The consuming apps read as quiet
 admin panels today, and that is deliberate. Any redesign driven from
 `design-kit/` moves token values, not character.
+
+## Releasing
+
+There is no CHANGELOG file — the release commit body is the changelog. Write it
+for the people upgrading: what changed, and whether anything they rely on moves.
+
+1. Land the work on `main` the usual way (branch, then merge).
+2. Bump `version` in `package.json` and commit **directly on `main`** as
+   `chore(release): X.Y.Z`, with a body describing the release.
+3. Tag `vX.Y.Z` and push both the commit and the tag. CI publishes on any `v*`
+   tag: `verify` runs lint, typecheck, the full test suite (including the
+   Storybook project against a real Chromium) and `bun publish --dry-run`, and
+   only then does `publish` run `bun publish`.
+
+Do not publish by hand. Publishing outside the tag path skips every gate in
+`verify`, and it leaves no tag, so nobody can tell later what shipped.
+
+**Why that warning exists.** `publishConfig.registry` pointed at
+`https://npm.qyubit.io/` for a while, and that host does not answer — so the
+tag path could not publish at all. 0.33.0 and 0.34.0 went out by hand as a
+result: no `chore(release)` commit, no tag, and no CI verification. The
+registry now points at the Gitea package registry the consumers actually pull
+from, so the documented path works again. If a release ever fails at the
+publish step, check that `publishConfig.registry` still matches the `@qyubit`
+registry in your `~/.npmrc` before working around it.

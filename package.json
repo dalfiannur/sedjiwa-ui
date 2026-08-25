@@ -125,6 +125,6 @@
     "vitest": "^3.0.0"
   },
   "publishConfig": {
-    "registry": "https://npm.qyubit.io/"
+    "registry": "https://git.rubick.qyubit.io/api/packages/Qyubit/npm/"
   }
 }
