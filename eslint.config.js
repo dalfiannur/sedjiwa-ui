@@ -7,7 +7,15 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config({ ignores: ["dist", "node_modules", "coverage"] }, {
+export default tseslint.config(
+  {
+    // design-kit is reference material, not this repo's source: markdown specs,
+    // token JSON, and its own gate scripts. Linting it reports on files nobody
+    // here maintains, and lint output people stop reading is lint output that
+    // stops working.
+    ignores: ["dist", "node_modules", "coverage", "design-kit"],
+  },
+  {
   extends: [js.configs.recommended, ...tseslint.configs.recommended],
   files: ["**/*.{ts,tsx}"],
   languageOptions: {
