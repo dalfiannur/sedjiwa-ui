@@ -33,14 +33,25 @@ describe("<Checkbox />", () => {
     render(<Checkbox aria-label="agree" checked="indeterminate" />);
     const cb = screen.getByRole("checkbox");
     expect(cb).toHaveAttribute("data-state", "indeterminate");
+    // What a screen reader actually announces. data-state is ours and styles
+    // the box; aria-checked="mixed" is what reaches the user, and it is the
+    // one thing the spec names for this state. The checked test above asserts
+    // aria-checked="true" — this state was the gap.
+    expect(cb).toHaveAttribute("aria-checked", "mixed");
     // Indicator renders the Minus icon
     expect(cb.querySelector("svg")).not.toBeNull();
   });
 
-  it("applies size variant", () => {
-    render(<Checkbox aria-label="agree" size="sm" />);
-    expect(screen.getByRole("checkbox")).toHaveAttribute("data-size", "sm");
-    expect(screen.getByRole("checkbox")).toHaveClass("size-3.5");
+  // The design kit specifies 16 / 20 / 24px boxes; these are those in Tailwind
+  // units. Pinning the class is what caught the scale change when it landed.
+  it.each([
+    ["sm", "size-4"],
+    ["default", "size-5"],
+    ["lg", "size-6"],
+  ] as const)("applies the %s size variant", (size, expected) => {
+    render(<Checkbox aria-label="agree" size={size} />);
+    expect(screen.getByRole("checkbox")).toHaveAttribute("data-size", size);
+    expect(screen.getByRole("checkbox")).toHaveClass(expected);
   });
 
   it("applies error state styling", () => {
@@ -76,4 +87,16 @@ describe("<Checkbox />", () => {
     render(<Checkbox aria-label="agree" ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLButtonElement);
   });
+
+  // Hover is a state the design kit names for this control. jsdom cannot
+  // compute :hover, so the class is the contract: an unchecked box washes
+  // with accent, a filled box softens, and neither fires while disabled.
+  it("carries the tone-agnostic hover classes", () => {
+    render(<Checkbox aria-label="agree" />);
+    const cb = screen.getByRole("checkbox");
+    expect(cb).toHaveClass("data-[state=unchecked]:enabled:hover:bg-accent");
+    expect(cb).toHaveClass("data-[state=checked]:enabled:hover:opacity-90");
+    expect(cb).toHaveClass("data-[state=indeterminate]:enabled:hover:opacity-90");
+  });
+
 });

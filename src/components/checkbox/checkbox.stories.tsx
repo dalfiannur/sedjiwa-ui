@@ -9,7 +9,7 @@ const meta: Meta<CheckboxProps> = {
   tags: ["autodocs"],
   parameters: { layout: "centered" },
   argTypes: {
-    size: { control: "select", options: ["sm", "default"] },
+    size: { control: "select", options: ["sm", "default", "lg"] },
     state: {
       control: "select",
       options: ["default", "error", "success", "warning"],
@@ -68,6 +68,10 @@ export const Sizes: Story = {
       <div className="flex items-center gap-2">
         <Checkbox {...args} size="default" id="cb-d" defaultChecked />
         <Label htmlFor="cb-d">Default</Label>
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox {...args} size="lg" id="cb-lg" defaultChecked />
+        <Label htmlFor="cb-lg">Large</Label>
       </div>
     </div>
   ),

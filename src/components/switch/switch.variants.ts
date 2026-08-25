@@ -8,6 +8,10 @@ export const switchVariants = cva(
     "focus-visible:outline-none focus-visible:ring-[3px]",
     "disabled:opacity-50 disabled:cursor-not-allowed",
     "data-[state=unchecked]:bg-input dark:data-[state=unchecked]:bg-input/60",
+    // Hover, tone-agnostic — see checkbox.variants.ts. The track is always
+    // filled (input when off, the state tone when on), so softening reads in
+    // both states where an accent wash would not.
+    "enabled:hover:opacity-90",
   ].join(" "),
   {
     variants: {

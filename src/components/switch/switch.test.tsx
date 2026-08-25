@@ -88,4 +88,12 @@ describe("<Switch />", () => {
     render(<Switch aria-label="autosave" ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLButtonElement);
   });
+
+  // See checkbox.test.tsx. The track is always filled, so it softens on hover
+  // in both states; `enabled:` keeps it clear of disabled:opacity-50.
+  it("carries the hover class", () => {
+    render(<Switch aria-label="autosave" />);
+    expect(screen.getByRole("switch")).toHaveClass("enabled:hover:opacity-90");
+  });
+
 });

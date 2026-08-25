@@ -7,12 +7,17 @@ export const radioGroupItemVariants = cva(
     "focus-visible:outline-none focus-visible:ring-[3px]",
     "disabled:opacity-50 disabled:cursor-not-allowed",
     "dark:bg-input/30",
+    // Hover, tone-agnostic — see checkbox.variants.ts for the reasoning.
+    // A radio never fills its whole box (the dot is a separate element), so
+    // both states take the accent wash rather than an opacity softening.
+    "enabled:hover:bg-accent",
   ].join(" "),
   {
     variants: {
       size: {
-        sm: "size-3.5",
-        default: "size-4",
+        sm: "size-4",
+        default: "size-5",
+        lg: "size-6",
       },
       state: {
         default:
@@ -32,8 +37,9 @@ export const radioGroupItemIndicatorVariants = cva(
   {
     variants: {
       size: {
-        sm: "size-1.5",
-        default: "size-2",
+        sm: "size-2",
+        default: "size-2.5",
+        lg: "size-3",
       },
       state: {
         default: "bg-primary",
