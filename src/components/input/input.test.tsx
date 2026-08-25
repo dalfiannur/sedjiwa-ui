@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Mail, X } from "lucide-react";
+import { useState } from "react";
 import { Input } from "./input";
 
 function renderField(
@@ -305,4 +306,40 @@ describe("<Input.Root />", () => {
     );
     errorSpy.mockRestore();
   });
+
+  it("keeps the same <input> node when the state flips while typing", async () => {
+    function FlippingField() {
+      const [value, setValue] = useState("");
+      // Invalid on odd length, so the valid/invalid boundary is crossed on
+      // every single keystroke. That is the harshest form of what a live
+      // validator does to a code field: partial input matches nothing yet.
+      return (
+        <Input.Root aria-invalid={value.length % 2 === 1}>
+          <Input.Field
+            data-testid="field"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+          />
+        </Input.Root>
+      );
+    }
+
+    const user = userEvent.setup();
+    render(<FlippingField />);
+
+    const field = screen.getByTestId("field");
+    await user.click(field);
+    await user.keyboard("BNR-001");
+
+    // Node identity is the assertion that matters. Root renders its children
+    // through two paths -- one for the plain case, one that appends the state
+    // icon -- and if those paths disagree about the children's keys, React
+    // treats the input as a different element, unmounts it and mounts a fresh
+    // one. Focus lands on the nearest focusable ancestor and every keystroke
+    // after the first is swallowed.
+    expect(screen.getByTestId("field")).toBe(field);
+    expect(field).toHaveValue("BNR-001");
+    expect(field).toHaveFocus();
+  });
+
 });
