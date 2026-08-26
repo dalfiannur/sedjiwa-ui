@@ -58,4 +58,46 @@ describe("<Table />", () => {
     expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
     expect(screen.getByText("Ada")).toBeInTheDocument();
   });
+
+  // Every table in the library composes from this primitive, so scope living
+  // here is what makes cell-to-header association work across all of them.
+  // Without it a screen reader guesses, and guesses badly in wide tables.
+  it("marks column headers with scope", () => {
+    render(
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>Spanduk</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    expect(screen.getByRole("columnheader", { name: "Name" })).toHaveAttribute(
+      "scope",
+      "col",
+    );
+  });
+
+  it("lets a row header override it", () => {
+    render(
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableHead scope="row">Spanduk</TableHead>
+            <TableCell>12</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    expect(screen.getByRole("rowheader", { name: "Spanduk" })).toHaveAttribute(
+      "scope",
+      "row",
+    );
+  });
+
 });

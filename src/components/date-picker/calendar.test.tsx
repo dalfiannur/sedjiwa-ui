@@ -447,4 +447,23 @@ describe("<Calendar /> grid semantics", () => {
     expect(selectedCell).toHaveTextContent("10");
     expect(container.querySelector("button[aria-selected]")).toBeNull();
   });
+
+  // The grid shows "Mo" but should announce "Monday". The long form comes from
+  // the same Intl call as the short one, so it follows the locale instead of
+  // hardcoding English.
+  it("announces the full weekday name while showing the abbreviation", () => {
+    render(<Calendar locale="en-US" />);
+    const monday = screen.getByRole("columnheader", { name: "Monday" });
+    expect(monday).toBeInTheDocument();
+    expect(monday.textContent).not.toBe("Monday");
+    expect(monday.textContent?.length).toBeLessThan("Monday".length);
+  });
+
+  it("follows the locale for the announced name too", () => {
+    render(<Calendar locale="id-ID" />);
+    expect(
+      screen.getByRole("columnheader", { name: "Senin" }),
+    ).toBeInTheDocument();
+  });
+
 });
