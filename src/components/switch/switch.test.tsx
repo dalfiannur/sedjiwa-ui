@@ -96,4 +96,16 @@ describe("<Switch />", () => {
     expect(screen.getByRole("switch")).toHaveClass("enabled:hover:opacity-90");
   });
 
+
+  // What a screen reader actually announces. The kit names role="switch" with
+  // aria-checked; getByRole covers the role, but the state was never asserted.
+  // Same gap that indeterminate had on Checkbox.
+  it.each([
+    [false, "false"],
+    [true, "true"],
+  ])("announces aria-checked=%s when checked=%s", (checked, expected) => {
+    render(<Switch aria-label="autosave" checked={checked} onCheckedChange={() => {}} />);
+    expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", expected);
+  });
+
 });
