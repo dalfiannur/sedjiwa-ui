@@ -62,3 +62,39 @@
     @apply border-border outline-ring/50;
   }
 }
+
+/* Respect prefers-reduced-motion.
+ *
+ * The design kit asks overlays to "skip scale, use fade only" when the user
+ * has set that preference. tw-animate-css builds its enter/exit keyframes out
+ * of six custom properties, so we can do exactly that in one place instead of
+ * annotating 43 animation classes across the components: force the transform
+ * properties back to their identity values and leave --tw-*-opacity alone, so
+ * the fade survives and the movement does not.
+ *
+ * Deliberately NOT disabled here:
+ *   - animation-* wholesale. `animate-spin` on a loading button is status
+ *     feedback, not decoration; killing it would remove information.
+ *   - transition-* on color/box-shadow. Those are not motion.
+ *   - accordion/collapsible height animations, which do not cause the
+ *     vestibular trouble that large translate/scale does.
+ *
+ * !important is required: the utility classes set these same properties on the
+ * element itself, so an equal-specificity rule here would lose.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    --tw-enter-scale: 1 !important;
+    --tw-exit-scale: 1 !important;
+    --tw-enter-translate-x: 0 !important;
+    --tw-enter-translate-y: 0 !important;
+    --tw-exit-translate-x: 0 !important;
+    --tw-exit-translate-y: 0 !important;
+    --tw-enter-rotate: 0 !important;
+    --tw-exit-rotate: 0 !important;
+    --tw-enter-blur: 0 !important;
+    --tw-exit-blur: 0 !important;
+  }
+}
