@@ -144,12 +144,18 @@ function buildGrid(
 function getWeekdayLabels(
   weekStartsOn: number,
   locale: string | undefined,
-): string[] {
+): Array<{ short: string; long: string }> {
   const sunday = new Date(1970, 0, 4); // known Sunday anchor
-  const fmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
-  return Array.from({ length: WEEK_LENGTH }, (_, i) =>
-    fmt.format(addDays(sunday, (i + weekStartsOn) % WEEK_LENGTH)),
-  );
+  const short = new Intl.DateTimeFormat(locale, { weekday: "short" });
+  // The column header shows the abbreviation but announces the full name: on
+  // its own "Mo" is not much to go on, and the design kit asks for the long
+  // form to be available. Same Intl call, so it stays locale-correct rather
+  // than smuggling in English.
+  const long = new Intl.DateTimeFormat(locale, { weekday: "long" });
+  return Array.from({ length: WEEK_LENGTH }, (_, i) => {
+    const day = addDays(sunday, (i + weekStartsOn) % WEEK_LENGTH);
+    return { short: short.format(day), long: long.format(day) };
+  });
 }
 
 function getInitialAnchor(props: CalendarProps): Date {
@@ -718,14 +724,15 @@ export function Calendar(props: CalendarProps) {
           <div role="row" className="contents">
             {weekdayLabels.map((label) => (
               <div
-                key={label}
+                key={label.short}
                 role="columnheader"
+                aria-label={label.long}
                 className={cn(
                   "text-center text-[0.7rem] font-medium text-muted-foreground",
                   weekdayCase === "upper" && "uppercase",
                 )}
               >
-                {label}
+                {label.short}
               </div>
             ))}
           </div>

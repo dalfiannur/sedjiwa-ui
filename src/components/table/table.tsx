@@ -62,10 +62,21 @@ export function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   );
 }
 
-export function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+export function TableHead({
+  // Column header by default. Without scope, screen readers fall back to
+  // guessing which header a cell belongs to — usually right in a narrow table,
+  // often wrong in a wide one, where you then hear a value with no idea what
+  // column it came from. Every table in the library composes from this one
+  // primitive, so setting it here covers all of them. Override with
+  // scope="row" for a row header.
+  scope = "col",
+  className,
+  ...props
+}: React.ComponentProps<"th">) {
   return (
     <th
       data-slot="table-head"
+      scope={scope}
       className={cn(
         "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
