@@ -157,6 +157,8 @@ export {
 
 export { Skeleton } from "./components/skeleton";
 export { Toaster } from "./components/sonner";
+export { SidebarLayout } from "./components/sidebar-layout";
+export type { SidebarLayoutProps } from "./components/sidebar-layout";
 export { Alert } from "./components/alert";
 export type { AlertProps, AlertAnnounce } from "./components/alert";
 export { alertVariants, type AlertVariants } from "./components/alert";
