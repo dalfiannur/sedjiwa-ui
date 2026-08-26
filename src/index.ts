@@ -199,6 +199,14 @@ export type {
   SmartColumn,
   SmartTableSort,
   SmartTableMenuLabels,
+  SmartTablePaginationProps,
+  PaginationProps,
+  SmartTablePaginationInfo,
+  PaginationInfo,
+} from "./components/smart-table";
+export {
+  SmartTablePagination,
+  Pagination,
 } from "./components/smart-table";
 
 export { Modal } from "./components/modal";

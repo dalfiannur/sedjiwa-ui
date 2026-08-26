@@ -58,8 +58,22 @@ export function SmartTablePagination({
       data-slot="smart-table-pagination"
       className={cn("flex flex-wrap items-center justify-between gap-3", className)}
     >
-      <div className="text-muted-foreground text-sm">
-        {renderSummary ? renderSummary({ from, to, total, page, pageCount }) : null}
+      {/* Live region: paging swaps the rows silently otherwise, so a screen
+          reader user gets no confirmation that the page changed or what range
+          they are now on. The kit asks for this to be announced politely.
+
+          The app's own summary is what gets announced when it supplies one —
+          it is already the localized sentence. The sr-only fallback keeps the
+          announcement working when it does not, and is English to match the
+          aria-labels this component already hardcodes. */}
+      <div className="text-muted-foreground text-sm" aria-live="polite" aria-atomic="true">
+        {renderSummary ? (
+          renderSummary({ from, to, total, page, pageCount })
+        ) : (
+          <span className="sr-only">
+            Showing {from}–{to} of {total}, page {page} of {pageCount}
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-1">
         <button
