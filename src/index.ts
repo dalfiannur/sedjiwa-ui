@@ -157,6 +157,9 @@ export {
 
 export { Skeleton } from "./components/skeleton";
 export { Toaster } from "./components/sonner";
+export { Alert } from "./components/alert";
+export type { AlertProps, AlertAnnounce } from "./components/alert";
+export { alertVariants, type AlertVariants } from "./components/alert";
 export { Progress } from "./components/progress";
 export type { ProgressProps } from "./components/progress";
 export {
