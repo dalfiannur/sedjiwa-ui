@@ -147,4 +147,22 @@ describe("<EmptyState /> tone", () => {
     const media = container.querySelector('[data-slot="empty-media"]');
     expect(media).not.toHaveClass("bg-success-subtle");
   });
+
+  // The empty state is often the only thing on screen, so its headline has to
+  // be reachable by heading navigation. As a div it looked like a heading and
+  // announced as nothing.
+  it("renders the title as a real heading", () => {
+    render(<EmptyTitle>Belum ada purchase order</EmptyTitle>);
+    expect(
+      screen.getByRole("heading", { name: "Belum ada purchase order", level: 2 }),
+    ).toBeInTheDocument();
+  });
+
+  it("lets the level be set where h2 is wrong", () => {
+    render(<EmptyTitle as="h3">Tidak ada hasil</EmptyTitle>);
+    expect(
+      screen.getByRole("heading", { name: "Tidak ada hasil", level: 3 }),
+    ).toBeInTheDocument();
+  });
+
 });

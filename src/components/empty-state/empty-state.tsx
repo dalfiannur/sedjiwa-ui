@@ -50,9 +50,20 @@ function EmptyMedia({
   );
 }
 
-function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
+/** Heading levels this may render as. The empty state is usually the only
+ *  thing on screen, so its headline should be reachable by heading navigation
+ *  — as a plain div it was styled like a heading and announced as nothing. */
+type EmptyTitleLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+
+function EmptyTitle({
+  className,
+  // h2 suits the common case: a page heading above, this below it. Pass `as`
+  // where that is wrong rather than leaving the document outline broken.
+  as: Heading = "h2",
+  ...props
+}: React.ComponentProps<"h2"> & { as?: EmptyTitleLevel }) {
   return (
-    <div
+    <Heading
       data-slot="empty-title"
       className={cn("text-lg font-medium tracking-tight", className)}
       {...props}
