@@ -134,6 +134,12 @@ export function FormMessage({ className, ...props }: React.ComponentProps<"p">) 
     <p
       data-slot="form-message"
       id={formMessageId}
+      // role="alert" so a validation failure is announced when it happens.
+      // aria-describedby alone only helps someone who navigates back to the
+      // field; nothing fires at the moment the error appears. This element
+      // returns null while there is no message, so it mounts exactly on
+      // error — the condition role="alert" is designed for.
+      role="alert"
       className={cn("text-destructive text-sm", className)}
       {...props}
     >

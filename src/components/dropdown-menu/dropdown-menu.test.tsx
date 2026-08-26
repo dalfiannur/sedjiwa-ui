@@ -68,4 +68,21 @@ describe("<DropdownMenu />", () => {
     const item = await screen.findByRole("menuitem", { name: "Delete" });
     expect(item).toHaveAttribute("data-variant", "destructive");
   });
+
+  // The kit caps the menu at 320px. Without it a single long item label
+  // stretches the whole menu — the same unbounded-width gap Tooltip had.
+  it("caps the content at the kit's 320px", async () => {
+    const user = userEvent.setup();
+    render(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>One</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+    await user.click(screen.getByText("Open"));
+    expect(await screen.findByRole("menu")).toHaveClass("max-w-80");
+  });
+
 });

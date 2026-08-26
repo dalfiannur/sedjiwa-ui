@@ -52,4 +52,25 @@ describe("<Form />", () => {
     await user.click(screen.getByText("Submit"));
     expect(await screen.findByText("Email required")).toBeInTheDocument();
   });
+
+  // Without role="alert" a validation failure is silent to a screen reader at
+  // the moment it happens: aria-describedby only pays off if you navigate back
+  // to the field. FormMessage renders null until there is a message, so it
+  // mounts exactly on error — the case role="alert" exists for.
+  it("announces the validation error when it appears", async () => {
+    const user = userEvent.setup();
+    render(<TestForm onSubmit={() => {}} />);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Email required");
+    // And it is still the element the input points at, not a second node.
+    expect(screen.getByLabelText("email-input")).toHaveAttribute(
+      "aria-describedby",
+      expect.stringContaining(alert.id),
+    );
+  });
+
 });
