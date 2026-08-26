@@ -5,6 +5,22 @@
   --foreground: oklch(0.18 0.025 265);
 
   --card: oklch(1 0 0);
+
+  /* Permukaan konten, satu anak tangga di bawah cangkang.
+   *
+   * Tangga yang dimaksud, dari terang ke gelap:
+   *
+   *   cangkang (--sidebar)  paling terang
+   *   konten   (--surface)  satu tingkat lebih gelap
+   *   kartu    (--card)     naik lagi di atas konten
+   *
+   * Bedanya sengaja tipis: yang dicari batas yang terlihat, bukan kontras yang
+   * diukur. Jangan menajamkannya karena rasionya — tajamkan kalau batasnya
+   * benar-benar hilang di mata.
+   *
+   * Dipakai SidebarLayout untuk memisahkan konten dari cangkangnya tanpa garis.
+   */
+  --surface: oklch(0.972 0.012 285);
   --card-foreground: oklch(0.18 0.025 265);
 
   --popover: oklch(1 0 0);
@@ -87,6 +103,11 @@
   --foreground: oklch(0.96 0.005 265);
 
   --card: oklch(0.21 0.018 265);
+
+  /* Di gelap tangganya membalik peran: konten turun ke --background, dan
+   * cangkang yang naik. Alias, bukan nilai mati — kalau --background bergeser,
+   * konten ikut, dan tangganya tetap utuh. */
+  --surface: var(--background);
   --card-foreground: oklch(0.96 0.005 265);
 
   --popover: oklch(0.21 0.018 265);
