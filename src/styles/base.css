@@ -57,6 +57,23 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Indeterminate progress: a segment that travels the track and repeats.
+ * Defined here rather than as an arbitrary value so the animation ships with
+ * the stylesheet and consumers get it without configuring anything.
+ *
+ * Not covered by the reduced-motion rule below: that one neutralises
+ * tw-animate-css enter/exit custom properties, and this is a keyframe of our
+ * own. Progress handles it at the call site with motion-reduce:animate-none.
+ */
+@theme {
+  --animate-progress-indeterminate: progress-indeterminate 1.4s ease-in-out infinite;
+
+  @keyframes progress-indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

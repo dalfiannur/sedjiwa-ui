@@ -157,6 +157,13 @@ export {
 
 export { Skeleton } from "./components/skeleton";
 export { Toaster } from "./components/sonner";
+export { Progress } from "./components/progress";
+export type { ProgressProps } from "./components/progress";
+export {
+  progressTrackVariants,
+  progressFillVariants,
+  type ProgressVariants,
+} from "./components/progress";
 
 export {
   Table, TableHeader, TableBody, TableFooter,
