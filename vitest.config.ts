@@ -14,7 +14,11 @@ export default defineConfig({
       test: {
         globals: true,
         environment: "jsdom",
-        setupFiles: ["./src/test/setup.ts", "./src/test/setup.pointer-events.ts"],
+        setupFiles: [
+          "./src/test/setup.ts",
+          "./src/test/setup.pointer-events.ts",
+          "./src/test/setup.intersection-observer.ts",
+        ],
         css: false,
         include: ["src/**/*.test.{ts,tsx}"]
       }

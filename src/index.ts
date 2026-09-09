@@ -224,6 +224,67 @@ export {
 export { Modal } from "./components/modal";
 export type { ModalProps } from "./components/modal";
 
+export { StatCard } from "./components/stat-card";
+export type { StatCardProps } from "./components/stat-card";
+export {
+  statCardTileVariants,
+  type StatCardTileVariants,
+} from "./components/stat-card";
+
+export { TrendIndicator } from "./components/trend-indicator";
+export type {
+  TrendIndicatorProps,
+  TrendPolarity,
+} from "./components/trend-indicator";
+export {
+  trendIndicatorVariants,
+  type TrendIndicatorVariants,
+} from "./components/trend-indicator";
+
+export { Topbar } from "./components/topbar";
+export type { TopbarProps } from "./components/topbar";
+
+export { NotificationButton } from "./components/notification-button";
+export type { NotificationButtonProps } from "./components/notification-button";
+
+export { UserMenuTrigger } from "./components/user-menu-trigger";
+export type { UserMenuTriggerProps } from "./components/user-menu-trigger";
+
+export { Rating } from "./components/rating";
+export type { RatingProps } from "./components/rating";
+export { ratingVariants, type RatingVariants } from "./components/rating";
+
+export { ChartLegend, ChartLegendItem } from "./components/chart-legend";
+export type {
+  ChartLegendProps,
+  ChartLegendItemProps,
+} from "./components/chart-legend";
+export {
+  chartLegendItemVariants,
+  type ChartLegendItemVariants,
+} from "./components/chart-legend";
+
+export {
+  Carousel, CarouselContent, CarouselItem,
+  CarouselPrevious, CarouselNext, CarouselStatus,
+  useCarousel,
+} from "./components/carousel";
+export type {
+  CarouselProps, CarouselContentProps, CarouselItemProps,
+  CarouselStatusProps, CarouselContextValue, CarouselOrientation,
+} from "./components/carousel";
+
+export {
+  ChartContainer, ChartTooltipContent,
+  chartAxisProps, chartGridProps, seriesColor,
+  AreaChart, LineChart, DonutChart,
+} from "./components/chart";
+export type {
+  ChartContainerProps, ChartTooltipContentProps,
+  ChartSeries, ChartDatum,
+  AreaChartProps, LineChartProps, DonutChartProps, DonutSlice,
+} from "./components/chart";
+
 export { cn, type ClassValue } from "./lib/cn";
 
 export { InputOrderProvider, useInputOrder } from "./hooks/use-input-order";
