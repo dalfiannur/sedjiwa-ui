@@ -250,6 +250,18 @@ export type { NotificationButtonProps } from "./components/notification-button";
 export { UserMenuTrigger } from "./components/user-menu-trigger";
 export type { UserMenuTriggerProps } from "./components/user-menu-trigger";
 
+export { ChatBubble, ChatBubbleList } from "./components/chat-bubble";
+export type {
+  ChatBubbleProps,
+  ChatBubbleListProps,
+} from "./components/chat-bubble";
+export {
+  chatBubbleRowVariants,
+  chatBubbleSurfaceVariants,
+  chatBubbleMetaVariants,
+  type ChatBubbleVariants,
+} from "./components/chat-bubble";
+
 export { ButtonGroup } from "./components/button-group";
 export type { ButtonGroupProps } from "./components/button-group";
 export {
