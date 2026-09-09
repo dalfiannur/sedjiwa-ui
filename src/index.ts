@@ -282,6 +282,18 @@ export { Rating } from "./components/rating";
 export type { RatingProps } from "./components/rating";
 export { ratingVariants, type RatingVariants } from "./components/rating";
 
+export { ColorSwatch, ColorSwatchList } from "./components/color-swatch";
+export type {
+  ColorSwatchProps,
+  ColorSwatchListProps,
+} from "./components/color-swatch";
+export {
+  colorSwatchVariants,
+  colorSwatchListVariants,
+  type ColorSwatchVariants,
+  type ColorSwatchListVariants,
+} from "./components/color-swatch";
+
 export { ChartLegend, ChartLegendItem } from "./components/chart-legend";
 export type {
   ChartLegendProps,
