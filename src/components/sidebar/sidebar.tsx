@@ -48,12 +48,23 @@ type SidebarContextProps = {
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
 
 export function useSidebar() {
-  const context = React.useContext(SidebarContext)
+  const context = useSidebarOptional()
   if (!context) {
     throw new Error("useSidebar must be used within a SidebarProvider.")
   }
 
   return context
+}
+
+/** Null outside a SidebarProvider instead of throwing.
+ *
+ *  For parts whose sidebar awareness is an enhancement rather than a
+ *  requirement. The menu primitives are generic markup — an icon, a label, a
+ *  count — and a mail folder list or a settings nav wants exactly that shape
+ *  without an app shell around it. Reading the context unconditionally welded
+ *  them to the shell for the sake of one tooltip. */
+function useSidebarOptional() {
+  return React.useContext(SidebarContext)
 }
 
 export function SidebarProvider({
@@ -506,7 +517,7 @@ export function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button"
-  const { isMobile, state } = useSidebar()
+  const sidebar = useSidebarOptional()
 
   const button = (
     <Comp
@@ -535,7 +546,11 @@ export function SidebarMenuButton({
       <TooltipContent
         side="right"
         align="center"
-        hidden={state !== "collapsed" || isMobile}
+        // Inside a sidebar the tooltip only earns its place once the rail has
+        // collapsed and swallowed the label. Outside one there is no rail and
+        // no collapsed state, so a caller who asked for a tooltip gets one —
+        // dropping it silently would be the surprising reading.
+        hidden={sidebar ? sidebar.state !== "collapsed" || sidebar.isMobile : false}
         {...tooltip}
       />
     </Tooltip>
