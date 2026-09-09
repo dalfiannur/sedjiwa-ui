@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { AvatarGroup } from "./avatar-group";
 import { Avatar, AvatarFallback } from "../avatar";
 import { Card, CardContent } from "../card";
@@ -46,11 +47,38 @@ export const NoOverflow: Story = {
   render: (args) => <AvatarGroup {...args}>{faces(3)}</AvatarGroup>,
 };
 
+/** The stack's size wins over each face's own.
+ *
+ *  Every `Avatar` carries a text size of its own now, and a class on the child
+ *  beats a size the parent merely passes down by inheritance — so the stack
+ *  sets its children's text through `[&>*]`, which outranks them. That is a
+ *  specificity argument, and specificity is invisible to jsdom: this has to be
+ *  measured in a browser or not checked at all. */
 export const Sizes: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const read = (label: string) => {
+      const group = canvas.getByLabelText(label);
+      const initials = group.querySelector('[data-slot="avatar-fallback"]');
+      return parseFloat(getComputedStyle(initials!).fontSize);
+    };
+
+    const small = read("sm");
+    const medium = read("default");
+    const large = read("lg");
+    await expect(medium).toBeGreaterThan(small);
+    await expect(large).toBeGreaterThan(medium);
+  },
   render: () => (
     <div className="flex flex-col gap-4">
       {(["sm", "default", "lg"] as const).map((size) => (
-        <AvatarGroup key={size} size={size} total={18}>
+        <AvatarGroup
+          key={size}
+          size={size}
+          total={18}
+          // The label doubles as the handle the `play` block reads by.
+          formatLabel={() => size}
+        >
           {faces(3)}
         </AvatarGroup>
       ))}

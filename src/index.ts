@@ -40,6 +40,8 @@ export {
 } from "./components/alert-dialog";
 
 export { Avatar, AvatarImage, AvatarFallback } from "./components/avatar";
+export type { AvatarProps } from "./components/avatar";
+export { avatarVariants, type AvatarVariants } from "./components/avatar";
 
 export {
   Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
