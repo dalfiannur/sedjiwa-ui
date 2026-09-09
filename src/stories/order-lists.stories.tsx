@@ -86,64 +86,67 @@ const ORDERS: Order[] = [
 ];
 
 const FILTERS = [
-  { key: "type", label: "Jenis Pesanan", options: ["Elektronik", "Buku", "Obat", "Jam"] },
   { key: "status", label: "Status", options: ["Selesai", "Diproses", "Ditolak", "Ditahan"] },
 ];
 
 /**
- * A date filter that commits on Apply, not on click.
+ * The shell both filters share: open state, a draft, and the two moments that
+ * matter — re-seed on the way in, commit only on Terapkan.
  *
- * The whole weight of it is holding a draft. `Calendar` selects immediately —
- * correct for a form field, wrong for a filter, where every click would refetch
- * the table. So the popover keeps its own copy, and `onOpenChange` is what makes
- * it honest: closing without applying throws the draft away, which covers
- * Escape and click-outside in one line rather than wiring each separately.
+ * `onOpenChange` is what makes it cheap. Radix routes Escape, click-outside
+ * and reopening through that one callback, so discarding the draft on all
+ * three is a single line rather than three separate handlers. That is why this
+ * stayed a local helper instead of becoming a library component: strip the
+ * markup and there are six lines of actual machinery here.
+ *
+ * `T extends unknown[]` because both filters hold a list, which also gives
+ * "is it empty" for free without asking the caller for a comparator.
  */
-function DateFilter({
+function FilterPopover<T extends unknown[]>({
+  label,
   value,
-  onChange,
+  empty,
+  onApply,
+  children,
 }: {
-  value: Date[];
-  onChange: (dates: Date[]) => void;
+  /** Rendered in the trigger; receives the committed value, not the draft. */
+  label: (value: T) => React.ReactNode;
+  value: T;
+  empty: T;
+  onApply: (value: T) => void;
+  children: (draft: T, setDraft: (value: T) => void) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<Date[]>(value);
+  const [draft, setDraft] = useState<T>(value);
 
   return (
     <Popover
       open={open}
       onOpenChange={(next) => {
-        // Re-seed on the way in, discard on the way out. Anything the user
-        // clicked and then dismissed never reaches the table.
         setDraft(value);
         setOpen(next);
       }}
     >
       <PopoverTrigger asChild>
-        <Button variant="ghost" className="text-muted-foreground data-[state=open]:text-foreground">
-          <CalendarIcon />
-          {value.length === 0
-            ? "Tanggal"
-            : `${value.length} tanggal dipilih`}
+        <Button
+          variant="ghost"
+          className={
+            value.length > 0
+              ? "text-foreground"
+              : "text-muted-foreground data-[state=open]:text-foreground"
+          }
+        >
+          {label(value)}
         </Button>
       </PopoverTrigger>
 
       <PopoverContent align="start" className="w-auto p-4">
-        <Calendar
-          mode="multiple"
-          value={draft}
-          onSelect={setDraft}
-          autoFocus
-          locale="id-ID"
-        />
-        <p className="text-muted-foreground mt-3 text-xs">
-          Anda dapat memilih lebih dari satu tanggal.
-        </p>
+        {children(draft, setDraft)}
         <div className="mt-4 flex items-center justify-end gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setDraft([])}
+            onClick={() => setDraft(empty)}
             disabled={draft.length === 0}
           >
             Kosongkan
@@ -151,7 +154,7 @@ function DateFilter({
           <Button
             size="sm"
             onClick={() => {
-              onChange(draft);
+              onApply(draft);
               setOpen(false);
             }}
           >
@@ -163,11 +166,24 @@ function DateFilter({
   );
 }
 
+const ORDER_TYPES = [
+  "Kesehatan & Obat",
+  "Buku & Alat Tulis",
+  "Jasa & Industri",
+  "Fesyen & Kecantikan",
+  "Rumah & Hunian",
+  "Elektronik",
+  "Ponsel & Gawai",
+  "Aksesori",
+];
+
 function OrderLists() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [dates, setDates] = useState<Date[]>([]);
-  const anyFilter = Object.keys(filters).length > 0 || dates.length > 0;
+  const [types, setTypes] = useState<string[]>([]);
+  const anyFilter =
+    Object.keys(filters).length > 0 || dates.length > 0 || types.length > 0;
 
   return (
     <div className="bg-surface min-h-screen space-y-5 p-6">
@@ -185,7 +201,82 @@ function OrderLists() {
           Filter
         </span>
 
-        <DateFilter value={dates} onChange={setDates} />
+        <FilterPopover
+          value={dates}
+          empty={[] as Date[]}
+          onApply={setDates}
+          label={(v) => (
+            <>
+              <CalendarIcon />
+              {v.length === 0 ? "Tanggal" : `${v.length} tanggal dipilih`}
+            </>
+          )}
+        >
+          {(draft, setDraft) => (
+            <>
+              <Calendar
+                mode="multiple"
+                value={draft}
+                onSelect={setDraft}
+                autoFocus
+                locale="id-ID"
+              />
+              <p className="text-muted-foreground mt-3 text-xs">
+                Anda dapat memilih lebih dari satu tanggal.
+              </p>
+            </>
+          )}
+        </FilterPopover>
+
+        <FilterPopover
+          value={types}
+          empty={[] as string[]}
+          onApply={setTypes}
+          label={(v) =>
+            v.length === 0 ? "Jenis Pesanan" : `${v.length} jenis dipilih`
+          }
+        >
+          {(draft, setDraft) => (
+            <>
+              <p className="mb-3 font-bold">Pilih Jenis Pesanan</p>
+              {/* Toggle chips, not checkboxes: `pressed` emits aria-pressed and
+                  data-state="on", so the outline variant's own on-state fill
+                  does the work and the state is announced rather than drawn. */}
+              <div
+                role="group"
+                aria-label="Jenis pesanan"
+                // flex-wrap, not a fixed grid: equal-width columns squeeze
+                // every chip to the narrowest track, and the longest label
+                // ("Fesyen & Kecantikan") lost its padding and ran into the
+                // pill's own border. A chip should be as wide as its word.
+                className="flex max-w-md flex-wrap gap-2"
+              >
+                {ORDER_TYPES.map((t) => {
+                  const on = draft.includes(t);
+                  return (
+                    <Button
+                      key={t}
+                      variant="outline"
+                      size="sm"
+                      pressed={on}
+                      onClick={() =>
+                        setDraft(
+                          on ? draft.filter((x) => x !== t) : [...draft, t],
+                        )
+                      }
+                      className="rounded-full"
+                    >
+                      {t}
+                    </Button>
+                  );
+                })}
+              </div>
+              <p className="text-muted-foreground mt-3 text-xs">
+                Anda dapat memilih lebih dari satu jenis.
+              </p>
+            </>
+          )}
+        </FilterPopover>
 
         {FILTERS.map((f) => (
           <Select
@@ -211,6 +302,7 @@ function OrderLists() {
           onClick={() => {
             setFilters({});
             setDates([]);
+            setTypes([]);
           }}
           disabled={!anyFilter}
           className="text-destructive-text hover:text-destructive-text"
