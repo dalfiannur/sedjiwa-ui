@@ -2,8 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 export const fieldSurfaceVariants = cva(
   [
-    "flex w-full min-w-0 rounded-md border bg-transparent text-foreground overflow-hidden",
-    "shadow-xs dark:bg-input/30",
+    "flex w-full min-w-0 border text-foreground overflow-hidden",
     "transition-[color,box-shadow,border-color,background-color] duration-150",
     "placeholder:text-muted-foreground",
     "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -15,6 +14,16 @@ export const fieldSurfaceVariants = cva(
         sm: "h-8 text-sm",
         default: "h-9 text-sm",
         lg: "h-10 text-base",
+      },
+      // Radius, fill and shadow live here rather than in the base string so
+      // the two appearances never both emit a `rounded-*` and leave the
+      // winner to stylesheet order. `state` still owns the border colour and
+      // the focus ring, which both appearances share.
+      appearance: {
+        default: "rounded-md bg-transparent shadow-xs dark:bg-input/30",
+        // The Figma's top-bar search: a pill on a muted fill, reading as a
+        // place to type rather than as a field in a form.
+        search: "rounded-full bg-muted shadow-none dark:bg-input/50",
       },
       state: {
         default: [
@@ -30,7 +39,7 @@ export const fieldSurfaceVariants = cva(
         warning: "border-warning bg-warning/[0.10]",
       },
     },
-    defaultVariants: { size: "default", state: "default" },
+    defaultVariants: { size: "default", state: "default", appearance: "default" },
   },
 );
 

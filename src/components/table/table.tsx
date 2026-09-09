@@ -9,7 +9,18 @@ export function Table({ className, ...props }: React.ComponentProps<"table">) {
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        // border-separate, not the preflight default of border-collapse.
+        // The header is a filled bar with rounded ends, and border-radius on a
+        // cell is simply ignored while the table collapses its borders. The
+        // cost is that row rules can no longer live on <tr> — a collapsed
+        // border belongs to the table, a separated one belongs to each cell —
+        // so TableCell carries border-b and TableBody/TableFooter reach
+        // through the row to reset it. border-spacing-0 keeps the cells
+        // touching, so nothing about the layout changes.
+        className={cn(
+          "w-full caption-bottom border-separate border-spacing-0 text-sm",
+          className
+        )}
         {...props}
       />
     </div>
@@ -17,20 +28,14 @@ export function Table({ className, ...props }: React.ComponentProps<"table">) {
 }
 
 export function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
-  return (
-    <thead
-      data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
-      {...props}
-    />
-  );
+  return <thead data-slot="table-header" className={cn(className)} {...props} />;
 }
 
 export function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
+      className={cn("[&_tr:last-child>td]:border-0", className)}
       {...props}
     />
   );
@@ -41,7 +46,7 @@ export function TableFooter({ className, ...props }: React.ComponentProps<"tfoot
     <tfoot
       data-slot="table-footer"
       className={cn(
-        "bg-muted/50 border-t font-medium [&>tr]:last:border-b-0",
+        "bg-muted/50 font-medium [&>tr>td]:border-t [&>tr>td]:border-b-0",
         className
       )}
       {...props}
@@ -54,7 +59,7 @@ export function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-muted/50 data-[state=selected]:bg-muted transition-colors",
         className
       )}
       {...props}
@@ -78,7 +83,12 @@ export function TableHead({
       data-slot="table-head"
       scope={scope}
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        // The header is a bar, not a rule: a muted fill whose outer corners
+        // round off, so the whole row reads as one object sitting above the
+        // data rather than as the data's first line.
+        "bg-muted text-foreground h-12 px-4 text-left align-middle font-semibold whitespace-nowrap",
+        "first:rounded-l-xl last:rounded-r-xl",
+        "[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
@@ -91,7 +101,8 @@ export function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "border-b px-4 py-3 align-middle whitespace-nowrap",
+        "[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}

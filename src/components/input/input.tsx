@@ -41,6 +41,10 @@ export type InputRootProps = Omit<
 > & {
   size?: FieldSurfaceVariants["size"];
   state?: FieldSurfaceVariants["state"];
+  /** `search` swaps the bordered box for a pill on a muted fill — the top-bar
+   *  search field. Everything else (sizes, states, the icon and addon slots)
+   *  behaves identically. */
+  appearance?: FieldSurfaceVariants["appearance"];
   loading?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
@@ -51,6 +55,7 @@ function InputRoot({
   className,
   size = "default",
   state: stateProp,
+  appearance = "default",
   loading = false,
   disabled = false,
   readOnly = false,
@@ -167,11 +172,12 @@ function InputRoot({
     <InputContext.Provider value={ctx}>
       <div
         data-slot="input"
+        data-appearance={appearance}
         data-state={resolvedState}
         data-loading={loading || undefined}
         aria-disabled={disabled || undefined}
         className={cn(
-          fieldSurfaceVariants({ size, state: resolvedState }),
+          fieldSurfaceVariants({ size, state: resolvedState, appearance }),
           "items-stretch",
           loading && "opacity-90",
           disabled && "opacity-50 cursor-not-allowed",

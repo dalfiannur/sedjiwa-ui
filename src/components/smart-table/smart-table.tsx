@@ -189,7 +189,11 @@ export function SmartTable<T>({
   const table = (
     <div
       className={cn(
-        "bg-card text-card-foreground w-full overflow-x-auto rounded-xl border shadow-sm",
+        // Matches Card: no border, and a wide soft shadow instead of shadow-sm.
+        // SmartTable draws its own shell rather than composing Card, so the
+        // two have to be kept in step by hand.
+        "bg-card text-card-foreground w-full overflow-x-auto rounded-xl",
+        "shadow-[6px_6px_54px_0_rgb(0_0_0/0.05)] dark:shadow-[6px_6px_54px_0_rgb(0_0_0/0.45)]",
         responsive && "hidden md:block"
       )}
     >
@@ -198,7 +202,7 @@ export function SmartTable<T>({
         <div
           role="row"
           data-slot="smart-table-header"
-          className="bg-muted/40 grid items-stretch"
+          className="bg-muted grid items-stretch"
           style={gridStyle}
         >
           {renderLeading && (
@@ -206,7 +210,7 @@ export function SmartTable<T>({
               {leadingHeader}
             </div>
           )}
-          {visibleColumns.map((col, i) => {
+          {visibleColumns.map((col) => {
             const sortable = columnSortable(col);
             const hideable = col.hideable !== false;
             const activeDir = columnActiveDir(col);
@@ -224,8 +228,7 @@ export function SmartTable<T>({
                     : undefined
                 }
                 className={cn(
-                  "text-foreground/70 flex items-center gap-2 px-4 py-3.5 text-sm font-medium",
-                  i < visibleColumns.length - 1 && "border-border/60 border-r",
+                  "text-foreground flex items-center gap-2 px-4 py-3.5 text-sm font-semibold",
                   col.align === "right" && "flex-row-reverse"
                 )}
               >

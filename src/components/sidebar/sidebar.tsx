@@ -471,7 +471,22 @@ export function SidebarMenuItem({ className, ...props }: React.ComponentProps<"l
     <li
       data-slot="sidebar-menu-item"
       data-sidebar="menu-item"
-      className={cn("group/menu-item relative", className)}
+      className={cn(
+        "group/menu-item relative",
+        // The Figma marks the active row twice: a filled pill, and a tick
+        // flush against the sidebar's own edge. The tick lives here rather
+        // than on the button because the button is overflow-hidden and would
+        // clip it, and because -left-2 has to cancel SidebarGroup's p-2 to
+        // reach the edge. It hangs off has-[], so it follows whichever child
+        // button is active without the item needing to be told.
+        "before:absolute before:top-1 before:bottom-1 before:-left-2 before:w-1",
+        "before:rounded-r-full before:bg-transparent",
+        "has-[[data-active=true]]:before:bg-sidebar-primary",
+        // In icon mode the rail is 8px wider than the button; a tick pinned
+        // outside it would sit on the content, so it is dropped there.
+        "group-data-[collapsible=icon]:before:hidden",
+        className
+      )}
       {...props}
     />
   )
