@@ -13,6 +13,10 @@ import { readFileSync } from "node:fs";
 import { contrastRatio } from "../src/lib/contrast.ts";
 
 const TONES = ["success", "warning", "info", "destructive"];
+// User-chosen label colours. Not semantic, but they carry text on a fill
+// exactly like the subtle pairs do, so they are gated the same way — the
+// whole reason the palette is fixed rather than an open colour prop.
+const LABELS = ["teal", "blue", "amber", "rose", "violet", "lime"];
 const THRESHOLD = 4.5;
 
 // Finds `selector`'s opening "{" and brace-counts forward to its matching "}",
@@ -126,6 +130,26 @@ for (const [theme, tokens] of THEMES) {
   }
 }
 
+for (const [theme, tokens] of THEMES) {
+  for (const label of LABELS) {
+    const fgName = `label-${label}-text`;
+    const bgName = `label-${label}`;
+    const fg = tokens[fgName];
+    const bg = tokens[bgName];
+    if (!fg || !bg) {
+      console.log(`MISSING  --${fgName} / --${bgName} (${theme})`);
+      failures++;
+      continue;
+    }
+    const ratio = contrastRatio(fg, bg);
+    const ok = ratio >= THRESHOLD;
+    if (!ok) failures++;
+    console.log(
+      `${ok ? "PASS" : "FAIL"} ${ratio.toFixed(2).padStart(6)}:1  label  --${fgName} on --${bgName} (${theme})`
+    );
+  }
+}
+
 // One-off pairs that don't follow the <tone>-subtle / <tone>-text convention.
 // --calendar-outside is the dimmed adjacent-month day in Calendar. Those days
 // stay clickable, so they are interactive text (4.5:1), and a Calendar can be
@@ -174,6 +198,7 @@ const themeInlineBodyRaw = findBlockBody(baseCss, "@theme inline", "@theme inlin
 const themeInlineBody = themeInlineBodyRaw.replace(/\/\*[\s\S]*?\*\//g, "");
 const MUST_BE_MAPPED = [
   ...TONES.flatMap((tone) => [`--color-${tone}-subtle`, `--color-${tone}-text`]),
+  ...LABELS.flatMap((l) => [`--color-label-${l}`, `--color-label-${l}-text`]),
   "--color-calendar-outside",
 ];
 for (const varName of MUST_BE_MAPPED) {

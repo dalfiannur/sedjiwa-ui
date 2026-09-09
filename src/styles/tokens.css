@@ -100,6 +100,35 @@
   --destructive-subtle: oklch(0.94 0.06 24.5);
   --destructive-text: oklch(0.35 0.15 24.5);
 
+  /* Labels the user names and colours themselves — a mail folder, a project
+     tag, a board swimlane. These are NOT semantic: nothing about `rose` means
+     danger, and nothing about `amber` means caution. Reach for the semantic
+     tones when you mean a state, and for these when the colour is only a
+     handle the user picked.
+
+     A fixed palette rather than an open `color` prop, because an arbitrary hex
+     cannot be contrast-checked and a gate that cannot check the colours
+     actually shipped is decoration. Every pair takes the same subtle/text
+     shape as the semantic tones and is gated alongside them; amber shifts its
+     text hue for the same reason --warning-text does. */
+  --label-teal: oklch(0.93 0.06 177);
+  --label-teal-text: oklch(0.36 0.1 177);
+
+  --label-blue: oklch(0.93 0.06 250);
+  --label-blue-text: oklch(0.36 0.1 250);
+
+  --label-amber: oklch(0.93 0.06 70);
+  --label-amber-text: oklch(0.36 0.1 55);
+
+  --label-rose: oklch(0.93 0.06 12);
+  --label-rose-text: oklch(0.36 0.1 12);
+
+  --label-violet: oklch(0.93 0.06 300);
+  --label-violet-text: oklch(0.36 0.1 300);
+
+  --label-lime: oklch(0.93 0.06 130);
+  --label-lime-text: oklch(0.36 0.1 130);
+
   --border: oklch(0.92 0.012 265);
   --input: oklch(0.92 0.012 265);
   --ring: oklch(0.62 0.19 264);
@@ -186,6 +215,26 @@
 
   --destructive-subtle: oklch(0.3 0.08 24.5);
   --destructive-text: oklch(0.85 0.12 24.5);
+
+  /* See the light-mode note. Same hues, the fill and text swapping ends of
+     the lightness range as every other subtle pair does here. */
+  --label-teal: oklch(0.3 0.06 177);
+  --label-teal-text: oklch(0.85 0.12 177);
+
+  --label-blue: oklch(0.3 0.06 250);
+  --label-blue-text: oklch(0.85 0.12 250);
+
+  --label-amber: oklch(0.3 0.06 70);
+  --label-amber-text: oklch(0.85 0.12 55);
+
+  --label-rose: oklch(0.3 0.06 12);
+  --label-rose-text: oklch(0.85 0.12 12);
+
+  --label-violet: oklch(0.3 0.06 300);
+  --label-violet-text: oklch(0.85 0.12 300);
+
+  --label-lime: oklch(0.3 0.06 130);
+  --label-lime-text: oklch(0.85 0.12 130);
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);

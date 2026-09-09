@@ -22,6 +22,21 @@ export const badgeVariants = cva(
           "border-transparent bg-info text-info-foreground [a&]:hover:bg-info/90",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        // User-chosen label colours. They bring their own fill and text, so
+        // `appearance` does not apply — a label has no solid/subtle pair,
+        // it is only ever the tinted chip.
+        "label-teal":
+          "border-transparent bg-label-teal text-label-teal-text [a&]:hover:bg-label-teal/80",
+        "label-blue":
+          "border-transparent bg-label-blue text-label-blue-text [a&]:hover:bg-label-blue/80",
+        "label-amber":
+          "border-transparent bg-label-amber text-label-amber-text [a&]:hover:bg-label-amber/80",
+        "label-rose":
+          "border-transparent bg-label-rose text-label-rose-text [a&]:hover:bg-label-rose/80",
+        "label-violet":
+          "border-transparent bg-label-violet text-label-violet-text [a&]:hover:bg-label-violet/80",
+        "label-lime":
+          "border-transparent bg-label-lime text-label-lime-text [a&]:hover:bg-label-lime/80",
       },
       appearance: {
         // Deliberately empty. `border-transparent` must NOT live here: it would

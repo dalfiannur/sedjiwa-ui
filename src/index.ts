@@ -250,6 +250,13 @@ export type { NotificationButtonProps } from "./components/notification-button";
 export { UserMenuTrigger } from "./components/user-menu-trigger";
 export type { UserMenuTriggerProps } from "./components/user-menu-trigger";
 
+export { ButtonGroup } from "./components/button-group";
+export type { ButtonGroupProps } from "./components/button-group";
+export {
+  buttonGroupVariants,
+  type ButtonGroupVariants,
+} from "./components/button-group";
+
 export { Rating } from "./components/rating";
 export type { RatingProps } from "./components/rating";
 export { ratingVariants, type RatingVariants } from "./components/rating";
