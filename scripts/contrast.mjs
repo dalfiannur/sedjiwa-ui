@@ -132,10 +132,18 @@ for (const [theme, tokens] of THEMES) {
 // rendered on any of three surfaces depending on whether the picker is modal,
 // inline in a dialog, or inline on a page — so all three are gated, not just
 // the one the default story happens to use.
+//
+// --primary / --sidebar-primary are not tones, so neither loop above reaches
+// them, yet both carry text: the default Button and the active Sidebar item.
+// That gap went unnoticed until --primary was re-cut around DashStack's
+// #4880FF, whose own lightness measures 3.62:1 under a near-white foreground.
+// Gate them here so the next hue change cannot quietly drop below AA.
 const EXPLICIT_PAIRS = [
   ["calendar-outside", "background"],
   ["calendar-outside", "card"],
   ["calendar-outside", "popover"],
+  ["primary-foreground", "primary"],
+  ["sidebar-primary-foreground", "sidebar-primary"],
 ];
 for (const [theme, tokens] of THEMES) {
   for (const [fgName, bgName] of EXPLICIT_PAIRS) {
