@@ -264,7 +264,13 @@ function OrderLists() {
                           on ? draft.filter((x) => x !== t) : [...draft, t],
                         )
                       }
-                      className="rounded-full"
+                      // The Figma fills a chosen chip solid primary, and
+                      // the on-state fill is set here rather than left to the
+                      // variant: Button's own data-[state=on] dims the fill to
+                      // /85, which over a light card lightens it to 2.97:1
+                      // against white text. Setting the fill outright keeps the
+                      // full 4.66:1.
+                      className="rounded-full data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                     >
                       {t}
                     </Button>
