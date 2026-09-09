@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import {
   ArchiveIcon,
   InfoIcon,
@@ -20,8 +21,25 @@ export default meta;
 
 type Story = StoryObj<typeof ButtonGroup>;
 
-/** The mail toolbar it was lifted from. */
+/** The mail toolbar it was lifted from.
+ *
+ *  The `play` block below measures the seam in a real browser. A jsdom test
+ *  cannot: it has no stylesheet, so it can only assert that a class name is
+ *  present — which is exactly how the 0.41.0 divider bug shipped green. The
+ *  seam depends on one selector outranking another, and specificity is only
+ *  observable once CSS is actually applied. */
 export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const buttons = canvas.getAllByRole("button");
+    const [first, second, third] = buttons;
+
+    // The first child opens the frame, so it must NOT carry a seam.
+    await expect(getComputedStyle(first!).borderLeftWidth).toBe("0px");
+    // Every later child draws exactly one hairline against its neighbour.
+    await expect(getComputedStyle(second!).borderLeftWidth).toBe("1px");
+    await expect(getComputedStyle(third!).borderLeftWidth).toBe("1px");
+  },
   render: () => (
     <ButtonGroup aria-label="Tindakan surat">
       <Button variant="ghost" size="icon" aria-label="Arsipkan">
@@ -66,6 +84,12 @@ export const WithLabels: Story = {
 };
 
 export const Vertical: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [first, second] = canvas.getAllByRole("button");
+    await expect(getComputedStyle(first!).borderTopWidth).toBe("0px");
+    await expect(getComputedStyle(second!).borderTopWidth).toBe("1px");
+  },
   render: () => (
     <ButtonGroup aria-label="Tindakan surat" orientation="vertical">
       <Button variant="ghost" size="icon" aria-label="Arsipkan">
