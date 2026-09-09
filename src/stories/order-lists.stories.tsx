@@ -1,10 +1,16 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ListFilterIcon, RotateCcwIcon } from "lucide-react";
+import { CalendarIcon, ListFilterIcon, RotateCcwIcon } from "lucide-react";
 import { Badge } from "../components/badge";
 import { Button } from "../components/button";
 import { ButtonGroup } from "../components/button-group";
+import { Calendar } from "../components/date-picker";
 import { Card, CardContent } from "../components/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../components/popover";
 import { Pagination } from "../components/smart-table";
 import {
   Select,
@@ -80,15 +86,88 @@ const ORDERS: Order[] = [
 ];
 
 const FILTERS = [
-  { key: "date", label: "Tanggal", options: ["Bulan ini", "Kuartal ini", "Tahun ini"] },
   { key: "type", label: "Jenis Pesanan", options: ["Elektronik", "Buku", "Obat", "Jam"] },
   { key: "status", label: "Status", options: ["Selesai", "Diproses", "Ditolak", "Ditahan"] },
 ];
 
+/**
+ * A date filter that commits on Apply, not on click.
+ *
+ * The whole weight of it is holding a draft. `Calendar` selects immediately —
+ * correct for a form field, wrong for a filter, where every click would refetch
+ * the table. So the popover keeps its own copy, and `onOpenChange` is what makes
+ * it honest: closing without applying throws the draft away, which covers
+ * Escape and click-outside in one line rather than wiring each separately.
+ */
+function DateFilter({
+  value,
+  onChange,
+}: {
+  value: Date[];
+  onChange: (dates: Date[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<Date[]>(value);
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        // Re-seed on the way in, discard on the way out. Anything the user
+        // clicked and then dismissed never reaches the table.
+        setDraft(value);
+        setOpen(next);
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button variant="ghost" className="text-muted-foreground data-[state=open]:text-foreground">
+          <CalendarIcon />
+          {value.length === 0
+            ? "Tanggal"
+            : `${value.length} tanggal dipilih`}
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent align="start" className="w-auto p-4">
+        <Calendar
+          mode="multiple"
+          value={draft}
+          onSelect={setDraft}
+          autoFocus
+          locale="id-ID"
+        />
+        <p className="text-muted-foreground mt-3 text-xs">
+          Anda dapat memilih lebih dari satu tanggal.
+        </p>
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDraft([])}
+            disabled={draft.length === 0}
+          >
+            Kosongkan
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              onChange(draft);
+              setOpen(false);
+            }}
+          >
+            Terapkan
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function OrderLists() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const anyFilter = Object.keys(filters).length > 0;
+  const [dates, setDates] = useState<Date[]>([]);
+  const anyFilter = Object.keys(filters).length > 0 || dates.length > 0;
 
   return (
     <div className="bg-surface min-h-screen space-y-5 p-6">
@@ -105,6 +184,8 @@ function OrderLists() {
         <span className="flex h-9 items-center px-4 text-sm font-medium">
           Filter
         </span>
+
+        <DateFilter value={dates} onChange={setDates} />
 
         {FILTERS.map((f) => (
           <Select
@@ -127,7 +208,10 @@ function OrderLists() {
 
         <Button
           variant="ghost"
-          onClick={() => setFilters({})}
+          onClick={() => {
+            setFilters({});
+            setDates([]);
+          }}
           disabled={!anyFilter}
           className="text-destructive-text hover:text-destructive-text"
         >
