@@ -10,10 +10,16 @@ export const avatarGroupVariants = cva(
   "flex items-center [&>*]:shrink-0 [&>*]:ring-2 [&>*]:ring-card",
   {
     variants: {
+      // Text size is set on the children, not inherited from the stack. Every
+      // `Avatar` now carries a text size of its own, and a class on the child
+      // beats anything the parent passes down — so a stack that only set the
+      // size here would leave a `size="sm"` group rendering default-size
+      // initials. `[&>*]` outranks the child's own class and holds the whole
+      // stack, the overflow chip included, at one size.
       size: {
-        sm: "-space-x-1.5 [&>*]:size-6 text-[0.625rem]",
-        default: "-space-x-2 [&>*]:size-8 text-xs",
-        lg: "-space-x-2.5 [&>*]:size-10 text-sm",
+        sm: "-space-x-1.5 [&>*]:size-6 [&>*]:text-[0.625rem]",
+        default: "-space-x-2 [&>*]:size-8 [&>*]:text-xs",
+        lg: "-space-x-2.5 [&>*]:size-10 [&>*]:text-sm",
       },
     },
     defaultVariants: { size: "default" },
