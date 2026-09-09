@@ -200,15 +200,21 @@ function Inbox() {
           <ul className="flex flex-col">
             {MAIL.map((m) => {
               const isStarred = starred.has(m.id);
+              const isSelected = selected.has(m.id);
               const label = m.label ? LABEL_BY_KEY[m.label] : undefined;
               return (
                 <li
                   key={m.id}
-                  className="hover:bg-muted/50 flex items-center gap-3 border-b px-6 py-3 last:border-b-0"
+                  // data-state=selected rather than a bespoke class: that is
+                  // how TableRow marks a chosen row, and a mail list that
+                  // invents its own hook would drift from it the first time
+                  // either side is restyled.
+                  data-state={isSelected ? "selected" : undefined}
+                  className="hover:bg-muted/50 data-[state=selected]:bg-accent flex items-center gap-3 border-b px-6 py-3 last:border-b-0"
                 >
                   <Checkbox
                     size="sm"
-                    checked={selected.has(m.id)}
+                    checked={isSelected}
                     onCheckedChange={() => setSelected((s) => toggle(s, m.id))}
                     aria-label={`Pilih surat dari ${m.from}`}
                   />
