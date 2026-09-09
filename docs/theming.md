@@ -58,11 +58,18 @@ passing, but with no room to spare — while `--destructive-text` is 11.5–11.9
 on both. Reach for `--<tone>-text` whenever you want coloured words, and reserve
 `--<tone>` for filled shapes.
 
-`bun run contrast` gates 38 pairs at 4.5:1, parsing `src/styles/tokens.css`
+`bun run contrast` gates 56 pairs at 4.5:1, parsing `src/styles/tokens.css`
 directly and failing the build if a token is edited below threshold. Counted
-across both themes: 8 solid, 8 subtle, 12 label, and 10 one-offs that follow no
-naming convention — `--calendar-outside` on each of its three possible
-surfaces, plus the `primary` and `sidebar-primary` pairs.
+across both themes: 8 solid, 8 subtle, 12 label, 18 interactive states, and 10
+one-offs that follow no naming convention — `--calendar-outside` on each of its
+three possible surfaces, plus the `primary` and `sidebar-primary` pairs.
+
+**A token that passes at rest can still fail when hovered.** Button darkens its
+solid fills for hover, active and pressed, so those three states are measured
+too, for `primary`, `destructive` and `secondary`. If you retint any of them,
+the state checks move with you — a fill that only just clears 4.5:1 at rest may
+not survive being darkened in dark mode, where darkening works *against* a
+light foreground.
 
 In components, prefer `<Badge variant="success" appearance="subtle">` over
 hand-written classes.

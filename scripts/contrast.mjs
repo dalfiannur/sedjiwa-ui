@@ -150,6 +150,48 @@ for (const [theme, tokens] of THEMES) {
   }
 }
 
+// Interactive states on solid Button fills.
+//
+// A token can sit comfortably above 4.5:1 at rest and fail the moment it is
+// hovered, held or toggled on, because those states shift the fill. Nothing
+// above sees that: every check so far reads tokens at full opacity, which is
+// exactly how primary shipped at 2.97:1 when pressed in 0.42.1.
+//
+// button.variants.ts darkens solid fills with
+// `color-mix(in oklab, var(--tone) N%, black)`. Mixing with black in oklab
+// scales L, a and b by N — and scaling a/b is the same as scaling chroma at a
+// fixed hue, so the mixed colour is just the token with L and C multiplied.
+const STATE_STEPS = [
+  ["hover", 0.92],
+  ["on", 0.88],
+  ["active", 0.85],
+];
+const SOLID_BUTTON_TONES = ["primary", "destructive", "secondary"];
+
+function mixWithBlack([L, C, H], fraction) {
+  return [L * fraction, C * fraction, H];
+}
+
+for (const [theme, tokens] of THEMES) {
+  for (const tone of SOLID_BUTTON_TONES) {
+    const fg = tokens[`${tone}-foreground`];
+    const bg = tokens[tone];
+    if (!fg || !bg) {
+      console.log(`MISSING  --${tone}-foreground / --${tone} (${theme})`);
+      failures++;
+      continue;
+    }
+    for (const [state, fraction] of STATE_STEPS) {
+      const ratio = contrastRatio(fg, mixWithBlack(bg, fraction));
+      const ok = ratio >= THRESHOLD;
+      if (!ok) failures++;
+      console.log(
+        `${ok ? "PASS" : "FAIL"} ${ratio.toFixed(2).padStart(6)}:1  state  --${tone}-foreground on --${tone} :${state} (${theme})`
+      );
+    }
+  }
+}
+
 // One-off pairs that don't follow the <tone>-subtle / <tone>-text convention.
 // --calendar-outside is the dimmed adjacent-month day in Calendar. Those days
 // stay clickable, so they are interactive text (4.5:1), and a Calendar can be
