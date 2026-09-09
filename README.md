@@ -59,7 +59,8 @@ document.documentElement.classList.toggle("dark");
 
 ### Atomic primitives (v0.1.0)
 
-shadcn-style primitives, composable via Tailwind utility classes:
+Unstyled behaviour from Radix where it applies, styled here; composable via
+Tailwind utility classes:
 
 - **Layout & overlay:** `Dialog`, `AlertDialog`, `Sheet`, `Tooltip`, `DropdownMenu`, `Sidebar`, `Tabs`
 - **Forms:** `Form`, `Input`, `Label`, `Select`, `Separator`, plus `react-hook-form` integration via `FormField`/`FormItem`/`FormControl`/`FormMessage`/`FormDescription`/`FormLabel`
