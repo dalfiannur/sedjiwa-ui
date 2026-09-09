@@ -51,8 +51,10 @@ describe("<ButtonGroup />", () => {
     expect(container.firstChild).toHaveClass("flex-col");
   });
 
-  // The frame belongs to the group; two stacked hairlines between neighbours
-  // is the thing this component exists to avoid.
+  // Class presence only. jsdom applies no stylesheet, so nothing here can see
+  // whether a rule actually wins — the 0.41.0 divider bug passed this file
+  // while every seam rendered 0px wide. The seam itself is measured in a real
+  // browser by the play block on the ButtonGroup stories.
   it("strips the children's own radius, border and shadow", () => {
     const { container } = render(
       <ButtonGroup aria-label="Tindakan">
