@@ -13,13 +13,6 @@ import {
 } from "../components/popover";
 import { Pagination } from "../components/smart-table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -44,7 +37,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          "ButtonGroup + Select + Table + label Badges + Pagination. No new components.",
+          "ButtonGroup + Popover + Calendar + toggle chips + Table + label Badges + Pagination. No new components.",
       },
     },
   },
@@ -85,9 +78,7 @@ const ORDERS: Order[] = [
   { id: "00009", name: "Dollie Hines", address: "124 Lyla Forge Suite 975", date: "09 Jan 2026", type: "Buku", status: "rejected" },
 ];
 
-const FILTERS = [
-  { key: "status", label: "Status", options: ["Selesai", "Diproses", "Ditolak", "Ditahan"] },
-];
+const STATUS_KEYS = Object.keys(STATUS) as (keyof typeof STATUS)[];
 
 /**
  * The shell both filters share: open state, a draft, and the two moments that
@@ -179,11 +170,11 @@ const ORDER_TYPES = [
 
 function OrderLists() {
   const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({});
   const [dates, setDates] = useState<Date[]>([]);
   const [types, setTypes] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<string[]>([]);
   const anyFilter =
-    Object.keys(filters).length > 0 || dates.length > 0 || types.length > 0;
+    dates.length > 0 || types.length > 0 || statuses.length > 0;
 
   return (
     <div className="bg-surface min-h-screen space-y-5 p-6">
@@ -284,31 +275,53 @@ function OrderLists() {
           )}
         </FilterPopover>
 
-        {FILTERS.map((f) => (
-          <Select
-            key={f.key}
-            value={filters[f.key] ?? ""}
-            onValueChange={(v) => setFilters((s) => ({ ...s, [f.key]: v }))}
-          >
-            <SelectTrigger aria-label={f.label} className="w-44">
-              <SelectValue placeholder={f.label} />
-            </SelectTrigger>
-            <SelectContent>
-              {f.options.map((o) => (
-                <SelectItem key={o} value={o}>
-                  {o}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ))}
+        <FilterPopover
+          value={statuses}
+          empty={[] as string[]}
+          onApply={setStatuses}
+          label={(v) =>
+            v.length === 0 ? "Status" : `${v.length} status dipilih`
+          }
+        >
+          {(draft, setDraft) => (
+            <>
+              <p className="mb-3 font-bold">Pilih Status Pesanan</p>
+              <div
+                role="group"
+                aria-label="Status pesanan"
+                className="flex max-w-md flex-wrap gap-2"
+              >
+                {STATUS_KEYS.map((k) => {
+                  const on = draft.includes(k);
+                  return (
+                    <Button
+                      key={k}
+                      variant="outline"
+                      size="sm"
+                      pressed={on}
+                      onClick={() =>
+                        setDraft(on ? draft.filter((x) => x !== k) : [...draft, k])
+                      }
+                      className="rounded-full data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                    >
+                      {STATUS[k].text}
+                    </Button>
+                  );
+                })}
+              </div>
+              <p className="text-muted-foreground mt-3 text-xs">
+                Anda dapat memilih lebih dari satu status.
+              </p>
+            </>
+          )}
+        </FilterPopover>
 
         <Button
           variant="ghost"
           onClick={() => {
-            setFilters({});
             setDates([]);
             setTypes([]);
+            setStatuses([]);
           }}
           disabled={!anyFilter}
           className="text-destructive-text hover:text-destructive-text"
