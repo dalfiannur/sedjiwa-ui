@@ -2,8 +2,12 @@
    touched, on one page, so the change can be judged as a whole rather than
    component by component. Rendered twice — light, then inside `.dark`. */
 import {
+  ArchiveIcon,
   BellIcon,
   HeartIcon,
+  InfoIcon,
+  LayoutGridIcon,
+  ListIcon,
   BoxIcon,
   ChartLineIcon,
   HistoryIcon,
@@ -11,6 +15,7 @@ import {
   PackageIcon,
   SearchIcon,
   SettingsIcon,
+  Trash2Icon,
   UsersIcon,
 } from "lucide-react";
 import {
@@ -19,6 +24,7 @@ import {
   AvatarFallback,
   Badge,
   Button,
+  ButtonGroup,
   Card,
   CardContent,
   CardHeader,
@@ -46,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
@@ -120,6 +127,15 @@ const SERIES = [
   { key: "penjualan", label: "Penjualan" },
   { key: "laba", label: "Laba", color: "var(--chart-5)" },
 ];
+
+const LABELS = [
+  { variant: "label-teal", text: "Primary" },
+  { variant: "label-blue", text: "Social" },
+  { variant: "label-amber", text: "Work" },
+  { variant: "label-rose", text: "Friends" },
+  { variant: "label-violet", text: "Riset" },
+  { variant: "label-lime", text: "Arsip" },
+] as const;
 
 const RATINGS = [4.3, 4.8, 3.6];
 
@@ -429,6 +445,12 @@ function Surface({ label }: { label: string }) {
               <Badge variant="destructive" appearance="subtle">Ditolak</Badge>
               <Badge variant="info" appearance="subtle">Info</Badge>
             </div>
+            {/* Warna label: dipilih pengguna, bukan nada semantik. */}
+            <div className="flex flex-wrap gap-2">
+              {LABELS.map(({ variant, text }) => (
+                <Badge key={variant} variant={variant}>{text}</Badge>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -441,6 +463,60 @@ function Surface({ label }: { label: string }) {
             <Button variant="secondary">Draf</Button>
             <Button variant="ghost">Lewati</Button>
             <Button variant="link">Pelajari</Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── ButtonGroup ── */}
+      <div className="grid gap-5 md:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>ButtonGroup</CardTitle></CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-5">
+            <ButtonGroup aria-label="Tindakan surat">
+              <Button variant="ghost" size="icon" aria-label="Arsipkan"><ArchiveIcon /></Button>
+              <Button variant="ghost" size="icon" aria-label="Detail"><InfoIcon /></Button>
+              <Button variant="ghost" size="icon" aria-label="Hapus"><Trash2Icon /></Button>
+            </ButtonGroup>
+            <ButtonGroup aria-label="Tampilan">
+              <Button variant="ghost" size="icon" pressed aria-label="Kisi"><LayoutGridIcon /></Button>
+              <Button variant="ghost" size="icon" pressed={false} aria-label="Daftar"><ListIcon /></Button>
+            </ButtonGroup>
+            <ButtonGroup aria-label="Rentang">
+              <Button variant="ghost">Hari</Button>
+              <Button variant="ghost">Minggu</Button>
+              <Button variant="ghost" disabled>Tahun</Button>
+            </ButtonGroup>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Menu tanpa SidebarProvider</CardTitle></CardHeader>
+          <CardContent>
+            {/* Sengaja TIDAK dibungkus SidebarProvider: sejak 0.41.0 primitif
+                menu berdiri sendiri, dan inilah buktinya. */}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive>
+                  <BellIcon />
+                  <span>Kotak Masuk</span>
+                  <SidebarMenuBadge>1253</SidebarMenuBadge>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <ArchiveIcon />
+                  <span>Arsip</span>
+                  <SidebarMenuBadge>245</SidebarMenuBadge>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Trash2Icon />
+                  <span>Sampah</span>
+                  <SidebarMenuBadge>9</SidebarMenuBadge>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </CardContent>
         </Card>
       </div>
