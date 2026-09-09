@@ -18,6 +18,7 @@ export default defineConfig({
           "./src/test/setup.ts",
           "./src/test/setup.pointer-events.ts",
           "./src/test/setup.intersection-observer.ts",
+          "./src/test/setup.object-url.ts",
         ],
         css: false,
         include: ["src/**/*.test.{ts,tsx}"]

@@ -78,6 +78,15 @@ export type {
 export { FileInput } from "./components/file-input";
 export type { FileInputProps } from "./components/file-input";
 
+export { ImageInput } from "./components/image-input";
+export type { ImageInputProps } from "./components/image-input";
+export {
+  imageInputPickerVariants,
+  imageInputCaptionVariants,
+  type ImageInputPickerVariants,
+  type ImageInputCaptionVariants,
+} from "./components/image-input";
+
 export { CurrencyInput, CURRENCY_PRESETS } from "./components/currency-input";
 export type {
   CurrencyInputProps, CurrencyConfig, CurrencyPresetKey,
