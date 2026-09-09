@@ -27,6 +27,24 @@ around 1.6:1. It takes dark ink instead, and that asymmetry is deliberate —
 matching the other three would mean either an unreadable badge or an amber
 dark enough to read as brown.
 
+## Label colours
+
+`--label-teal`, `--label-blue`, `--label-amber`, `--label-rose`,
+`--label-violet` and `--label-lime`, each with a `-text` partner. They back
+`<Badge variant="label-teal">` and friends.
+
+These are **not semantic**. `rose` does not mean danger and `amber` does not
+mean caution — they are handles a user picks for their own labels: a mail
+folder, a project tag, a board swimlane. Use the semantic tones when you mean
+a state.
+
+It is a fixed palette rather than an open `color` prop on purpose. An
+arbitrary hex cannot be contrast-checked, and a gate that cannot see the
+colours actually shipped is decoration. All twelve pairs are gated at 4.5:1 in
+both themes alongside the semantic tones.
+
+## Contrast rules
+
 **Never use a solid tone as text on a tint of itself.** Measured in light mode
 that lands between 1.36:1 and 4.02:1 — below AA, and worst by far for
 `warning`, where a light amber on a lighter amber is barely visible at all.
@@ -40,11 +58,11 @@ passing, but with no room to spare — while `--destructive-text` is 11.5–11.9
 on both. Reach for `--<tone>-text` whenever you want coloured words, and reserve
 `--<tone>` for filled shapes.
 
-`bun run contrast` gates 28 pairs at 4.5:1 — 8 solid, 8 subtle, and 12
-one-offs that follow no naming convention (`--calendar-outside` on its three
-possible surfaces, the two `primary` pairs, and the pill pair) — parsing
-`src/styles/tokens.css` directly. It fails the build if a token is edited below
-threshold.
+`bun run contrast` gates 38 pairs at 4.5:1, parsing `src/styles/tokens.css`
+directly and failing the build if a token is edited below threshold. Counted
+across both themes: 8 solid, 8 subtle, 12 label, and 10 one-offs that follow no
+naming convention — `--calendar-outside` on each of its three possible
+surfaces, plus the `primary` and `sidebar-primary` pairs.
 
 In components, prefer `<Badge variant="success" appearance="subtle">` over
 hand-written classes.

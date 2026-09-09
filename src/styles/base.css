@@ -40,6 +40,18 @@
   --color-info-text: var(--info-text);
   --color-destructive-subtle: var(--destructive-subtle);
   --color-destructive-text: var(--destructive-text);
+  --color-label-teal: var(--label-teal);
+  --color-label-teal-text: var(--label-teal-text);
+  --color-label-blue: var(--label-blue);
+  --color-label-blue-text: var(--label-blue-text);
+  --color-label-amber: var(--label-amber);
+  --color-label-amber-text: var(--label-amber-text);
+  --color-label-rose: var(--label-rose);
+  --color-label-rose-text: var(--label-rose-text);
+  --color-label-violet: var(--label-violet);
+  --color-label-violet-text: var(--label-violet-text);
+  --color-label-lime: var(--label-lime);
+  --color-label-lime-text: var(--label-lime-text);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

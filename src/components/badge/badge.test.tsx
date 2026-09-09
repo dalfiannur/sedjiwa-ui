@@ -131,4 +131,33 @@ describe("<Badge />", () => {
     render(<Badge data-testid="b" variant="destructive">Ditolak</Badge>);
     expect(screen.getByTestId("b")).not.toHaveClass("dark:bg-destructive/60");
   });
+
+  // Label colours are a fixed palette precisely so the gate can check them; an
+  // open colour prop would leave `bun run contrast` unable to see what ships.
+  it.each(["teal", "blue", "amber", "rose", "violet", "lime"] as const)(
+    "fills the %s label from its own gated pair",
+    (label) => {
+      render(
+        <Badge data-testid="b" variant={`label-${label}`}>
+          Work
+        </Badge>
+      );
+      const el = screen.getByTestId("b");
+      expect(el).toHaveClass(`bg-label-${label}`);
+      expect(el).toHaveClass(`text-label-${label}-text`);
+    }
+  );
+
+  // A label has no solid/subtle pair — it is only ever the tinted chip — so
+  // appearance must not smuggle a semantic fill in over it.
+  it("ignores appearance on a label variant", () => {
+    render(
+      <Badge data-testid="b" variant="label-rose" appearance="subtle">
+        Friends
+      </Badge>
+    );
+    const el = screen.getByTestId("b");
+    expect(el).toHaveClass("bg-label-rose");
+    expect(el).not.toHaveClass("bg-destructive-subtle");
+  });
 });
