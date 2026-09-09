@@ -13,22 +13,38 @@ Each tone ships two usable pairs:
 | Solid fill | `--success` | `--success-foreground` |
 | Tinted / subtle | `--success-subtle` | `--success-text` |
 
+A `-foreground` is **near-white, or neutral ink — never a darkened copy of its
+own tone.** Hue-matched text on a coloured fill scores well and reads badly:
+dark amber on amber registers as shading, not as words. If you retint, keep the
+foreground neutral.
+
 Same shape for `--warning`, `--info` and `--destructive`.
 
+**Solid fills take near-white text; `warning` is the exception.** Three of the
+four tones are dark enough to carry `--<tone>-foreground` as near-white.
+`--warning` cannot be: white on an amber that still reads as amber tops out
+around 1.6:1. It takes dark ink instead, and that asymmetry is deliberate —
+matching the other three would mean either an unreadable badge or an amber
+dark enough to read as brown.
+
 **Never use a solid tone as text on a tint of itself.** Measured in light mode
-that lands between 2.02:1 and 3.77:1 — below AA. Use the `-text` token, which
-is measured against its `-subtle` partner.
+that lands between 1.36:1 and 4.02:1 — below AA, and worst by far for
+`warning`, where a light amber on a lighter amber is barely visible at all.
+Use the `-text` token, which is measured against its `-subtle` partner.
 
 **The `-text` token is also the right choice for coloured text on an ordinary
 surface** — `--card`, `--background`, or anything else. The solid tone is a
 *fill*; as body text it is marginal at best. For example `--destructive` as text
-measures 4.78:1 on a white card and only 4.32:1 on a slightly sunken background,
-while `--destructive-text` is 10.7–11.9:1 on both. Reach for `--<tone>-text`
-whenever you want coloured words, and reserve `--<tone>` for filled shapes.
+measures 4.85:1 on a white card and 4.72:1 on a slightly sunken background —
+passing, but with no room to spare — while `--destructive-text` is 11.5–11.9:1
+on both. Reach for `--<tone>-text` whenever you want coloured words, and reserve
+`--<tone>` for filled shapes.
 
-`bun run contrast` gates all 16 pairs (8 solid, 8 subtle) at 4.5:1, parses
-`src/styles/tokens.css` directly, and runs in CI. It fails the build if a token
-is edited below threshold.
+`bun run contrast` gates 28 pairs at 4.5:1 — 8 solid, 8 subtle, and 12
+one-offs that follow no naming convention (`--calendar-outside` on its three
+possible surfaces, the two `primary` pairs, and the pill pair) — parsing
+`src/styles/tokens.css` directly. It fails the build if a token is edited below
+threshold.
 
 In components, prefer `<Badge variant="success" appearance="subtle">` over
 hand-written classes.
@@ -42,16 +58,21 @@ The sidebar is retinted per app by overriding these in a scope that wraps it
 |---|---|
 | `--sidebar` | panel background |
 | `--sidebar-foreground` | default label colour |
-| `--sidebar-accent` | active/hover item fill |
-| `--sidebar-accent-foreground` | active item label |
+| `--sidebar-primary` | active item fill, and the tick at the panel edge |
+| `--sidebar-primary-foreground` | active item label |
+| `--sidebar-accent` | hover and open-submenu fill |
+| `--sidebar-accent-foreground` | hover label |
 | `--sidebar-border` | panel edge and separators |
 | `--sidebar-ring` | focus ring |
 
-Two constraints when picking an accent, both measurable:
+Two constraints when picking the **active** fill (`--sidebar-primary`), both
+measurable:
 
 - the active fill must reach **3:1 against `--sidebar`**, so the selected item
   is discernible as a UI component (WCAG 1.4.11);
-- its label must reach **4.5:1 against the fill**.
+- its label must reach **4.5:1 against the fill**. The second of these is
+  gated: `scripts/contrast.mjs` checks `--sidebar-primary-foreground` on
+  `--sidebar-primary` in both themes.
 
 These pull in opposite directions and the usable window is narrow. For an
 indigo panel at `oklch(0.25 0.1 265)`, `oklch(0.55 0.18 265)` clears both
@@ -65,10 +86,14 @@ floor at 4.42:1.) See the
 `--sidebar-*` is independent of `--background` and `--card` — retinting the
 sidebar does not follow from retinting the rest of the app, and vice versa.
 Both the `:root` and `.dark` blocks need their own `--sidebar-*` overrides;
-setting only `:root` leaves dark mode on the library defaults. Note also that
-`--sidebar-primary` and `--sidebar-primary-foreground` exist in `tokens.css`
-but are consumed by no component in this version — overriding them currently
-has no visible effect.
+setting only `:root` leaves dark mode on the library defaults.
+
+Note that `--sidebar-primary` changed role in 0.40.0. It used to be declared
+but unread, and the active item was filled with `--sidebar-accent`; now
+`--sidebar-primary` fills the active item and `--sidebar-accent` is hover only.
+An app that retinted its sidebar by overriding `--sidebar-accent` alone will
+find its active item falling back to the library's blue — override
+`--sidebar-primary` and `--sidebar-primary-foreground` as well.
 
 ### Known exceptions
 

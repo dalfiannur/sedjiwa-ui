@@ -26,7 +26,14 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.025 265);
 
-  --primary: oklch(0.45 0.18 265);
+  /* Hue 264 is DashStack's #4880FF. Its own lightness (L 0.63) measures only
+     3.62:1 under --primary-foreground; L 0.577 lands exactly on 4.5:1, which
+     is too close to the line to leave, so it sits at 0.562 (4.60:1). Side by
+     side with #4880FF the difference is barely visible; the hue is what reads.
+     Gated via EXPLICIT_PAIRS in scripts/contrast.mjs — the tone loops there
+     only cover success/warning/info/destructive, so primary would otherwise
+     drift unchecked. */
+  --primary: oklch(0.562 0.198 264);
   --primary-foreground: oklch(0.99 0.005 265);
 
   --secondary: oklch(0.96 0.012 265);
@@ -43,59 +50,74 @@
      opaque token. Worst surface is --background (light) / --popover (dark). */
   --calendar-outside: oklch(0.55 0.018 265);
 
-  --accent: oklch(0.95 0.03 265);
-  --accent-foreground: oklch(0.3 0.08 265);
+  --accent: oklch(0.95 0.03 264);
+  --accent-foreground: oklch(0.3 0.08 264);
 
-  --destructive: oklch(0.58 0.22 27);
+  /* Solid tone fills carry near-white text, and each is darkened until it
+     clears 4.5:1 against it. That costs DashStack's literal values: the Figma
+     fills these at #FD5454 and #00B69B, which measure 3.20:1 and 2.57:1 under
+     white and cannot be used as drawn. Hue and chroma are kept and only
+     lightness moves, so they still read as the same colours — and all four
+     tones now land in the same lightness band as --primary, which is what
+     stops a badge row from looking like a mix of two systems.
+
+     warning is the exception, and it is not a preference. White on #FCBE2D is
+     1.63:1, and no lightness that still reads as this yellow will carry white
+     text. It keeps the Figma fill exactly and takes ink instead.
+
+     Where a foreground IS dark it is NEUTRAL ink, never a darkened copy of
+     its own hue. Hue-matched text scores marginally better on paper and reads
+     considerably worse — dark amber on amber registers as a shading of the
+     fill rather than as words on it. Do not "harmonise" it back to the hue. */
+  --destructive: oklch(0.575 0.205 24.5);
   --destructive-foreground: oklch(0.99 0.005 265);
 
-  /* -foreground tokens for mid-lightness tone fills must be dark, not
-     near-white: near-white measures only 3.32:1 against these fills, well
-     under the 4.5:1 AA floor for solid badge text. Follow the
-     --warning-foreground pattern below (dark foreground on the tone fill). */
-  --success: oklch(0.62 0.14 155);
-  --success-foreground: oklch(0.2 0.03 155);
+  --success: oklch(0.525 0.129 177);
+  --success-foreground: oklch(0.99 0.005 265);
 
-  --warning: oklch(0.72 0.15 70);
-  --warning-foreground: oklch(0.2 0.03 70);
+  --warning: oklch(0.836 0.161 83);
+  --warning-foreground: oklch(0.22 0.012 265);
 
-  --info: oklch(0.62 0.13 220);
-  --info-foreground: oklch(0.2 0.03 220);
+  /* info has no DashStack counterpart at all, so nothing was given up in
+     moving it. Same treatment as the rest: L 0.53 carries white at 4.70:1. */
+  --info: oklch(0.53 0.13 220);
+  --info-foreground: oklch(0.99 0.005 265);
 
-  --success-subtle: oklch(0.93 0.06 155);
-  --success-text: oklch(0.36 0.09 155);
+  --success-subtle: oklch(0.93 0.06 177);
+  --success-text: oklch(0.36 0.09 177);
 
-  /* warning-text intentionally shifts hue from warning-subtle (55 vs 70 here,
-     80 vs 70 below) to stay legible — a straight hue match reads muddy/brown
-     at these lightness levels for amber. Every other tone holds hue constant;
-     do not "fix" this to match. */
-  --warning-subtle: oklch(0.93 0.07 70);
-  --warning-text: oklch(0.43 0.12 55);
+  /* warning-text intentionally shifts hue from warning-subtle (68 vs 83 here,
+     93 vs 83 below) to stay legible — a straight hue match reads muddy/brown
+     at these lightness levels for amber. The shift is the same ±15 it always
+     was; only the base hue moved, from 70 to DashStack's 83. Every other tone
+     holds hue constant; do not "fix" this to match. */
+  --warning-subtle: oklch(0.93 0.07 83);
+  --warning-text: oklch(0.43 0.12 68);
 
   --info-subtle: oklch(0.93 0.05 220);
   --info-text: oklch(0.36 0.1 220);
 
-  --destructive-subtle: oklch(0.94 0.06 27);
-  --destructive-text: oklch(0.35 0.15 27);
+  --destructive-subtle: oklch(0.94 0.06 24.5);
+  --destructive-text: oklch(0.35 0.15 24.5);
 
   --border: oklch(0.92 0.012 265);
   --input: oklch(0.92 0.012 265);
-  --ring: oklch(0.55 0.18 265);
+  --ring: oklch(0.62 0.19 264);
 
-  --chart-1: oklch(0.55 0.18 265);
+  --chart-1: oklch(0.63 0.198 264);
   --chart-2: oklch(0.65 0.14 220);
-  --chart-3: oklch(0.72 0.15 70);
-  --chart-4: oklch(0.62 0.14 155);
+  --chart-3: oklch(0.72 0.15 83);
+  --chart-4: oklch(0.62 0.14 177);
   --chart-5: oklch(0.62 0.20 305);
 
   --sidebar: oklch(0.985 0.005 265);
   --sidebar-foreground: oklch(0.22 0.025 265);
-  --sidebar-primary: oklch(0.45 0.18 265);
+  --sidebar-primary: oklch(0.562 0.198 264);
   --sidebar-primary-foreground: oklch(0.99 0.005 265);
-  --sidebar-accent: oklch(0.95 0.03 265);
-  --sidebar-accent-foreground: oklch(0.3 0.08 265);
+  --sidebar-accent: oklch(0.95 0.03 264);
+  --sidebar-accent-foreground: oklch(0.3 0.08 264);
   --sidebar-border: oklch(0.92 0.012 265);
-  --sidebar-ring: oklch(0.55 0.18 265);
+  --sidebar-ring: oklch(0.62 0.19 264);
 }
 
 .dark {
@@ -113,7 +135,7 @@
   --popover: oklch(0.21 0.018 265);
   --popover-foreground: oklch(0.96 0.005 265);
 
-  --primary: oklch(0.7 0.16 265);
+  --primary: oklch(0.72 0.16 264);
   --primary-foreground: oklch(0.18 0.025 265);
 
   --secondary: oklch(0.27 0.022 265);
@@ -126,49 +148,61 @@
      to dim, where light needs a lighter one — the direction flips. */
   --calendar-outside: oklch(0.62 0.015 265);
 
-  --accent: oklch(0.32 0.06 265);
+  --accent: oklch(0.32 0.06 264);
   --accent-foreground: oklch(0.96 0.005 265);
 
-  --destructive: oklch(0.7 0.2 25);
-  --destructive-foreground: oklch(0.2 0.03 25);
+  /* Dark keeps the same hues as light — the DashStack values themselves are
+     light-only, so the dark ladder is derived here, not lifted from Figma.
 
-  --success: oklch(0.72 0.14 155);
+     Note that dark inverts the light-mode polarity, the same way --primary
+     does: a lighter fill carrying a dark foreground. The action/status split
+     therefore collapses here — both land on the same pair — but both tokens
+     stay declared so a consumer overriding one theme does not have to know
+     that. */
+  --destructive: oklch(0.72 0.19 24.5);
+  --destructive-foreground: oklch(0.16 0.02 265);
+
+  /* Dark inverts the polarity across the board — lighter fills carrying dark
+     ink — the same way --primary does. So unlike light mode there is no
+     white-text constraint here, and the fills can stay where they are.
+     The ink stays neutral for the same reason it does in light. */
+  --success: oklch(0.75 0.12 177);
   --success-foreground: oklch(0.16 0.02 265);
 
-  --warning: oklch(0.78 0.15 75);
-  --warning-foreground: oklch(0.2 0.03 70);
+  --warning: oklch(0.85 0.15 83);
+  --warning-foreground: oklch(0.16 0.02 265);
 
   --info: oklch(0.74 0.13 220);
   --info-foreground: oklch(0.16 0.02 265);
 
-  --success-subtle: oklch(0.3 0.06 155);
-  --success-text: oklch(0.85 0.12 155);
+  --success-subtle: oklch(0.3 0.06 177);
+  --success-text: oklch(0.85 0.12 177);
 
-  --warning-subtle: oklch(0.3 0.06 70);
-  --warning-text: oklch(0.88 0.12 80);
+  --warning-subtle: oklch(0.3 0.06 83);
+  --warning-text: oklch(0.88 0.12 93);
 
   --info-subtle: oklch(0.3 0.06 220);
   --info-text: oklch(0.85 0.1 220);
 
-  --destructive-subtle: oklch(0.3 0.08 27);
-  --destructive-text: oklch(0.85 0.12 27);
+  --destructive-subtle: oklch(0.3 0.08 24.5);
+  --destructive-text: oklch(0.85 0.12 24.5);
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.7 0.16 265);
+  --ring: oklch(0.72 0.16 264);
 
-  --chart-1: oklch(0.7 0.16 265);
+  --chart-1: oklch(0.72 0.16 264);
   --chart-2: oklch(0.72 0.14 220);
-  --chart-3: oklch(0.78 0.15 75);
-  --chart-4: oklch(0.72 0.14 155);
+  --chart-3: oklch(0.78 0.15 83);
+  --chart-4: oklch(0.72 0.14 177);
   --chart-5: oklch(0.72 0.20 305);
 
   --sidebar: oklch(0.18 0.018 265);
   --sidebar-foreground: oklch(0.96 0.005 265);
-  --sidebar-primary: oklch(0.7 0.16 265);
+  --sidebar-primary: oklch(0.72 0.16 264);
   --sidebar-primary-foreground: oklch(0.18 0.025 265);
-  --sidebar-accent: oklch(0.26 0.025 265);
+  --sidebar-accent: oklch(0.26 0.025 264);
   --sidebar-accent-foreground: oklch(0.96 0.005 265);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.7 0.16 265);
+  --sidebar-ring: oklch(0.72 0.16 264);
 }

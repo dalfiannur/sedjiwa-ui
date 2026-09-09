@@ -26,6 +26,8 @@ export default defineConfig({
     "@radix-ui/react-tabs",
     "@radix-ui/react-tooltip",
     "lucide-react",
+    "recharts",
+    "embla-carousel-react",
     "next-themes",
     "react-hook-form",
     "sonner",

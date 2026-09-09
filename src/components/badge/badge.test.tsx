@@ -114,12 +114,18 @@ describe("<Badge />", () => {
     }
   );
 
-  it("uses the destructive foreground token rather than literal white", () => {
-    render(<Badge data-testid="b" variant="destructive">Ditolak</Badge>);
-    const el = screen.getByTestId("b");
-    expect(el).toHaveClass("text-destructive-foreground");
-    expect(el).not.toHaveClass("text-white");
-  });
+  // Every solid tone takes its foreground from a token, never a literal:
+  // warning's has to be dark ink where the rest are near-white, and a
+  // hard-coded text-white would be invisible on it (1.63:1).
+  it.each(["destructive", "success", "warning", "info"] as const)(
+    "takes the %s foreground from a token rather than literal white",
+    (variant) => {
+      render(<Badge data-testid="b" variant={variant}>Status</Badge>);
+      const el = screen.getByTestId("b");
+      expect(el).toHaveClass(`text-${variant}-foreground`);
+      expect(el).not.toHaveClass("text-white");
+    },
+  );
 
   it("does not dilute the destructive fill in dark mode", () => {
     render(<Badge data-testid="b" variant="destructive">Ditolak</Badge>);

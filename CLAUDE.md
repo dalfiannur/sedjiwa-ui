@@ -25,24 +25,40 @@ Examples — do NOT run `storybook dev` directly; run `bun run storybook` (or `b
 
 ## Adding new components
 
-New components MUST start from shadcn/ui as the base — do not build from scratch.
+Build on a Radix primitive where one exists; otherwise write the component
+here. There is no CLI step and no generated code to refactor.
 
-1. Pull the canonical source via the shadcn CLI:
-   `bunx shadcn@latest add <component>`
-   (`components.json` is configured; it writes to `src/components/<name>.tsx`.)
-2. Refactor the generated code to match this repo's conventions:
-   - Move into its own folder: `src/components/<name>/`.
-   - Split files: `<name>.tsx`, `<name>.variants.ts` (extract any `cva` variants),
-     `<name>.test.tsx`, `<name>.stories.tsx`, and an `index.ts` barrel.
-   - Import `cn` from `../../lib/cn` (not `@/lib/utils`).
-   - Convert unified `radix-ui` imports (e.g. `import { Foo } from "radix-ui"`)
-     to per-package imports (`@radix-ui/react-foo`), and add them as
-     `peerDependencies` + `devDependencies` — do NOT keep the `radix-ui`
-     metapackage the CLI adds.
-   - Keep `data-slot` / `data-variant` attributes; follow the patterns in
-     existing components (e.g. `button/`).
-3. Export the component from `src/index.ts`.
-4. Add tests and a Storybook story before considering it done.
+shadcn/ui was the original source of much of this library and its token names
+still follow shadcn's shape, but it is not a dependency and is no longer the
+starting point. Do not run `bunx shadcn@latest add`; there is no
+`components.json` for it to read.
+
+**Does Radix cover it?** About half the library has a primitive and half does
+not, and the split is not arbitrary. Anything with behaviour to get right —
+focus traps, roving tabindex, portals, controlled/uncontrolled state, ARIA
+wiring — almost certainly has one, and you MUST use it rather than
+reimplement it; that behaviour is the whole reason the dependency is there.
+Anything purely presentational (`Table`, `Card`, `Badge`, `Skeleton`,
+`StatCard`) has none, so write it directly.
+
+1. If a Radix primitive applies, install it **per-package**
+   (`@radix-ui/react-<name>`) and add it to BOTH `peerDependencies` and
+   `devDependencies`. Never add the unified `radix-ui` metapackage.
+2. Create `src/components/<name>/` holding `<name>.tsx`,
+   `<name>.variants.ts` (any `cva` variants, extracted), `<name>.test.tsx`,
+   `<name>.stories.tsx`, and an `index.ts` barrel.
+3. Follow the house patterns:
+   - Import `cn` from `../../lib/cn`.
+   - Put `data-slot` on every element a consumer might target, and
+     `data-variant` / `data-state` wherever a variant or state is worth
+     exposing to CSS.
+   - Read `button/` for a variant-driven presentational component,
+     `alert/` for one whose accessibility decision needed writing down,
+     `dialog/` for a thin Radix wrapper, and `stat-card/` for a composite
+     built out of other components in this library.
+4. Export from `src/index.ts`: the component, its prop types, and its `cva`
+   function if it has one — those are public API.
+5. Tests and a Storybook story before it is done.
 
 ## Design system material (`design-kit/`)
 
@@ -70,13 +86,18 @@ understands hex only — it cannot parse an oklch token at all. Keep it for
 one-off "what is the ratio between these two" questions while designing; it is
 not a substitute for the gate, and the gate is not a substitute for it.
 
-**Where it does and does not override the rules above.** The shadcn/ui rule
-stands: new components still start from `bunx shadcn@latest add <component>`
-and are refactored into this repo's file layout. The kit does not replace that
-structural base. What it governs is everything layered on top — token mapping,
-the eight states, accessibility criteria, and visual direction. If
-`design-kit/CLAUDE.md` reads as telling you to generate a component from a spec
-instead of from shadcn, this file wins.
+**Where it does and does not override the rules above.** The structural rules
+stand: new components follow the file layout above and use a Radix primitive
+wherever one exists. The kit does not replace that base. What it governs is
+everything layered on top — token mapping, the eight states, accessibility
+criteria, and visual direction. If `design-kit/CLAUDE.md` reads as telling you
+to generate a component whose behaviour reimplements what Radix already
+provides, this file wins.
+
+Note that `design-kit/design-systems/` catalogues *other* design systems,
+shadcn/ui among them, as mapping targets. Those references describe an
+external system to interoperate with; they are not instructions to build
+this library from it.
 
 **Visual direction: the calm tone stays.** The consuming apps read as quiet
 admin panels today, and that is deliberate. Any redesign driven from

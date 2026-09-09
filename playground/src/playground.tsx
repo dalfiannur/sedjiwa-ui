@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FormsShowcase } from "./forms";
+import { DashboardShowcase } from "./dashboard";
 import {
   Button, Badge, Avatar, AvatarFallback, AvatarImage,
   Separator, Skeleton,
@@ -25,7 +26,7 @@ const buttonVariants = ["default", "destructive", "outline", "secondary", "ghost
 const badgeVariants = ["default", "secondary", "destructive", "outline"] as const;
 
 export function Playground() {
-  const [tab, setTab] = useState("buttons");
+  const [tab, setTab] = useState("dashboard");
 
   return (
     <main className="min-h-screen bg-background text-foreground p-8">
@@ -39,6 +40,7 @@ export function Playground() {
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="buttons">Buttons</TabsTrigger>
           <TabsTrigger value="forms">Forms</TabsTrigger>
           <TabsTrigger value="overlays">Overlays</TabsTrigger>
@@ -46,6 +48,10 @@ export function Playground() {
           <TabsTrigger value="composed">Composed</TabsTrigger>
           <TabsTrigger value="misc">Misc</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="pt-4">
+          <DashboardShowcase />
+        </TabsContent>
 
         <TabsContent value="buttons" className="space-y-6 pt-4">
           <section>
