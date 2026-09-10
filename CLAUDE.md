@@ -18,6 +18,10 @@ Examples — do NOT run `storybook dev` directly; run `bun run storybook` (or `b
 - `bun run dev` — Vite playground (`playground/vite.config.ts`)
 - `bun run build` — library build via `tsup`
 - `bun run test` / `bun run test:watch` — Vitest (uses `projects` config: unit tests + Storybook tests in Playwright/chromium)
+- `bunx vitest run <path>` — narrow to one component while iterating. Note it
+  runs BOTH projects for that path (the unit test *and* the Chromium render of
+  its stories). `--project` cannot narrow further: the unit project has no
+  `name`, so any name filter matches nothing.
 - `bun run lint` — ESLint
 - `bun run typecheck` — `tsc --noEmit`
 - `bun run storybook` — Storybook dev on port 6006
@@ -32,6 +36,11 @@ shadcn/ui was the original source of much of this library and its token names
 still follow shadcn's shape, but it is not a dependency and is no longer the
 starting point. Do not run `bunx shadcn@latest add`; there is no
 `components.json` for it to read.
+
+**Does something here already cover it?** `Combobox` is the one that catches
+people out: `multiple` makes it a MultiSelect, `creatable` a TagsInput,
+`searchable` an Autocomplete. `TagsInput` is a thin preset over it, not a
+second implementation.
 
 **Does Radix cover it?** About half the library has a primitive and half does
 not, and the split is not arbitrary. Anything with behaviour to get right —
@@ -56,6 +65,10 @@ Anything purely presentational (`Table`, `Card`, `Badge`, `Skeleton`,
      `alert/` for one whose accessibility decision needed writing down,
      `dialog/` for a thin Radix wrapper, and `stat-card/` for a composite
      built out of other components in this library.
+   - Numeric fields share one mask engine: pure functions in
+     `lib/number-mask.ts`, the React half in `lib/use-number-mask.ts`.
+     `CurrencyInput` and `NumberInput` are both thin adapters over it. Do not
+     write fresh locale or caret-restoration logic.
 4. Export from `src/index.ts`: the component, its prop types, and its `cva`
    function if it has one — those are public API.
 5. Tests and a Storybook story before it is done.
@@ -121,12 +134,19 @@ Actions is enabled on the repo, but the Gitea instance has **no runners
 registered** — `/api/v1/repos/Qyubit/sedjiwa-ui/actions/runners` returns zero,
 and the workflow-run list is empty. Nothing in that workflow has ever
 executed: not lint, not typecheck, not the test suite, not the publish job.
+The runners endpoint needs repo-owner rights, so the repo token cannot read
+it; `…/actions/tasks` needs only the repo token, and its `"total_count": 0`
+is the same proof — still 0 as of 0.46.0.
 
 That is the whole explanation for the release history. 0.33.0 and 0.34.0 have
 no `chore(release)` commit and no tag because the tag path publishes nothing;
 they went out by hand. `publishConfig.registry` pointed at
 `https://npm.qyubit.io/`, a host that does not answer, and nobody noticed
 because the `bun publish --dry-run` step that would have caught it never ran.
+It has since been repointed at the Gitea instance's own npm registry
+(`https://git.rubick.qyubit.io/api/packages/Qyubit/npm/`), which 0.46.0
+published through cleanly. Still run the dry-run — just do not expect that
+particular failure.
 
 So until a runner exists, **you are the CI**. Run every gate in step 4 yourself
 before publishing; skipping them is skipping them entirely, not deferring them
