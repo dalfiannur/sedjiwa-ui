@@ -159,8 +159,8 @@ For richer composition (multiple sections, custom close logic, no header), use `
 
 ```bash
 bun install
-bun run dev       # vite playground
-bun run test      # vitest
+bun run dev       # storybook on :6006 — the preview surface
+bun run test      # vitest (unit + every story rendered in chromium)
 bun run build     # tsup
 bun run lint
 ```

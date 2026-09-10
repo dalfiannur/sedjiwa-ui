@@ -22,7 +22,7 @@
     "**/*.css"
   ],
   "scripts": {
-    "dev": "vite --config playground/vite.config.ts",
+    "dev": "storybook dev -p 6006",
     "build": "tsup",
     "prepublishOnly": "bun run build",
     "test": "vitest run",
