@@ -382,7 +382,59 @@ export type {
   AreaChartProps, LineChartProps, DonutChartProps, DonutSlice,
 } from "./components/chart";
 
+export {
+  Accordion, AccordionItem, AccordionTrigger, AccordionContent,
+} from "./components/accordion";
+export type {
+  AccordionProps, AccordionItemProps, AccordionTriggerProps,
+  AccordionContentProps, AccordionVariant, AccordionSize,
+} from "./components/accordion";
+export {
+  accordionItemVariants, accordionTriggerVariants, accordionContentVariants,
+  type AccordionItemVariants, type AccordionTriggerVariants,
+  type AccordionContentVariants,
+} from "./components/accordion";
+
+export {
+  DataList, DataListRoot, DataListItem, DataListLabel, DataListValue,
+} from "./components/data-list";
+export type {
+  DataListProps, DataListRootProps, DataListItemProps, DataListLabelProps,
+  DataListValueProps, DataListField, DataListOrientation,
+} from "./components/data-list";
+export {
+  dataListVariants, dataListItemVariants, dataListLabelVariants,
+  dataListValueVariants,
+  type DataListVariants, type DataListItemVariants,
+  type DataListLabelVariants, type DataListValueVariants,
+} from "./components/data-list";
+
+export {
+  Timeline, TimelineRoot, TimelineItem, TimelineDot, TimelineContent,
+} from "./components/timeline";
+export type {
+  TimelineProps, TimelineRootProps, TimelineItemProps, TimelineDotProps,
+  TimelineContentProps, TimelineEvent, TimelineStatus,
+} from "./components/timeline";
+export {
+  timelineVariants, timelineItemVariants, timelineDotVariants,
+  timelineConnectorVariants, timelineContentVariants,
+  type TimelineVariants, type TimelineItemVariants, type TimelineDotVariants,
+  type TimelineConnectorVariants, type TimelineContentVariants,
+} from "./components/timeline";
+
+export { CopyButton } from "./components/copy-button";
+export type { CopyButtonProps } from "./components/copy-button";
+
+export { Kbd } from "./components/kbd";
+export type { KbdProps } from "./components/kbd";
+export {
+  kbdVariants, kbdGroupVariants,
+  type KbdVariants, type KbdGroupVariants,
+} from "./components/kbd";
+
 export { cn, type ClassValue } from "./lib/cn";
+export { isMac } from "./lib/platform";
 
 export { InputOrderProvider, useInputOrder } from "./hooks/use-input-order";
 export type {
