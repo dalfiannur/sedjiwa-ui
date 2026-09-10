@@ -1,6 +1,6 @@
 {
   "name": "@qyubit/sedjiwa-ui",
-  "version": "0.46.0",
+  "version": "0.47.0",
   "description": "Shared React + TailwindCSS UI primitives for sedjiwa-portal apps.",
   "type": "module",
   "license": "UNLICENSED",
