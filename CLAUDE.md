@@ -69,6 +69,10 @@ Anything purely presentational (`Table`, `Card`, `Badge`, `Skeleton`,
      `lib/number-mask.ts`, the React half in `lib/use-number-mask.ts`.
      `CurrencyInput` and `NumberInput` are both thin adapters over it. Do not
      write fresh locale or caret-restoration logic.
+   - Building on `Button`? It writes its own `data-state` *after* spreading
+     props, for `loading` / `pressed`. A wrapper cannot pass one through —
+     give your state its own attribute (`CopyButton` uses `data-copied`)
+     rather than overloading that one.
 4. Export from `src/index.ts`: the component, its prop types, and its `cva`
    function if it has one — those are public API.
 5. Tests and a Storybook story before it is done.
@@ -81,7 +85,7 @@ code** — 174 markdown files and 14 JSON token files. It is reference material
 that shapes what you build here; it is not a library you can import.
 
 It sits in one directory rather than at the repo root on purpose: a root-level
-`components/` full of markdown would shadow `src/components/`, where the 63 real
+`components/` full of markdown would shadow `src/components/`, where the 68 real
 components live, and a root-level `scripts/` would collide with `contrast.mjs`.
 
 `design-kit/CLAUDE.md` is the kit's own instruction surface. Paths inside it

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { isMac } from "../lib/platform";
 
 export type KeyboardShortcutEvent = "keydown" | "keyup";
 
@@ -60,15 +61,6 @@ const KEY_ALIASES: Record<string, string> = {
   pageup: "pageup",
   pagedown: "pagedown",
 };
-
-function isMac(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const platform =
-    (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform ??
-    navigator.platform ??
-    "";
-  return /mac|iphone|ipad|ipod/i.test(platform);
-}
 
 function normalizeKey(token: string): string {
   const lower = token.toLowerCase();

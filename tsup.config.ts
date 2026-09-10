@@ -13,6 +13,7 @@ export default defineConfig({
     "tailwindcss",
     "tw-animate-css",
     "@radix-ui/react-slot",
+    "@radix-ui/react-accordion",
     "@radix-ui/react-alert-dialog",
     "@radix-ui/react-avatar",
     "@radix-ui/react-checkbox",
