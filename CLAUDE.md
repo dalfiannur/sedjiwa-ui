@@ -15,7 +15,7 @@ Examples — do NOT run `storybook dev` directly; run `bun run storybook` (or `b
 
 ## Scripts
 
-- `bun run dev` — Vite playground (`playground/vite.config.ts`)
+- `bun run dev` — Storybook on port 6006 (alias of `bun run storybook`; there is no separate playground)
 - `bun run build` — library build via `tsup`
 - `bun run test` / `bun run test:watch` — Vitest (uses `projects` config: unit tests + Storybook tests in Playwright/chromium)
 - `bunx vitest run <path>` — narrow to one component while iterating. Note it

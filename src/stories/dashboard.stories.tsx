@@ -1,6 +1,13 @@
-/* Preview surface for the 0.40.0 restyle. Everything the DashStack pass
-   touched, on one page, so the change can be judged as a whole rather than
-   component by component. Rendered twice — light, then inside `.dark`. */
+/* The admin dashboard, as one page.
+ *
+ * Ported from the Vite playground when Storybook became the only preview
+ * surface. It began as the review page for the 0.40.0 DashStack restyle —
+ * everything that pass touched, on one surface, so the change could be judged
+ * as a whole rather than component by component. It earns its keep now as the
+ * widest composition the library has: if a token move breaks something, it
+ * usually shows here first.
+ */
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   ArchiveIcon,
   BellIcon,
@@ -18,57 +25,58 @@ import {
   Trash2Icon,
   UsersIcon,
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "../components/avatar";
+import { Badge } from "../components/badge";
+import { Button } from "../components/button";
+import { ButtonGroup } from "../components/button-group";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/card";
 import {
-  AreaChart,
-  Avatar,
-  AvatarFallback,
-  Badge,
-  Button,
-  ButtonGroup,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
   CarouselStatus,
-  ChartLegend,
-  ChartLegendItem,
-  DonutChart,
+} from "../components/carousel";
+import { AreaChart, DonutChart, LineChart } from "../components/chart";
+import { ChartLegend, ChartLegendItem } from "../components/chart-legend";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  Input,
-  LineChart,
-  NotificationButton,
-  Rating,
+} from "../components/dropdown-menu";
+import { Input } from "../components/input";
+import { NotificationButton } from "../components/notification-button";
+import { Rating } from "../components/rating";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+} from "../components/select";
+import {
   SidebarMenu,
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SmartTable,
-  StatCard,
+} from "../components/sidebar";
+import { SmartTable, type SmartColumn } from "../components/smart-table";
+import { StatCard } from "../components/stat-card";
+import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-  Topbar,
-  TrendIndicator,
-  UserMenuTrigger,
-  type SmartColumn,
-} from "@qyubit/sedjiwa-ui";
+} from "../components/table";
+import { Topbar } from "../components/topbar";
+import { TrendIndicator } from "../components/trend-indicator";
+import { UserMenuTrigger } from "../components/user-menu-trigger";
+
 
 type Deal = {
   id: string;
@@ -538,13 +546,31 @@ function Surface({ label }: { label: string }) {
   );
 }
 
-export function DashboardShowcase() {
-  return (
-    <div className="-m-8">
+const meta: Meta = {
+  title: "Recipes/Dashboard",
+  parameters: { layout: "fullscreen" },
+};
+export default meta;
+
+type Story = StoryObj;
+
+/** The admin dashboard as a whole page. */
+export const Default: Story = {
+  render: () => <Surface label="Terang" />,
+};
+
+/**
+ * Both themes stacked, which is the reason this page exists: a restyle has to
+ * be judged as a whole surface, not component by component, and the two
+ * grounds have to be compared without a toolbar toggle in between.
+ */
+export const LightAndDark: Story = {
+  render: () => (
+    <>
       <Surface label="Terang" />
       <div className="dark">
         <Surface label="Gelap" />
       </div>
-    </div>
-  );
-}
+    </>
+  ),
+};

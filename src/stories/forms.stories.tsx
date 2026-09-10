@@ -1,9 +1,18 @@
+/* Every form control, standalone and wired to react-hook-form.
+ *
+ * Ported from the Vite playground when Storybook became the only preview
+ * surface. The individual component stories cover each control's own variants;
+ * what this page adds is the two of them in one place — a control on its own
+ * beside the same control inside `FormField`, where the aria wiring and the
+ * error rendering are the thing being shown.
+ */
 import { useState } from "react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useForm } from "react-hook-form";
 import { Mail, Search, X } from "lucide-react";
+import { Button } from "../components/button";
+import { Checkbox } from "../components/checkbox";
 import {
-  Button,
-  Checkbox,
   Form,
   FormControl,
   FormDescription,
@@ -11,13 +20,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  Input,
-  Label,
-  RadioGroup,
-  RadioGroupItem,
-  Switch,
-  Textarea,
-} from "@qyubit/sedjiwa-ui";
+} from "../components/form";
+import { Input } from "../components/input";
+import { Label } from "../components/label";
+import { RadioGroup, RadioGroupItem } from "../components/radio-group";
+import { Switch } from "../components/switch";
+import { Textarea } from "../components/textarea";
+
 
 type FormValues = {
   email: string;
@@ -27,14 +36,37 @@ type FormValues = {
   autosave: boolean;
 };
 
-export function FormsShowcase() {
-  return (
+const meta: Meta = {
+  title: "Recipes/Forms",
+  parameters: { layout: "padded" },
+};
+export default meta;
+
+type Story = StoryObj;
+
+/** Every form control on one page, standalone and inside react-hook-form. */
+export const Default: Story = {
+  render: () => (
     <div className="space-y-12">
       <PrimitivesShowcase />
       <RHFShowcase />
     </div>
-  );
-}
+  ),
+};
+
+/** The controls on their own — size and state variants, no form library. */
+export const Primitives: Story = {
+  render: () => <PrimitivesShowcase />,
+};
+
+/**
+ * The wiring that matters: `FormControl` injects `aria-invalid` into whatever
+ * it wraps, and `FormMessage` renders react-hook-form's error. Submit with the
+ * email empty to see both fire.
+ */
+export const WithReactHookForm: Story = {
+  render: () => <RHFShowcase />,
+};
 
 function PrimitivesShowcase() {
   const [val, setVal] = useState("");
