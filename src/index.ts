@@ -92,6 +92,27 @@ export type {
   CurrencyInputProps, CurrencyConfig, CurrencyPresetKey,
 } from "./components/currency-input";
 
+export { PasswordInput } from "./components/password-input";
+export type { PasswordInputProps } from "./components/password-input";
+
+export { PinInput } from "./components/pin-input";
+export type { PinInputProps, PinInputType } from "./components/pin-input";
+export {
+  pinInputBoxVariants,
+  pinInputGroupVariants,
+  type PinInputBoxVariants,
+  type PinInputGroupVariants,
+} from "./components/pin-input";
+
+export { NumberInput } from "./components/number-input";
+export type { NumberInputProps } from "./components/number-input";
+export {
+  numberInputControlsVariants,
+  numberInputStepVariants,
+  type NumberInputControlsVariants,
+  type NumberInputStepVariants,
+} from "./components/number-input";
+
 export { DatePicker } from "./components/date-picker";
 export type { DatePickerProps } from "./components/date-picker";
 
@@ -146,6 +167,33 @@ export type {
   ComboboxProps,
   ComboboxOptionRenderState,
 } from "./components/combobox";
+
+export { TagsInput } from "./components/tags-input";
+export type { TagsInputProps } from "./components/tags-input";
+
+export { SegmentedControl } from "./components/segmented-control";
+export type {
+  SegmentedControlProps,
+  SegmentedControlItem,
+} from "./components/segmented-control";
+export {
+  segmentedControlVariants,
+  segmentedControlItemVariants,
+  type SegmentedControlVariants,
+  type SegmentedControlItemVariants,
+} from "./components/segmented-control";
+
+export { Slider } from "./components/slider";
+export type { SliderProps, SliderMark, SliderValue } from "./components/slider";
+export {
+  sliderVariants,
+  sliderTrackVariants,
+  sliderRangeVariants,
+  sliderThumbVariants,
+  type SliderVariants,
+  type SliderTrackVariants,
+  type SliderThumbVariants,
+} from "./components/slider";
 
 export {
   Sheet, SheetTrigger, SheetClose, SheetPortal, SheetOverlay,

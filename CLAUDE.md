@@ -68,7 +68,7 @@ code** — 174 markdown files and 14 JSON token files. It is reference material
 that shapes what you build here; it is not a library you can import.
 
 It sits in one directory rather than at the repo root on purpose: a root-level
-`components/` full of markdown would shadow `src/components/`, where the 40 real
+`components/` full of markdown would shadow `src/components/`, where the 63 real
 components live, and a root-level `scripts/` would collide with `contrast.mjs`.
 
 `design-kit/CLAUDE.md` is the kit's own instruction surface. Paths inside it
