@@ -1,4 +1,4 @@
-# @qyubit/sedjiwa-ui
+# sedjiwa-ui
 
 Shared React + Tailwind CSS UI primitives for the sedjiwa-portal apps.
 
@@ -15,7 +15,7 @@ Shared React + Tailwind CSS UI primitives for the sedjiwa-portal apps.
 ## Install
 
 ```bash
-bun add @qyubit/sedjiwa-ui \
+bun add sedjiwa-ui \
   @radix-ui/react-alert-dialog @radix-ui/react-avatar \
   @radix-ui/react-dialog @radix-ui/react-dropdown-menu \
   @radix-ui/react-label @radix-ui/react-select \
@@ -32,9 +32,9 @@ In your app's main stylesheet (e.g., `src/index.css`):
 
 ```css
 @import "tailwindcss";
-@import "@qyubit/sedjiwa-ui/styles.css";
+@import "sedjiwa-ui/styles.css";
 
-@source "../node_modules/@qyubit/sedjiwa-ui";
+@source "../node_modules/sedjiwa-ui";
 ```
 
 The `@source` directive tells Tailwind to scan the library's compiled JSX so utility classes used inside our components are emitted into your final CSS.
@@ -77,7 +77,7 @@ Standard variants (`default`, `destructive`, `outline`, `secondary`, `ghost`, `l
 - `pressed?: boolean` — controlled toggle state. Sets `aria-pressed` and `data-state="on" | "off"`. When `loading` is also true, `loading` wins visually (`data-state="loading"`).
 
 ```tsx
-import { Button } from "@qyubit/sedjiwa-ui";
+import { Button } from "sedjiwa-ui";
 
 <Button loading>Saving…</Button>
 <Button pressed={isOn} onClick={() => setIsOn((v) => !v)}>Toggle</Button>
@@ -107,7 +107,7 @@ Higher-level building blocks layered on the atomic primitives.
 Typed, declarative table with column config. Composes `Table`, so consumers can drop down to lower-level primitives whenever they need full control.
 
 ```tsx
-import { DataTable, type Column } from "@qyubit/sedjiwa-ui";
+import { DataTable, type Column } from "sedjiwa-ui";
 
 type Person = { id: string; name: string; role: string };
 
@@ -133,7 +133,7 @@ Props: `columns`, `rows`, `getRowKey`, `renderAction?`, `onRowClick?`, `emptyMes
 Convenience wrapper over `Dialog` for the common "controlled open + title + body" shape. Inherits Radix's focus-trap, Escape-to-close, and ARIA semantics.
 
 ```tsx
-import { Modal, Button } from "@qyubit/sedjiwa-ui";
+import { Modal, Button } from "sedjiwa-ui";
 
 const [open, setOpen] = useState(false);
 
