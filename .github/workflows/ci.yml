@@ -42,7 +42,11 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
       - run: bun run build
-      - name: Publish to private registry
+      # Publishes to registry.npmjs.org (see publishConfig in package.json).
+      # NPM_CONFIG_TOKEN is the env var bun reads for registry auth; the
+      # secret must be an npm granular access token with publish rights on
+      # @qyubit/sedjiwa-ui.
+      - name: Publish to npm
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: bun publish
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bun publish --access public
