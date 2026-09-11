@@ -3,7 +3,23 @@
   "version": "0.47.0",
   "description": "Shared React + TailwindCSS UI primitives for sedjiwa-portal apps.",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dalfiannur/sedjiwa-ui.git"
+  },
+  "homepage": "https://github.com/dalfiannur/sedjiwa-ui#readme",
+  "bugs": {
+    "url": "https://github.com/dalfiannur/sedjiwa-ui/issues"
+  },
+  "keywords": [
+    "react",
+    "tailwindcss",
+    "radix-ui",
+    "ui",
+    "components",
+    "design-system"
+  ],
   "files": [
     "dist",
     "docs/theming.md",
@@ -135,7 +151,8 @@
     "vitest": "^3.0.0"
   },
   "publishConfig": {
-    "registry": "https://git.rubick.qyubit.io/api/packages/Qyubit/npm/"
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "peerDependenciesMeta": {
     "embla-carousel-react": {

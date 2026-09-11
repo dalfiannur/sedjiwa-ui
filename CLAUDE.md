@@ -147,12 +147,31 @@ no `chore(release)` commit and no tag because the tag path publishes nothing;
 they went out by hand. `publishConfig.registry` pointed at
 `https://npm.qyubit.io/`, a host that does not answer, and nobody noticed
 because the `bun publish --dry-run` step that would have caught it never ran.
-It has since been repointed at the Gitea instance's own npm registry
-(`https://git.rubick.qyubit.io/api/packages/Qyubit/npm/`), which 0.46.0
-published through cleanly. Still run the dry-run — just do not expect that
-particular failure.
+0.46.0 and 0.47.0 went through the Gitea instance's own npm registry. Since
+0.48.0 the package is public: `publishConfig` points at
+`https://registry.npmjs.org/` with `access: public`, and the licence is MIT.
+Still run the dry-run.
 
-So until a runner exists, **you are the CI**. Run every gate in step 4 yourself
+**The project `.npmrc` is load-bearing.** Your `~/.npmrc` may still carry
+`@qyubit:registry=https://git.rubick.qyubit.io/…` from the Gitea days. A
+scoped registry line beats *both* `publishConfig.registry` and `--registry`
+in `bun publish` — verified on bun 1.4.0: with only the home file present the
+dry-run reported the Gitea URL under both. The committed `.npmrc` pins
+`@qyubit` to npmjs at project level, which wins over the home file. Do not
+delete it. Read the `Registry:` line of the dry-run output before publishing,
+and confirm the landing with
+`curl https://registry.npmjs.org/@qyubit%2Fsedjiwa-ui` — `npm view` also
+honours the scope line, so it is not proof of where you are.
+
+**The GitHub mirror is where CI actually runs.** The repo is pushed to both
+Gitea (`origin`) and GitHub (`github`, `dalfiannur/sedjiwa-ui`, public).
+GitHub has runners, so `.github/workflows/ci.yml` executes there on every
+push to `main`: lint, typecheck, the full test suite, contrast, build,
+dry-run. The `publish` job on `v*` tags needs an `NPM_TOKEN` repo secret
+(npm granular token with publish rights) — until that secret is set, the tag
+push turns red at the publish step and you still publish by hand.
+
+So until that secret exists, **you are the CI**. Run every gate in step 4 yourself
 before publishing; skipping them is skipping them entirely, not deferring them
 to a machine. One gate cannot be run everywhere: `bun run test` includes the
 Storybook project, which drives a real Chromium through Playwright
@@ -160,6 +179,5 @@ Storybook project, which drives a real Chromium through Playwright
 your machine, say so in the release commit rather than implying the suite was
 green.
 
-Once a runner is registered, delete step 4 and this section's warning — the
-workflow already does the right thing, it has simply never had anything to run
-it.
+Once the `NPM_TOKEN` secret exists on GitHub, delete step 4 and this
+section's warning — the workflow already does the right thing.
