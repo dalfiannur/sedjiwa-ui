@@ -152,13 +152,16 @@ because the `bun publish --dry-run` step that would have caught it never ran.
 `https://registry.npmjs.org/` with `access: public`, and the licence is MIT.
 Still run the dry-run.
 
-**Watch your local `.npmrc`.** It may still carry
-`@qyubit:registry=https://git.rubick.qyubit.io/…` from the Gitea days. Scoped
-registry lines in `.npmrc` beat `--registry` on the command line, so
-`npm view @qyubit/sedjiwa-ui` answers from Gitea, not npmjs, while that line
-exists. `publishConfig` does override it for `bun publish`, so publishing is
-unaffected — but check where you actually landed with
-`curl https://registry.npmjs.org/@qyubit%2Fsedjiwa-ui`, not `npm view`.
+**The project `.npmrc` is load-bearing.** Your `~/.npmrc` may still carry
+`@qyubit:registry=https://git.rubick.qyubit.io/…` from the Gitea days. A
+scoped registry line beats *both* `publishConfig.registry` and `--registry`
+in `bun publish` — verified on bun 1.4.0: with only the home file present the
+dry-run reported the Gitea URL under both. The committed `.npmrc` pins
+`@qyubit` to npmjs at project level, which wins over the home file. Do not
+delete it. Read the `Registry:` line of the dry-run output before publishing,
+and confirm the landing with
+`curl https://registry.npmjs.org/@qyubit%2Fsedjiwa-ui` — `npm view` also
+honours the scope line, so it is not proof of where you are.
 
 **The GitHub mirror is where CI actually runs.** The repo is pushed to both
 Gitea (`origin`) and GitHub (`github`, `dalfiannur/sedjiwa-ui`, public).
