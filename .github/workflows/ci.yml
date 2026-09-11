@@ -28,8 +28,11 @@ jobs:
       - run: bun run test
       - run: bun run contrast
       - run: bun run build
+      # `bun publish --dry-run` still authenticates against the registry and
+      # fails with "missing authentication" on a runner with no token. `pack`
+      # exercises the same `files` filter and prepublish build without auth.
       - name: Verify publishable artifact
-        run: bun publish --dry-run
+        run: bun pm pack --dry-run
 
   publish:
     needs: verify
