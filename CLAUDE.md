@@ -148,20 +148,17 @@ they went out by hand. `publishConfig.registry` pointed at
 `https://npm.qyubit.io/`, a host that does not answer, and nobody noticed
 because the `bun publish --dry-run` step that would have caught it never ran.
 0.46.0 and 0.47.0 went through the Gitea instance's own npm registry. Since
-0.48.0 the package is public: `publishConfig` points at
-`https://registry.npmjs.org/` with `access: public`, and the licence is MIT.
-Still run the dry-run.
+0.48.0 the package is public on npmjs (`publishConfig.registry` is
+`https://registry.npmjs.org/`) under the MIT licence. Still run the dry-run.
 
-**The project `.npmrc` is load-bearing.** Your `~/.npmrc` may still carry
-`@qyubit:registry=https://git.rubick.qyubit.io/…` from the Gitea days. A
-scoped registry line beats *both* `publishConfig.registry` and `--registry`
-in `bun publish` — verified on bun 1.4.0: with only the home file present the
-dry-run reported the Gitea URL under both. The committed `.npmrc` pins
-`@qyubit` to npmjs at project level, which wins over the home file. Do not
-delete it. Read the `Registry:` line of the dry-run output before publishing,
-and confirm the landing with
-`curl https://registry.npmjs.org/@qyubit%2Fsedjiwa-ui` — `npm view` also
-honours the scope line, so it is not proof of where you are.
+**The package is unscoped (`sedjiwa-ui`) since 0.49.0.** 0.48.0 was the
+one release under `@qyubit/sedjiwa-ui`; it stays on npmjs but nothing new
+goes there. Being unscoped matters for the registry: a leftover
+`@qyubit:registry=https://git.rubick.qyubit.io/…` line in `~/.npmrc` no
+longer applies, and bun 1.4.0 was observed letting such a scoped line beat
+both `publishConfig.registry` and `--registry`. Read the `Registry:` line of
+the publish output anyway, and confirm the landing with
+`curl https://registry.npmjs.org/sedjiwa-ui`.
 
 **The GitHub mirror is where CI actually runs.** The repo is pushed to both
 Gitea (`origin`) and GitHub (`github`, `dalfiannur/sedjiwa-ui`, public).

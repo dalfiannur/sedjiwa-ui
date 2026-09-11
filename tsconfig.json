@@ -20,7 +20,7 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@qyubit/sedjiwa-ui": ["./src/index.ts"],
+      "sedjiwa-ui": ["./src/index.ts"],
       "@/*": ["./src/*"]
     },
     "types": ["vitest/globals", "@testing-library/jest-dom"]
