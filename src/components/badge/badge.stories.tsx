@@ -107,3 +107,14 @@ export const AsMailLabels: Story = {
     </div>
   ),
 };
+
+export const WithDot: Story = {
+  render: () => (
+    <div className="flex flex-wrap gap-2">
+      <Badge variant="success" appearance="subtle" dot>Tersambung</Badge>
+      <Badge variant="warning" appearance="subtle" dot>Menunggu pemindaian QR</Badge>
+      <Badge variant="secondary" dot>Menyiapkan…</Badge>
+      <Badge variant="destructive" appearance="subtle" dot>Terputus</Badge>
+    </div>
+  ),
+};

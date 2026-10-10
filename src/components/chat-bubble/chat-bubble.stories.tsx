@@ -104,3 +104,39 @@ export const Bare: Story = {
     </div>
   ),
 };
+
+const inisial = (nama: string, key: string) => (
+  <Avatar className="size-7 text-[11px]">
+    <AvatarFallback colorKey={key}>{nama}</AvatarFallback>
+  </Avatar>
+);
+
+/** A WhatsApp-style group thread on a tinted surface: outlined incoming
+ *  bubbles, the author once per run (`continued` for the rest), and delivery
+ *  ticks on outgoing messages — including one that failed. */
+export const GroupThreadWithStatus: Story = {
+  render: () => (
+    <div className="bg-surface w-[34rem] rounded-xl p-5">
+      <ChatBubbleList aria-label="Percakapan dengan Tim Gudang" className="gap-1.5">
+        <ChatBubble author="Andi" showAuthor authorClassName="text-label-amber-text" appearance="outlined" avatar={inisial("AN", "628222")} time="16.42">
+          Stok kardus ukuran L tinggal 40 pcs.
+        </ChatBubble>
+        <ChatBubble author="Andi" showAuthor continued appearance="outlined" avatar={inisial("AN", "628222")} time="16.43">
+          Perlu dipesan ulang sebelum Jumat.
+        </ChatBubble>
+        <ChatBubble author="Anda" side="outgoing" time="16.50" status="read" className="mt-2">
+          Baik, saya buatkan PO hari ini.
+        </ChatBubble>
+        <ChatBubble author="Anda" side="outgoing" continued time="16.51" status="delivered">
+          Ukuran M masih aman?
+        </ChatBubble>
+        <ChatBubble author="Sari" showAuthor authorClassName="text-label-lime-text" appearance="outlined" avatar={inisial("SA", "628333")} time="09.12" className="mt-2">
+          M masih 120 pcs.
+        </ChatBubble>
+        <ChatBubble author="Anda" side="outgoing" time="09.20" status="failed" className="mt-2">
+          Terima kasih, nanti saya teruskan ke purchasing.
+        </ChatBubble>
+      </ChatBubbleList>
+    </div>
+  ),
+};

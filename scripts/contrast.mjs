@@ -80,9 +80,31 @@ function parseBlock(css, selector) {
 }
 
 const css = readFileSync(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
+const light = parseBlock(css, ":root");
+const dark = parseBlock(css, ".dark");
+
+// Optional themes override only some tokens, so each is measured stacked on
+// the default it sits over — exactly what the cascade does in a browser. The
+// selectors are anchored at the start of a line: the dark block's selector
+// list contains the light block's selector as a substring.
+const THEME_FILES = ["teal"];
+function parseThemeBlock(themeCss, re, label) {
+  const match = re.exec(themeCss);
+  if (!match) throw new Error(`Could not find "${label}" block`);
+  return parseTokens(extractBody(themeCss, match.index + match[0].length, label));
+}
+
 const THEMES = [
-  ["light", parseBlock(css, ":root")],
-  ["dark", parseBlock(css, ".dark")],
+  ["light", light],
+  ["dark", dark],
+  ...THEME_FILES.flatMap((name) => {
+    const themeCss = readFileSync(new URL(`../src/styles/themes/${name}.css`, import.meta.url), "utf8");
+    const attr = escapeRegExp(`[data-theme="${name}"]`);
+    return [
+      [`${name} light`, { ...light, ...parseThemeBlock(themeCss, new RegExp(`^${attr}\\s*\\{`, "m"), `${name} light`) }],
+      [`${name} dark`, { ...dark, ...parseThemeBlock(themeCss, new RegExp(`^\\.dark${attr}[^{]*\\{`, "m"), `${name} dark`) }],
+    ];
+  }),
 ];
 
 let failures = 0;

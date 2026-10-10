@@ -104,4 +104,42 @@ describe("<Avatar />", () => {
     const classes = screen.getByTestId("fb").className.split(" ");
     expect(classes.filter((c) => c.startsWith("text-"))).toHaveLength(0);
   });
+
+  it("tints the fallback by colorKey, the same key always the same colour", () => {
+    render(
+      <>
+        <Avatar><AvatarFallback data-testid="a" colorKey="628111@c.us">BS</AvatarFallback></Avatar>
+        <Avatar><AvatarFallback data-testid="b" colorKey="628111@c.us">BS</AvatarFallback></Avatar>
+        <Avatar><AvatarFallback data-testid="c">BS</AvatarFallback></Avatar>
+      </>
+    );
+    const a = screen.getByTestId("a").className;
+    expect(a).toMatch(/bg-label-\w+ text-label-\w+-text/);
+    expect(a).not.toContain("bg-muted");
+    expect(screen.getByTestId("b").className).toBe(a);
+    expect(screen.getByTestId("c")).toHaveClass("bg-muted");
+  });
+
+  it("keeps the DOM unchanged without a badge", () => {
+    const { container } = render(<Avatar data-testid="root"><AvatarFallback>AB</AvatarFallback></Avatar>);
+    expect(container.querySelector('[data-slot="avatar-wrapper"]')).toBeNull();
+    expect(container.firstElementChild).toBe(screen.getByTestId("root"));
+  });
+
+  it("puts the badge outside the clipped circle and names it when labelled", () => {
+    const { container } = render(
+      <Avatar data-testid="root" badge={<svg />} badgeLabel="Grup">
+        <AvatarFallback>TG</AvatarFallback>
+      </Avatar>
+    );
+    const wrapper = container.querySelector('[data-slot="avatar-wrapper"]');
+    expect(wrapper).not.toBeNull();
+    expect(wrapper).toContainElement(screen.getByTestId("root"));
+    expect(screen.getByTestId("root")).not.toContainElement(screen.getByRole("img", { name: "Grup" }));
+  });
+
+  it("hides an unlabelled badge from assistive tech", () => {
+    const { container } = render(<Avatar badge={<svg />}><AvatarFallback>TG</AvatarFallback></Avatar>);
+    expect(container.querySelector('[data-slot="avatar-badge"]')).toHaveAttribute("aria-hidden", "true");
+  });
 });

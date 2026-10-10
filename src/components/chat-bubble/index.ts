@@ -1,5 +1,5 @@
 export { ChatBubble, ChatBubbleList } from "./chat-bubble";
-export type { ChatBubbleProps, ChatBubbleListProps } from "./chat-bubble";
+export type { ChatBubbleProps, ChatBubbleListProps, ChatBubbleStatus } from "./chat-bubble";
 export {
   chatBubbleRowVariants,
   chatBubbleSurfaceVariants,

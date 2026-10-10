@@ -41,5 +41,8 @@ export default defineConfig({
     mkdirSync("dist", { recursive: true });
     copyFileSync("src/styles/base.css", "dist/styles.css");
     copyFileSync("src/styles/tokens.css", "dist/tokens.css");
+    // Optional themes ship as plain CSS beside the defaults; see docs/theming.md.
+    mkdirSync("dist/themes", { recursive: true });
+    copyFileSync("src/styles/themes/teal.css", "dist/themes/teal.css");
   },
 });

@@ -168,4 +168,22 @@ describe("<SegmentedControl />", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  it("shows a count after the label, hidden at zero", () => {
+    render(
+      <SegmentedControl
+        aria-label="Pemegang"
+        defaultValue="all"
+        items={[
+          { value: "all", label: "Semua", count: 24 },
+          { value: "mine", label: "Milik saya", count: 0 },
+          { value: "queue", label: "Antrean", count: 12, countTone: "warning" },
+        ]}
+      />,
+    );
+    expect(screen.getByRole("radio", { name: "Semua 24" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Milik saya" })).toBeInTheDocument();
+    const antrean = screen.getByRole("radio", { name: "Antrean 12" });
+    expect(antrean.querySelector('[data-slot="segmented-control-count"]')).toHaveClass("text-warning-text");
+  });
 });
