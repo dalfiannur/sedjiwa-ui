@@ -27,8 +27,33 @@ export const chatBubbleSurfaceVariants = cva(
         incoming: "bg-muted text-foreground rounded-bl-sm",
         outgoing: "bg-primary text-primary-foreground rounded-br-sm",
       },
+      /** `outlined` puts incoming messages on the card colour with a hairline
+       *  border — for threads drawn on a tinted surface (`bg-surface`), where
+       *  `--muted` would sink into the background. Outgoing is unaffected. */
+      appearance: {
+        filled: "",
+        outlined: "",
+      },
+      /** A follow-up from the same author: the corner nearest the author
+       *  tightens on top too, so a run of bubbles reads as one block. */
+      continued: {
+        true: "",
+        false: "",
+      },
+      /** An outgoing message that did not send. It leaves the primary fill —
+       *  a failure must not look like a delivered message. */
+      failed: {
+        true: "",
+        false: "",
+      },
     },
-    defaultVariants: { side: "incoming" },
+    compoundVariants: [
+      { side: "incoming", appearance: "outlined", class: "bg-card border-border border" },
+      { side: "incoming", continued: true, class: "rounded-tl-sm" },
+      { side: "outgoing", continued: true, class: "rounded-tr-sm" },
+      { side: "outgoing", failed: true, class: "bg-destructive-subtle text-foreground border-destructive/30 border" },
+    ],
+    defaultVariants: { side: "incoming", appearance: "filled", continued: false, failed: false },
   },
 );
 
@@ -47,9 +72,23 @@ export const chatBubbleMetaVariants = cva(
         incoming: "text-muted-foreground",
         outgoing: "text-primary-foreground",
       },
+      failed: {
+        true: "",
+        false: "",
+      },
     },
-    defaultVariants: { side: "incoming" },
+    compoundVariants: [
+      // On --destructive-subtle the primary foreground (near-white) would
+      // vanish; the failure's own text token carries it instead.
+      { side: "outgoing", failed: true, class: "text-destructive-text" },
+    ],
+    defaultVariants: { side: "incoming", failed: false },
   },
 );
 
-export type ChatBubbleVariants = VariantProps<typeof chatBubbleSurfaceVariants>;
+/** Only the variants a consumer chooses; `continued` and `failed` are driven
+ *  by the component's own props (`continued`, `status`). */
+export type ChatBubbleVariants = Pick<
+  VariantProps<typeof chatBubbleSurfaceVariants>,
+  "side" | "appearance"
+>;

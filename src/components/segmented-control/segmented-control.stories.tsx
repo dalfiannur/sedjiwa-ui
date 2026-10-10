@@ -131,3 +131,18 @@ export const Controlled: Story = {
     );
   },
 };
+
+/** `count` puts a number after the label; `countTone` flags a bucket that
+ *  needs attention. Zero hides the number. */
+export const WithCounts: Story = {
+  args: {
+    "aria-label": "Pemegang",
+    defaultValue: "all",
+    fullWidth: true,
+    items: [
+      { value: "all", label: "Semua", count: 24 },
+      { value: "mine", label: "Milik saya", count: 4, countTone: "primary" },
+      { value: "queue", label: "Antrean", count: 12, countTone: "warning" },
+    ],
+  },
+};

@@ -1,0 +1,89 @@
+/* Tema teal — opsional, berasal dari Sedjiwa Inbox.
+ *
+ * Diaktifkan dengan `data-theme="teal"` pada <html> (atau pembungkus mana
+ * pun), sesudah `sedjiwa-ui/styles.css` diimpor:
+ *
+ *   @import "sedjiwa-ui/styles.css";
+ *   @import "sedjiwa-ui/themes/teal.css";
+ *
+ * Hanya menimpa token yang berbeda dari bawaan; sisanya (label, tone selain
+ * success, chart 2–5, dsb.) tetap milik tokens.css. Satu aksen teal untuk
+ * tindakan utama dan status "baik", latar abu sangat muda di bawah kartu
+ * putih. Tidak mengubah karakter pustaka — hanya nilai token.
+ *
+ * Spesifisitas: blok terang (0,1,0) menang atas `:root` karena dimuat
+ * sesudahnya; blok gelap (0,2,0) menang atas `.dark` bawaan maupun blok terang
+ * di sini, di mana pun `.dark` dipasang relatif terhadap tema.
+ *
+ * Font: tema menyetel `--font-sans` ke Plus Jakarta Sans, tetapi tidak
+ * memuatnya — aplikasi memuat sendiri (Google Fonts atau berkas lokal).
+ * Tanpa itu, tumpukan cadangannya yang dipakai.
+ *
+ * Dijaga `bun run contrast` bersama tokens.css: kedua blok di bawah diukur
+ * setelah ditumpuk di atas `:root` / `.dark` bawaan. */
+
+[data-theme="teal"] {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --default-font-family: var(--font-sans);
+
+  --background: oklch(0.976 0.003 264.5);
+  --foreground: oklch(0.204 0.011 260.7);
+  --surface: oklch(0.963 0.005 258.3);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.204 0.011 260.7);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.204 0.011 260.7);
+
+  --primary: oklch(0.503 0.088 180.2);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.963 0.005 258.3);
+  --secondary-foreground: oklch(0.204 0.011 260.7);
+  --muted: oklch(0.963 0.005 258.3);
+  --muted-foreground: oklch(0.508 0.021 258.4);
+  --accent: oklch(0.952 0.013 185.1);
+  --accent-foreground: oklch(0.427 0.074 180.6);
+
+  /* "Baik" berbagi hue dengan aksen: di aplikasi ini tersambung = siap. */
+  --success: oklch(0.503 0.088 180.2);
+  --success-foreground: oklch(1 0 0);
+  --success-subtle: oklch(0.952 0.013 185.1);
+  --success-text: oklch(0.427 0.074 180.6);
+  --warning-subtle: oklch(0.972 0.023 75.9);
+  --warning-text: oklch(0.479 0.112 59.9);
+  --destructive-subtle: oklch(0.957 0.018 17.5);
+  --destructive-text: oklch(0.444 0.161 26.9);
+
+  --border: oklch(0.924 0.008 260.7);
+  --input: oklch(0.861 0.013 251.6);
+  --ring: oklch(0.503 0.088 180.2);
+
+  --chart-1: oklch(0.503 0.088 180.2);
+
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.204 0.011 260.7);
+  --sidebar-primary: oklch(0.503 0.088 180.2);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.952 0.013 185.1);
+  --sidebar-accent-foreground: oklch(0.427 0.074 180.6);
+  --sidebar-border: oklch(0.924 0.008 260.7);
+  --sidebar-ring: oklch(0.503 0.088 180.2);
+}
+
+/* Gelap: netral bawaan `.dark` dipertahankan (sudah diukur), hanya aksennya
+ * yang menjadi teal. Polaritasnya mengikuti bawaan: isian terang membawa
+ * tinta gelap. */
+.dark[data-theme="teal"],
+.dark [data-theme="teal"] {
+  --primary: oklch(0.74 0.11 180);
+  --primary-foreground: oklch(0.18 0.02 260);
+  --accent: oklch(0.32 0.05 182);
+  --accent-foreground: oklch(0.96 0.005 265);
+  --ring: oklch(0.74 0.11 180);
+
+  --chart-1: oklch(0.74 0.11 180);
+
+  --sidebar-primary: oklch(0.74 0.11 180);
+  --sidebar-primary-foreground: oklch(0.18 0.02 260);
+  --sidebar-accent: oklch(0.26 0.03 182);
+  --sidebar-ring: oklch(0.74 0.11 180);
+}
