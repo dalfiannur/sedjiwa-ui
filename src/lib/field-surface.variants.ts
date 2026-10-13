@@ -20,7 +20,7 @@ export const fieldSurfaceVariants = cva(
       // winner to stylesheet order. `state` still owns the border colour and
       // the focus ring, which both appearances share.
       appearance: {
-        default: "rounded-md bg-transparent shadow-xs dark:bg-input/30",
+        default: "rounded-md bg-white shadow-xs dark:bg-input/30",
         // The Figma's top-bar search: a pill on a muted fill, reading as a
         // place to type rather than as a field in a form.
         search: "rounded-full bg-muted shadow-none dark:bg-input/50",
