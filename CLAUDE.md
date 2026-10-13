@@ -125,56 +125,55 @@ admin panels today, and that is deliberate. Any redesign driven from
 There is no CHANGELOG file — the release commit body is the changelog. Write it
 for the people upgrading: what changed, and whether anything they rely on moves.
 
+The repo lives on GitHub (`origin`, `dalfiannur/sedjiwa-ui`, public). That is
+the only remote.
+
 1. Land the work on `main` the usual way (branch, then merge).
-2. Bump `version` in `package.json` and commit **directly on `main`** as
+2. **Pick the version from what is already out, not from local `package.json`.**
+   `git fetch origin --tags`, merge `origin/main` if it moved, and check
+   `curl -s https://registry.npmjs.org/-/package/sedjiwa-ui/dist-tags`. The
+   new version must be above both the latest tag and npm's `latest`.
+3. Bump `version` in `package.json` and commit **directly on `main`** as
    `chore(release): X.Y.Z`, with a body describing the release.
-3. Tag `vX.Y.Z` and push the commit and the tag.
-4. **Run the gates and publish by hand** — see below for why:
+4. Tag `vX.Y.Z` and push the commit and the tag: `git push origin main vX.Y.Z`.
+5. **Run the gates and publish by hand** — see below for why:
    `bun run lint && bun run typecheck && bun run test && bun run contrast && bun run build`,
    then `bun publish --dry-run`, then `bun publish`.
 
-**CI does not publish today, whatever `.github/workflows/ci.yml` says.**
-Actions is enabled on the repo, but the Gitea instance has **no runners
-registered** — `/api/v1/repos/Qyubit/sedjiwa-ui/actions/runners` returns zero,
-and the workflow-run list is empty. Nothing in that workflow has ever
-executed: not lint, not typecheck, not the test suite, not the publish job.
-The runners endpoint needs repo-owner rights, so the repo token cannot read
-it; `…/actions/tasks` needs only the repo token, and its `"total_count": 0`
-is the same proof — still 0 as of 0.46.0.
+**CI runs on GitHub but does not publish yet.** `.github/workflows/ci.yml`
+executes on every push to `main`: lint, typecheck, the full test suite,
+contrast, build, dry-run. The `publish` job on `v*` tags needs an `NPM_TOKEN`
+repo secret (npm granular token with publish rights) — until that secret is
+set, the tag push turns red at the publish step and you still publish by hand.
 
-That is the whole explanation for the release history. 0.33.0 and 0.34.0 have
-no `chore(release)` commit and no tag because the tag path publishes nothing;
-they went out by hand. `publishConfig.registry` pointed at
-`https://npm.qyubit.io/`, a host that does not answer, and nobody noticed
-because the `bun publish --dry-run` step that would have caught it never ran.
-0.46.0 and 0.47.0 went through the Gitea instance's own npm registry. Since
-0.48.0 the package is public on npmjs (`publishConfig.registry` is
-`https://registry.npmjs.org/`) under the MIT licence. Still run the dry-run.
+So until that secret exists, **you are the CI** for the release. Run every gate
+in step 5 yourself before publishing; skipping them is skipping them entirely,
+not deferring them to a machine. One gate cannot be run everywhere:
+`bun run test` includes the Storybook project, which drives a real Chromium
+through Playwright (`bunx playwright install chromium` first). If that browser
+will not install on your machine, say so in the release commit rather than
+implying the suite was green.
 
-**The package is unscoped (`sedjiwa-ui`) since 0.49.0.** 0.48.0 was the
-one release under `@qyubit/sedjiwa-ui`; it stays on npmjs but nothing new
-goes there. Being unscoped matters for the registry: a leftover
-`@qyubit:registry=https://git.rubick.qyubit.io/…` line in `~/.npmrc` no
-longer applies, and bun 1.4.0 was observed letting such a scoped line beat
-both `publishConfig.registry` and `--registry`. Read the `Registry:` line of
-the publish output anyway, and confirm the landing with
-`curl https://registry.npmjs.org/sedjiwa-ui`.
+**The package is unscoped (`sedjiwa-ui`) on npmjs** (`publishConfig.registry`
+is `https://registry.npmjs.org/`, MIT licence). Read the `Registry:` line of
+the publish output, and confirm the landing with
+`curl https://registry.npmjs.org/sedjiwa-ui`. A leftover
+`@qyubit:registry=…` line in `~/.npmrc` no longer applies, but bun 1.4.0 was
+observed letting such a scoped line beat both `publishConfig.registry` and
+`--registry`, so do not skip the dry-run.
 
-**The GitHub mirror is where CI actually runs.** The repo is pushed to both
-Gitea (`origin`) and GitHub (`github`, `dalfiannur/sedjiwa-ui`, public).
-GitHub has runners, so `.github/workflows/ci.yml` executes there on every
-push to `main`: lint, typecheck, the full test suite, contrast, build,
-dry-run. The `publish` job on `v*` tags needs an `NPM_TOKEN` repo secret
-(npm granular token with publish rights) — until that secret is set, the tag
-push turns red at the publish step and you still publish by hand.
+History, for reading old tags:
 
-So until that secret exists, **you are the CI**. Run every gate in step 4 yourself
-before publishing; skipping them is skipping them entirely, not deferring them
-to a machine. One gate cannot be run everywhere: `bun run test` includes the
-Storybook project, which drives a real Chromium through Playwright
-(`bunx playwright install chromium` first). If that browser will not install on
-your machine, say so in the release commit rather than implying the suite was
-green.
+- Until 0.49.0 the repo was primarily on a Gitea instance
+  (`git.rubick.qyubit.io/Qyubit/sedjiwa-ui`) with GitHub as a mirror. Gitea
+  had no Actions runners, so nothing in CI ran there. Gitea is retired; it
+  still holds a stray `chore(release): 0.50.0` commit (`d7aa7eb`) and a
+  `v0.50.0` tag that do **not** match the 0.50.0 on npm. The real 0.50.0 is
+  `890df47` on GitHub.
+- 0.33.0 and 0.34.0 have no `chore(release)` commit and no tag; they went out
+  by hand. 0.46.0 and 0.47.0 went through Gitea's own npm registry. 0.48.0 was
+  the one release under `@qyubit/sedjiwa-ui`; it stays on npmjs but nothing new
+  goes there. Since 0.49.0 the package is `sedjiwa-ui`.
 
-Once the `NPM_TOKEN` secret exists on GitHub, delete step 4 and this
-section's warning — the workflow already does the right thing.
+Once the `NPM_TOKEN` secret exists on GitHub, delete step 5's manual publish
+and this section's warning — the workflow already does the right thing.
