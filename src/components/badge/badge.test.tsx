@@ -160,4 +160,22 @@ describe("<Badge />", () => {
     expect(el).toHaveClass("bg-label-rose");
     expect(el).not.toHaveClass("bg-destructive-subtle");
   });
+
+  it("renders a decorative dot before the label with `dot`", () => {
+    render(<Badge data-testid="b" variant="success" appearance="subtle" dot>Tersambung</Badge>);
+    const el = screen.getByTestId("b");
+    const dot = el.querySelector('[data-slot="badge-dot"]');
+    expect(dot).toHaveAttribute("aria-hidden", "true");
+    expect(el.firstElementChild).toBe(dot);
+    expect(el).toHaveTextContent("Tersambung");
+  });
+
+  it("ignores `dot` with asChild", () => {
+    render(
+      <Badge asChild dot>
+        <a href="/x" data-testid="b">link</a>
+      </Badge>
+    );
+    expect(screen.getByTestId("b").querySelector('[data-slot="badge-dot"]')).toBeNull();
+  });
 });

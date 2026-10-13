@@ -116,4 +116,57 @@ describe("<ChatBubble />", () => {
     );
     expect(screen.getByRole("button", { name: "Opsi" })).toBeInTheDocument();
   });
+
+  it("draws an outgoing status as ticks and announces its wording", () => {
+    const { container } = render(
+      <ChatBubble author="Anda" side="outgoing" time="09.13" status="read">oke</ChatBubble>,
+    );
+    const st = container.querySelector('[data-slot="chat-bubble-status"]');
+    expect(st).toHaveTextContent("dibaca");
+    expect(st?.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(container.firstElementChild).toHaveAttribute("data-status", "read");
+  });
+
+  it("lets the caller reword a status", () => {
+    const { container } = render(
+      <ChatBubble author="Anda" side="outgoing" status="sent" statusLabel="sent">ok</ChatBubble>,
+    );
+    expect(container.querySelector('[data-slot="chat-bubble-status"]')).toHaveTextContent("sent");
+  });
+
+  it("ignores status on incoming messages", () => {
+    const { container } = render(<ChatBubble author="Budi" status="read">halo</ChatBubble>);
+    expect(container.querySelector('[data-slot="chat-bubble-status"]')).toBeNull();
+    expect(container.firstElementChild).not.toHaveAttribute("data-status");
+  });
+
+  // A failure must not look like a delivered message.
+  it("moves a failed outgoing message off the primary fill", () => {
+    const { container } = render(<ChatBubble author="Anda" side="outgoing" status="failed">x</ChatBubble>);
+    const surface = container.querySelector('[data-slot="chat-bubble-surface"]');
+    expect(surface).toHaveClass("bg-destructive-subtle");
+    expect(surface).not.toHaveClass("bg-primary");
+    expect(container.querySelector('[data-slot="chat-bubble-meta"]')).toHaveClass("text-destructive-text");
+  });
+
+  it("drops the visible author and keeps the avatar's space when continued", () => {
+    const { container } = render(
+      <ChatBubble author="Andi" showAuthor continued avatar={<span>AN</span>}>lagi</ChatBubble>,
+    );
+    expect(container.querySelector('[data-slot="chat-bubble-author"]')).toHaveClass("sr-only");
+    expect(container.querySelector('[data-slot="chat-bubble-avatar"]')).toHaveClass("invisible");
+    expect(container.querySelector('[data-slot="chat-bubble-surface"]')).toHaveClass("rounded-tl-sm");
+  });
+
+  it("puts incoming messages on the card colour when outlined", () => {
+    const { container } = render(<ChatBubble author="Budi" appearance="outlined">halo</ChatBubble>);
+    const surface = container.querySelector('[data-slot="chat-bubble-surface"]');
+    expect(surface).toHaveClass("bg-card");
+    expect(surface).not.toHaveClass("bg-muted");
+  });
+
+  it("colours the visible author line with authorClassName", () => {
+    render(<ChatBubble author="Sari" showAuthor authorClassName="text-label-rose-text">x</ChatBubble>);
+    expect(screen.getByText("Sari")).toHaveClass("text-label-rose-text");
+  });
 });

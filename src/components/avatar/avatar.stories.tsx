@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 import { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 import { Card, CardContent } from "../card";
+import { Users } from "lucide-react";
 
 const meta: Meta<typeof Avatar> = {
   title: "Data Display/Avatar",
@@ -117,4 +118,25 @@ export const OnAProfileCard: Story = {
       </CardContent>
     </Card>
   ),
+};
+
+/** `colorKey` tints the initials from the label palette; the same key always
+ *  lands on the same colour. `badge` marks the avatar, e.g. as a group. */
+export const ColorKeyAndBadge: Story = {
+  render: () => (
+    <div className="flex items-center gap-4">
+      {["Dewi Lestari", "Bagus Santoso", "Maya Anggraini", "Toko Sinar Jaya"].map((n) => (
+        <Avatar key={n} size="lg">
+          <AvatarFallback colorKey={n}>{n.split(" ").map((w) => w[0]).join("")}</AvatarFallback>
+        </Avatar>
+      ))}
+      <Avatar size="lg" badge={<Users />} badgeLabel="Grup">
+        <AvatarFallback colorKey="Tim Gudang">TG</AvatarFallback>
+      </Avatar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("img", { name: "Grup" })).toBeInTheDocument();
+  },
 };

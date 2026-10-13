@@ -13,6 +13,20 @@ export type SegmentedControlItem = {
   /** Usually a lucide glyph, rendered before the label. Decorative. */
   icon?: React.ReactNode;
   disabled?: boolean;
+  /** A number after the label — how many items sit behind this segment
+   *  ("Antrean 12"). Hidden when undefined or zero: an empty bucket needs no
+   *  "0" competing with the label. */
+  count?: number;
+  /** Colour of `count`, from the `-text` tokens. Use it to flag a bucket
+   *  that needs attention; leave it `muted` otherwise. */
+  countTone?: "muted" | "primary" | "warning" | "destructive";
+};
+
+const COUNT_TONE: Record<NonNullable<SegmentedControlItem["countTone"]>, string> = {
+  muted: "text-muted-foreground",
+  primary: "text-success-text",
+  warning: "text-warning-text",
+  destructive: "text-destructive-text",
 };
 
 export type SegmentedControlProps = Omit<
@@ -112,6 +126,15 @@ export function SegmentedControl({
               </span>
             ) : null}
             {item.label}
+            {item.count ? " " : null}
+            {item.count ? (
+              <span
+                data-slot="segmented-control-count"
+                className={cn("font-semibold tabular-nums", COUNT_TONE[item.countTone ?? "muted"])}
+              >
+                {item.count}
+              </span>
+            ) : null}
           </ToggleGroupPrimitive.Item>
         ))}
       </ToggleGroupPrimitive.Root>

@@ -4,6 +4,41 @@ Consuming apps override CSS variables; they never restyle components with raw
 colour utilities. `dist/tokens.css` defines the defaults, `dist/styles.css`
 maps them to Tailwind utilities.
 
+## Optional themes
+
+A theme is a stylesheet of token overrides, switched on with an attribute.
+The defaults stay as they are; nothing changes until you opt in.
+
+### `teal`
+
+Calm teal on a near-white grey: one teal accent for primary actions and the
+"good" state, white cards on a `#F6F7F9` background, and Plus Jakarta Sans.
+It comes from Sedjiwa Inbox.
+
+```css
+@import "tailwindcss";
+@import "sedjiwa-ui/styles.css";
+@import "sedjiwa-ui/themes/teal.css";
+```
+
+```html
+<html data-theme="teal">
+```
+
+- **Scope.** `data-theme="teal"` works on `<html>` or on any wrapper, so one
+  page can host two themes side by side.
+- **Dark mode.** Covered: `.dark` on the same element or an ancestor picks up
+  the teal dark block (the default dark neutrals with a teal accent).
+- **Font.** The theme sets `--font-sans` to Plus Jakarta Sans but does not
+  load it. Load it yourself, e.g. from Google Fonts
+  (`family=Plus+Jakarta+Sans:wght@400;500;600;700`); without it the fallback
+  stack is used.
+- **Gated.** `bun run contrast` measures the theme stacked on the defaults —
+  every pair below, in light and dark — so a theme cannot ship below 4.5:1
+  any more than the defaults can.
+- **Overriding further.** Put your own `[data-theme="teal"] { … }` after the
+  import; same specificity, later wins.
+
 ## Semantic colour tokens
 
 Each tone ships two usable pairs:

@@ -40,8 +40,8 @@ export {
 } from "./components/alert-dialog";
 
 export { Avatar, AvatarImage, AvatarFallback } from "./components/avatar";
-export type { AvatarProps } from "./components/avatar";
-export { avatarVariants, type AvatarVariants } from "./components/avatar";
+export type { AvatarProps, AvatarFallbackProps } from "./components/avatar";
+export { avatarVariants, type AvatarVariants, avatarColorClass } from "./components/avatar";
 
 export {
   Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
@@ -320,6 +320,7 @@ export { ChatBubble, ChatBubbleList } from "./components/chat-bubble";
 export type {
   ChatBubbleProps,
   ChatBubbleListProps,
+  ChatBubbleStatus,
 } from "./components/chat-bubble";
 export {
   chatBubbleRowVariants,
@@ -450,3 +451,42 @@ export type {
   KeyboardShortcutTarget,
   UseKeyboardShortcutOptions,
 } from "./hooks/use-keyboard-shortcut";
+
+export { FilterChip, FilterChipGroup } from "./components/filter-chip";
+export type { FilterChipProps, FilterChipGroupProps } from "./components/filter-chip";
+export {
+  filterChipVariants,
+  filterChipGroupVariants,
+  type FilterChipVariants,
+} from "./components/filter-chip";
+
+export { NavRail, NavRailHeader, NavRailFooter, NavRailItem, formatNavCount } from "./components/nav-rail";
+export type { NavRailProps, NavRailItemProps } from "./components/nav-rail";
+export {
+  navRailVariants,
+  navRailItemVariants,
+  navRailBadgeVariants,
+  type NavRailVariants,
+} from "./components/nav-rail";
+
+export { BottomNav, BottomNavItem } from "./components/bottom-nav";
+export type { BottomNavProps, BottomNavItemProps } from "./components/bottom-nav";
+export {
+  bottomNavVariants,
+  bottomNavItemVariants,
+  bottomNavBadgeVariants,
+  type BottomNavVariants,
+} from "./components/bottom-nav";
+
+export { AudioMessage, formatAudioTime } from "./components/audio-message";
+export type { AudioMessageProps } from "./components/audio-message";
+export {
+  audioMessageButtonVariants,
+  audioMessageTrackVariants,
+  audioMessageRangeVariants,
+  audioMessageThumbVariants,
+  type AudioMessageVariants,
+} from "./components/audio-message";
+
+export { AuthLayout } from "./components/auth-layout";
+export type { AuthLayoutProps } from "./components/auth-layout";
