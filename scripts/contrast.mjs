@@ -172,6 +172,23 @@ for (const [theme, tokens] of THEMES) {
   }
 }
 
+// Header text on the TableHead fill.
+for (const [theme, tokens] of THEMES) {
+  const fg = tokens["foreground"];
+  const bg = tokens["table-header"];
+  if (!fg || !bg) {
+    console.log(`MISSING  --foreground / --table-header (${theme})`);
+    failures++;
+    continue;
+  }
+  const ratio = contrastRatio(fg, bg);
+  const ok = ratio >= THRESHOLD;
+  if (!ok) failures++;
+  console.log(
+    `${ok ? "PASS" : "FAIL"} ${ratio.toFixed(2).padStart(6)}:1  table  --foreground on --table-header (${theme})`
+  );
+}
+
 // Interactive states on solid Button fills.
 //
 // A token can sit comfortably above 4.5:1 at rest and fail the moment it is
