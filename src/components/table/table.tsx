@@ -83,10 +83,10 @@ export function TableHead({
       data-slot="table-head"
       scope={scope}
       className={cn(
-        // The header is a bar, not a rule: a muted fill whose outer corners
+        // The header is a bar, not a rule: a filled bar whose outer corners
         // round off, so the whole row reads as one object sitting above the
         // data rather than as the data's first line.
-        "bg-muted text-foreground h-12 px-4 text-left align-middle font-semibold whitespace-nowrap",
+        "bg-table-header text-foreground h-12 px-4 text-left align-middle font-semibold whitespace-nowrap",
         "first:rounded-l-xl last:rounded-r-xl",
         "[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className

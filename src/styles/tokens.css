@@ -42,6 +42,12 @@
   --muted: oklch(0.96 0.008 265);
   --muted-foreground: oklch(0.5 0.018 265);
 
+  /* TableHead fill. --muted sits only ~0.025 L below --background, so a
+     header bar on the page background (no card around the table) all but
+     disappeared. Its own token so --muted, shared by input addons, search
+     fields and row hover, keeps its value. */
+  --table-header: oklch(0.935 0.014 265);
+
   /* Adjacent-month days in Calendar. These stay clickable, so they are
      interactive text and need 4.5:1 — not the disabled-control exemption.
      Dimming --muted-foreground with an alpha cannot get there: /50 measures
@@ -172,6 +178,9 @@
 
   --muted: oklch(0.26 0.018 265);
   --muted-foreground: oklch(0.72 0.015 265);
+
+  /* Dark already separates --muted from --background by 0.1 L. */
+  --table-header: oklch(0.26 0.018 265);
 
   /* See the light-mode note. Dark needs a *darker* L than --muted-foreground
      to dim, where light needs a lighter one — the direction flips. */
