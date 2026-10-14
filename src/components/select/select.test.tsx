@@ -23,6 +23,21 @@ describe("<Select />", () => {
     expect(screen.queryByRole("option", { name: "Apple" })).not.toBeInTheDocument();
   });
 
+  // The trigger shares the text-field surface (fieldSurfaceVariants default),
+  // so a Select next to an Input on a gray page reads as the same kind of field.
+  it("gives the trigger the same surface as a text input", () => {
+    render(
+      <Select>
+        <SelectTrigger aria-label="fruit">
+          <SelectValue placeholder="Pick" />
+        </SelectTrigger>
+      </Select>
+    );
+    const trigger = screen.getByLabelText("fruit");
+    expect(trigger).toHaveClass("bg-white", "dark:bg-input/30");
+    expect(trigger).not.toHaveClass("bg-transparent");
+  });
+
   it("opens listbox on trigger click", async () => {
     const user = userEvent.setup();
     render(
