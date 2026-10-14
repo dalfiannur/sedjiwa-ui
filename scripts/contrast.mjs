@@ -172,12 +172,33 @@ for (const [theme, tokens] of THEMES) {
   }
 }
 
-// Header text on the TableHead fill.
+// Header text on the TableHead fill. --table-header is a color-mix, which
+// parseTokens cannot read, so it is rebuilt here from --primary and
+// --table-header-base. TABLE_HEADER_MIX mirrors the 11% in tokens.css.
+const TABLE_HEADER_MIX = 0.11;
+
+function oklchToOklab([L, C, H]) {
+  const h = (H * Math.PI) / 180;
+  return [L, C * Math.cos(h), C * Math.sin(h)];
+}
+
+function oklabToOklch([L, a, b]) {
+  const H = (Math.atan2(b, a) * 180) / Math.PI;
+  return [L, Math.hypot(a, b), (H + 360) % 360];
+}
+
+function mixOklab(p, q, fraction) {
+  const [pa, qa] = [oklchToOklab(p), oklchToOklab(q)];
+  return oklabToOklch(pa.map((v, i) => v * fraction + qa[i] * (1 - fraction)));
+}
+
 for (const [theme, tokens] of THEMES) {
   const fg = tokens["foreground"];
-  const bg = tokens["table-header"];
+  const primary = tokens["primary"];
+  const base = tokens["table-header-base"];
+  const bg = primary && base ? mixOklab(primary, base, TABLE_HEADER_MIX) : undefined;
   if (!fg || !bg) {
-    console.log(`MISSING  --foreground / --table-header (${theme})`);
+    console.log(`MISSING  --foreground / --primary / --table-header-base (${theme})`);
     failures++;
     continue;
   }

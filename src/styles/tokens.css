@@ -43,10 +43,14 @@
   --muted-foreground: oklch(0.5 0.018 265);
 
   /* TableHead fill. --muted sits only ~0.025 L below --background, so a
-     header bar on the page background (no card around the table) all but
-     disappeared. Its own token so --muted, shared by input addons, search
-     fields and row hover, keeps its value. */
-  --table-header: oklch(0.935 0.014 265);
+     header bar on the page background all but disappeared. A gray pulled
+     11% toward --primary, so it follows whatever primary a theme sets. Its
+     own token so --muted, shared by input addons, search fields and row
+     hover, keeps its value. Themes that change --primary must redeclare
+     --table-header (same expression) so it recomputes on their element;
+     scripts/contrast.mjs mirrors the 11% mix. */
+  --table-header-base: oklch(0.975 0.002 265);
+  --table-header: color-mix(in oklab, var(--primary) 11%, var(--table-header-base));
 
   /* Adjacent-month days in Calendar. These stay clickable, so they are
      interactive text and need 4.5:1 — not the disabled-control exemption.
@@ -179,8 +183,10 @@
   --muted: oklch(0.26 0.018 265);
   --muted-foreground: oklch(0.72 0.015 265);
 
-  /* Dark already separates --muted from --background by 0.1 L. */
-  --table-header: oklch(0.26 0.018 265);
+  /* See the light-mode note. Dark base sits near --muted, which already
+     separates from --background by 0.1 L. */
+  --table-header-base: oklch(0.25 0.01 265);
+  --table-header: color-mix(in oklab, var(--primary) 11%, var(--table-header-base));
 
   /* See the light-mode note. Dark needs a *darker* L than --muted-foreground
      to dim, where light needs a lighter one — the direction flips. */
