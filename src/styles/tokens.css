@@ -18,9 +18,13 @@
    * diukur. Jangan menajamkannya karena rasionya — tajamkan kalau batasnya
    * benar-benar hilang di mata.
    *
+   * Itu yang terjadi di L 0.972: 1.04:1 terhadap --sidebar, dan di Sedjiwa
+   * Task Management batas konten-cangkang tidak terbaca lagi. 0.955 memberi
+   * ~1.09:1, sejajar tema teal (1.11:1); --muted-foreground di atasnya 5.26:1.
+   *
    * Dipakai SidebarLayout untuk memisahkan konten dari cangkangnya tanpa garis.
    */
-  --surface: oklch(0.972 0.012 285);
+  --surface: oklch(0.955 0.012 285);
   --card-foreground: oklch(0.18 0.025 265);
 
   --popover: oklch(1 0 0);
@@ -261,11 +265,14 @@
   --chart-4: oklch(0.72 0.14 177);
   --chart-5: oklch(0.72 0.20 305);
 
-  --sidebar: oklch(0.18 0.018 265);
+  /* Cangkang naik di atas konten (--background, L 0.16). Di 0.18 bedanya
+   * 1.03:1 dan batasnya hilang; 0.21 memberi ~1.10:1. --sidebar-accent ikut
+   * naik supaya hover/aktif tetap ~1.21:1 di atas cangkang. */
+  --sidebar: oklch(0.21 0.018 265);
   --sidebar-foreground: oklch(0.96 0.005 265);
   --sidebar-primary: oklch(0.72 0.16 264);
   --sidebar-primary-foreground: oklch(0.18 0.025 265);
-  --sidebar-accent: oklch(0.26 0.025 264);
+  --sidebar-accent: oklch(0.28 0.025 264);
   --sidebar-accent-foreground: oklch(0.96 0.005 265);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.72 0.16 264);
