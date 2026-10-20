@@ -1,8 +1,13 @@
+import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CircleCheck, EllipsisVertical } from "lucide-react";
 import { SmartTable, type SmartColumn } from "./smart-table";
+import { SmartTableColumnsMenu } from "./smart-table-columns-menu";
+import { useSmartTableColumns } from "./use-smart-table-columns";
 import { Avatar, AvatarFallback, AvatarImage } from "../avatar";
 import { Badge } from "../badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../table";
+import { expect, waitFor, within } from "storybook/test";
 
 type Order = {
   id: string;
@@ -143,4 +148,149 @@ export const Empty: Story = {
       <SmartTable columns={COLUMNS} rows={[]} getRowKey={(o) => o.id} emptyMessage="Belum ada order." />
     </div>
   ),
+};
+
+function CustomizableColumnsDemo() {
+  const { columnState, setColumnState, reset } = useSmartTableColumns(COLUMNS, {
+    storageKey: "storybook-orders",
+  });
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex justify-end">
+        <SmartTableColumnsMenu
+          columns={COLUMNS}
+          columnState={columnState}
+          onColumnStateChange={setColumnState}
+          onReset={reset}
+        />
+      </div>
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        minWidth="64rem"
+        columnState={columnState}
+        onColumnStateChange={setColumnState}
+      />
+    </div>
+  );
+}
+
+/** Hide and reorder columns from the Columns menu or each header's ⋮; the layout survives a reload. */
+export const CustomizableColumns: Story = {
+  render: () => <CustomizableColumnsDemo />,
+};
+
+function ExpandableRowsDemo() {
+  const [open, setOpen] = useState<string[]>([ORDERS[0]!.id]);
+  const toggle = (id: string) =>
+    setOpen((prev) => (prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id]));
+  return (
+    <SmartTable
+      columns={COLUMNS}
+      rows={ORDERS}
+      getRowKey={(o) => o.id}
+      minWidth="64rem"
+      onRowClick={(o) => toggle(o.id)}
+      expandedKeys={open}
+      renderExpanded={(o) => (
+        <div className="text-muted-foreground">
+          {o.address} · {o.detail} · {o.duration}
+        </div>
+      )}
+    />
+  );
+}
+
+/** Click a row to show its detail underneath; the open keys live in the page's state. */
+export const ExpandableRows: Story = {
+  render: () => <ExpandableRowsDemo />,
+};
+
+const LONG_HEADER_COLUMNS: SmartColumn<Order>[] = [
+  { key: "id", header: "Order identification number", width: "5rem", render: (o) => o.id },
+  { key: "name", header: "Customer business name", render: (o) => o.name },
+  { key: "phone", header: "Primary contact phone", width: "minmax(0, 1.5fr)", render: (o) => o.phone },
+  { key: "date", header: "Requested delivery date", render: (o) => o.date },
+];
+
+/** Columns never get narrower than their header; the table scrolls sideways instead. */
+export const LongHeaders: Story = {
+  render: () => (
+    <div style={{ width: "32rem" }}>
+      <SmartTable
+        columns={LONG_HEADER_COLUMNS}
+        rows={ORDERS.slice(0, 3)}
+        getRowKey={(o) => o.id}
+        minWidth="20rem"
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const headers = await canvas.findAllByRole("columnheader");
+    await waitFor(() => {
+      for (const header of headers) {
+        const label = header.querySelector("span")!;
+        const range = document.createRange();
+        range.selectNodeContents(label);
+        const textWidth = range.getBoundingClientRect().width;
+        expect(label.clientWidth + 1, header.textContent ?? "").toBeGreaterThanOrEqual(textWidth);
+      }
+    });
+    // Body cells stay lined up with their header.
+    const firstRow = canvas.getAllByRole("row")[1]!;
+    const cells = within(firstRow).getAllByRole("cell");
+    headers.forEach((header, i) =>
+      expect(cells[i]!.getBoundingClientRect().left).toBeCloseTo(
+        header.getBoundingClientRect().left,
+        0,
+      ),
+    );
+  },
+};
+
+/** SmartTable's header, rows and rules look the same as the plain Table's. */
+export const MatchesTable: Story = {
+  render: () => (
+    <div className="space-y-8">
+      <SmartTable columns={COLUMNS.slice(0, 3)} rows={ORDERS.slice(0, 2)} getRowKey={(o) => o.id} />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Order ID</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {ORDERS.slice(0, 2).map((o) => (
+            <TableRow key={o.id}>
+              <TableCell>{o.id}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const style = (selector: string) =>
+      getComputedStyle(canvasElement.querySelector<HTMLElement>(selector)!);
+    const smartHead = style('[data-slot="smart-table-header"]');
+    const head = style('[data-slot="table-head"]');
+    await expect(smartHead.backgroundColor).toBe(head.backgroundColor);
+    await expect(smartHead.borderTopLeftRadius).toBe(head.borderTopLeftRadius);
+    await expect(smartHead.height).toBe(head.height);
+
+    const smartCell = style('[data-slot="smart-table-row"] [role="cell"]');
+    const cell = style('[data-slot="table-cell"]');
+    await expect(smartCell.paddingTop).toBe(cell.paddingTop);
+    await expect(smartCell.paddingLeft).toBe(cell.paddingLeft);
+
+    const smartRow = style('[data-slot="smart-table-row"]');
+    await expect(smartRow.borderBottomWidth).toBe(cell.borderBottomWidth);
+    await expect(smartRow.borderBottomColor).toBe(cell.borderBottomColor);
+    await expect(smartRow.borderTopWidth).toBe("0px");
+    // Like TableBody, the last row has no rule under it.
+    const rows = canvasElement.querySelectorAll<HTMLElement>('[data-slot="smart-table-row"]');
+    await expect(getComputedStyle(rows[rows.length - 1]!).borderBottomWidth).toBe("0px");
+  },
 };

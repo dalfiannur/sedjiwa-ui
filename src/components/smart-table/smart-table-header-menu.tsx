@@ -1,5 +1,7 @@
 import {
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ArrowUp,
   Check,
   EllipsisVertical,
@@ -19,6 +21,8 @@ export type SmartTableMenuLabels = {
   sortDesc: string;
   hideColumn: string;
   showAllColumns: string;
+  moveLeft: string;
+  moveRight: string;
 };
 
 const triggerClass =
@@ -31,6 +35,10 @@ export function SmartTableHeaderMenu({
   hideable,
   canHide,
   onHide,
+  reorderable,
+  canMoveLeft,
+  canMoveRight,
+  onMove,
   anyHidden,
   onShowAll,
   labels,
@@ -43,6 +51,10 @@ export function SmartTableHeaderMenu({
   /** False when this is the last visible column (can't hide everything). */
   canHide: boolean;
   onHide: () => void;
+  reorderable: boolean;
+  canMoveLeft: boolean;
+  canMoveRight: boolean;
+  onMove: (delta: -1 | 1) => void;
   anyHidden: boolean;
   onShowAll: () => void;
   labels: SmartTableMenuLabels;
@@ -67,7 +79,22 @@ export function SmartTableHeaderMenu({
             </DropdownMenuItem>
           </>
         )}
-        {sortable && (hideable || anyHidden) && <DropdownMenuSeparator />}
+        {sortable && (reorderable || hideable || anyHidden) && (
+          <DropdownMenuSeparator />
+        )}
+        {reorderable && (
+          <>
+            <DropdownMenuItem disabled={!canMoveLeft} onClick={() => onMove(-1)}>
+              <ArrowLeft />
+              {labels.moveLeft}
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={!canMoveRight} onClick={() => onMove(1)}>
+              <ArrowRight />
+              {labels.moveRight}
+            </DropdownMenuItem>
+          </>
+        )}
+        {reorderable && (hideable || anyHidden) && <DropdownMenuSeparator />}
         {hideable && (
           <DropdownMenuItem disabled={!canHide} onClick={onHide}>
             <EyeOff />

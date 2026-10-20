@@ -1,4 +1,12 @@
-import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  Fragment,
+  type ReactNode,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ArrowDown, ArrowUp, EllipsisVertical } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { CardListTable } from "../card-list-table";
@@ -15,13 +23,24 @@ import {
   SmartTableHeaderMenu,
   type SmartTableMenuLabels,
 } from "./smart-table-header-menu";
+import {
+  moveColumn,
+  normalizeColumnState,
+  setColumnVisible,
+  type SmartTableColumnState,
+} from "./column-state";
+import { floorTrack, gridMinWidth, trackMinimum } from "./column-width";
 
 export type SmartColumn<T> = {
   key: string;
   header: ReactNode;
   render: (item: T) => ReactNode;
   align?: "left" | "right";
-  /** Grid track for this column (e.g. `"1fr"`, `"minmax(0,1.5fr)"`, `"9rem"`). Defaults to `minmax(0,1fr)`. */
+  /**
+   * Grid track for this column (e.g. `"1fr"`, `"minmax(0,1.5fr)"`, `"9rem"`).
+   * Defaults to `minmax(0,1fr)`. Either way the column never gets narrower
+   * than its header, so a fixed width grows when the header needs more room.
+   */
   width?: string;
   className?: string;
   /**
@@ -39,6 +58,8 @@ export type SmartColumn<T> = {
   sortField?: string;
   /** Whether the column offers "Hide column" in its ⋮ menu. Defaults to true. */
   hideable?: boolean;
+  /** Whether the column offers "Move left/right" in its ⋮ menu. Defaults to true. */
+  reorderable?: boolean;
   /** Custom ⋮ menu content. Overrides the built-in sort/hide menu for this column. */
   headerMenu?: ReactNode;
   /**
@@ -63,8 +84,20 @@ export type SmartTableProps<T> = {
   /** Trailing per-row action (e.g. a ⋮ row menu). Clicks here don't trigger `onRowClick`. */
   renderAction?: (item: T) => ReactNode;
   onRowClick?: (item: T) => void;
+  /**
+   * Detail content rendered full-width under a row whose `getRowKey` is in
+   * `expandedKeys`. The table does not toggle rows itself: keep the open keys
+   * in your state and flip them from a cell button or `onRowClick`. If that
+   * button lives in a column, mark the column `hideable: false` so it can't be
+   * hidden away.
+   */
+  renderExpanded?: (item: T) => ReactNode;
+  expandedKeys?: readonly string[];
   emptyMessage?: ReactNode;
-  /** Minimum grid width before horizontal scroll kicks in. Defaults to `48rem`. */
+  /**
+   * Minimum grid width before horizontal scroll kicks in. Defaults to `48rem`;
+   * raised automatically when the columns' headers need more than that.
+   */
   minWidth?: string;
   /**
    * Below `md`, stack into `CardListTable` cards instead of a horizontally
@@ -91,7 +124,15 @@ export type SmartTableProps<T> = {
    */
   sortState?: SmartTableSort | null;
   onSortChange?: (sort: SmartTableSort | null) => void;
-  /** Labels for the built-in column ⋮ menu (sort / hide). Defaults to English. */
+  /**
+   * Controlled column visibility + order. Pass `onColumnStateChange` to take
+   * control (usually with `useSmartTableColumns`, which can persist it); the
+   * table then renders `columnState` and only reports hide/move/show-all.
+   * Without it the table keeps its own state, reset on unmount.
+   */
+  columnState?: SmartTableColumnState;
+  onColumnStateChange?: (state: SmartTableColumnState) => void;
+  /** Labels for the built-in column ⋮ menu (sort / hide / move). Defaults to English. */
   menuLabels?: Partial<SmartTableMenuLabels>;
   className?: string;
 };
@@ -115,6 +156,8 @@ export function SmartTable<T>({
   leadingHeader,
   renderAction,
   onRowClick,
+  renderExpanded,
+  expandedKeys,
   emptyMessage = "No data",
   minWidth = "48rem",
   responsive,
@@ -124,23 +167,41 @@ export function SmartTable<T>({
   pagination,
   sortState,
   onSortChange,
+  columnState,
+  onColumnStateChange,
   menuLabels,
   className,
 }: SmartTableProps<T>) {
   const controlled = !!onSortChange;
   const [internalSort, setInternalSort] = useState<SortState | null>(null);
   const sort = controlled ? (sortState ?? null) : internalSort;
-  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const columnsControlled = !!onColumnStateChange;
+  const [internalColumns, setInternalColumns] =
+    useState<SmartTableColumnState | null>(null);
+  const layout = normalizeColumnState(
+    columns.map((col) => col.key),
+    columnsControlled ? columnState : internalColumns,
+  );
+  const updateLayout = (next: SmartTableColumnState) => {
+    if (next === layout) return;
+    if (columnsControlled) onColumnStateChange!(next);
+    else setInternalColumns(next);
+  };
 
   const labels: SmartTableMenuLabels = {
     sortAsc: menuLabels?.sortAsc ?? "Sort ascending",
     sortDesc: menuLabels?.sortDesc ?? "Sort descending",
     hideColumn: menuLabels?.hideColumn ?? "Hide column",
     showAllColumns: menuLabels?.showAllColumns ?? "Show all columns",
+    moveLeft: menuLabels?.moveLeft ?? "Move left",
+    moveRight: menuLabels?.moveRight ?? "Move right",
   };
 
-  const visibleColumns = columns.filter((col) => !hidden.has(col.key));
-  const anyHidden = columns.some((col) => hidden.has(col.key));
+  const byKey = new Map(columns.map((col) => [col.key, col]));
+  const visibleColumns = layout.order
+    .filter((key) => !layout.hidden.includes(key))
+    .map((key) => byKey.get(key)!);
+  const anyHidden = layout.hidden.length > 0;
 
   const sortedRows = useMemo(() => {
     // In controlled mode the server returns already-sorted rows.
@@ -173,18 +234,75 @@ export function SmartTable<T>({
     else setInternalSort(next);
   };
   const hideColumn = (key: string) =>
-    setHidden((prev) => new Set(prev).add(key));
-  const showAllColumns = () => setHidden(new Set());
+    updateLayout(setColumnVisible(layout, key, false));
+  const showAllColumns = () => updateLayout({ ...layout, hidden: [] });
 
-  const template = [
-    renderLeading ? "2.75rem" : null,
-    ...visibleColumns.map((col) => col.width ?? "minmax(0, 1fr)"),
-    renderAction ? "3rem" : null,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  // Header widths in px by column key: label text + padding, sort arrow and ⋮.
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerWidths, setHeaderWidths] = useState<Record<string, number>>({});
+  const visibleKeys = visibleColumns.map((col) => col.key).join(" ");
+  useLayoutEffect(() => {
+    const row = headerRef.current;
+    if (!row) return;
+    const measure = () => {
+      const next: Record<string, number> = {};
+      row
+        .querySelectorAll<HTMLElement>("[data-column-key]")
+        .forEach((cell) => {
+          const label = cell.querySelector<HTMLElement>(
+            '[data-slot="smart-table-header-label"]',
+          );
+          // Hidden (e.g. the responsive card view is showing): keep the last value.
+          if (!label || !cell.offsetWidth) return;
+          const range = document.createRange();
+          range.selectNodeContents(label);
+          const text = range.getBoundingClientRect().width;
+          const chrome = cell.offsetWidth - label.clientWidth;
+          next[cell.dataset.columnKey!] = Math.ceil(chrome + text);
+        });
+      setHeaderWidths((prev) => {
+        const merged = { ...prev, ...next };
+        const changed = Object.keys(merged).some(
+          (key) => merged[key] !== prev[key],
+        );
+        return changed ? merged : prev;
+      });
+    };
+    measure();
+    // Re-measure once web fonts land, and when a hidden table is shown.
+    let cancelled = false;
+    document.fonts?.ready.then(() => !cancelled && measure());
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(row);
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+    };
+  }, [visibleKeys, sort?.key, sort?.dir]);
 
-  const gridStyle: CSSProperties = { gridTemplateColumns: template, minWidth };
+  const tracks = [
+    renderLeading ? { track: "2.75rem", min: "2.75rem" } : null,
+    ...visibleColumns.map((col) => {
+      const floor = headerWidths[col.key] ?? 0;
+      return {
+        track: floorTrack(col.width, floor),
+        min: trackMinimum(col.width, floor),
+      };
+    }),
+    renderAction ? { track: "3rem", min: "3rem" } : null,
+  ].filter((t) => t !== null);
+  const template = tracks.map((t) => t.track).join(" ");
+  const tableMinWidth = gridMinWidth(
+    minWidth,
+    tracks.map((t) => t.min),
+    visibleColumns.some((col) => headerWidths[col.key]),
+  );
+
+  const gridStyle: CSSProperties = {
+    gridTemplateColumns: template,
+    minWidth: tableMinWidth,
+  };
 
   const table = (
     <div
@@ -202,24 +320,32 @@ export function SmartTable<T>({
         <div
           role="row"
           data-slot="smart-table-header"
-          className="bg-muted grid items-stretch"
+          // Same bar as TableHead: filled, rounded at the outer corners.
+          className="bg-table-header grid h-12 items-stretch rounded-xl"
           style={gridStyle}
+          ref={headerRef}
         >
           {renderLeading && (
-            <div className="text-muted-foreground flex items-center justify-center py-3.5">
+            <div className="text-muted-foreground flex items-center justify-center">
               {leadingHeader}
             </div>
           )}
-          {visibleColumns.map((col) => {
+          {visibleColumns.map((col, index) => {
             const sortable = columnSortable(col);
             const hideable = col.hideable !== false;
+            const reorderable = col.reorderable !== false;
             const activeDir = columnActiveDir(col);
             const hasMenu =
-              col.headerMenu != null || sortable || hideable || anyHidden;
+              col.headerMenu != null ||
+              sortable ||
+              hideable ||
+              reorderable ||
+              anyHidden;
             return (
               <div
                 key={col.key}
                 role="columnheader"
+                data-column-key={col.key}
                 aria-sort={
                   activeDir
                     ? activeDir === "asc"
@@ -228,11 +354,12 @@ export function SmartTable<T>({
                     : undefined
                 }
                 className={cn(
-                  "text-foreground flex items-center gap-2 px-4 py-3.5 text-sm font-semibold",
+                  "text-foreground flex items-center gap-2 px-4 text-sm font-semibold",
                   col.align === "right" && "flex-row-reverse"
                 )}
               >
                 <span
+                  data-slot="smart-table-header-label"
                   className={cn(
                     "min-w-0 flex-1 truncate",
                     // flex-row-reverse only mirrors the *order* of the header
@@ -271,6 +398,12 @@ export function SmartTable<T>({
                     hideable={hideable}
                     canHide={visibleColumns.length > 1}
                     onHide={() => hideColumn(col.key)}
+                    reorderable={reorderable}
+                    canMoveLeft={index > 0}
+                    canMoveRight={index < visibleColumns.length - 1}
+                    onMove={(delta) =>
+                      updateLayout(moveColumn(layout, col.key, delta))
+                    }
                     anyHidden={anyHidden}
                     onShowAll={showAllColumns}
                     labels={labels}
@@ -279,67 +412,92 @@ export function SmartTable<T>({
               </div>
             );
           })}
-          {renderAction && <div className="py-3.5" />}
+          {renderAction && <div />}
         </div>
 
         {/* Body */}
-        <div role="rowgroup">
+        <div role="rowgroup" className="[&>[role=row]:last-child]:border-b-0">
           {sortedRows.length === 0 ? (
-            <div className="text-muted-foreground border-border/70 border-t px-4 py-10 text-center text-sm">
+            <div className="text-muted-foreground px-4 py-10 text-center text-sm">
               {emptyMessage}
             </div>
           ) : (
-            sortedRows.map((row) => (
-              <div
-                key={getRowKey(row)}
-                role="row"
-                data-slot="smart-table-row"
-                className={cn(
-                  "border-border/70 hover:bg-muted/40 grid items-center border-t transition-colors",
-                  onRowClick && "cursor-pointer"
-                )}
-                style={gridStyle}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-              >
-                {renderLeading && (
+            sortedRows.map((row) => {
+              const rowKey = getRowKey(row);
+              const expanded =
+                !!renderExpanded && !!expandedKeys?.includes(rowKey);
+              return (
+                <Fragment key={rowKey}>
                   <div
-                    role="cell"
-                    className="flex items-center justify-center py-4"
-                  >
-                    {renderLeading(row)}
-                  </div>
-                )}
-                {visibleColumns.map((col) => (
-                  <div
-                    key={col.key}
-                    role="cell"
+                    role="row"
+                    data-state={
+                      renderExpanded
+                        ? expanded
+                          ? "open"
+                          : "closed"
+                        : undefined
+                    }
+                    data-slot="smart-table-row"
                     className={cn(
-                      "min-w-0 px-4 py-4 text-sm",
-                      col.align === "right" && "text-right",
-                      col.className
+                      "hover:bg-muted/50 grid items-center border-b transition-colors",
+                      onRowClick && "cursor-pointer",
                     )}
+                    style={gridStyle}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
-                    {col.render(row)}
+                    {renderLeading && (
+                      <div
+                        role="cell"
+                        className="flex items-center justify-center py-3"
+                      >
+                        {renderLeading(row)}
+                      </div>
+                    )}
+                    {visibleColumns.map((col) => (
+                      <div
+                        key={col.key}
+                        role="cell"
+                        className={cn(
+                          "min-w-0 px-4 py-3 text-sm",
+                          col.align === "right" && "text-right",
+                          col.className,
+                        )}
+                      >
+                        {col.render(row)}
+                      </div>
+                    ))}
+                    {renderAction && (
+                      <div
+                        role="cell"
+                        className="flex items-center justify-center py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {renderAction(row)}
+                      </div>
+                    )}
                   </div>
-                ))}
-                {renderAction && (
-                  <div
-                    role="cell"
-                    className="flex items-center justify-center py-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {renderAction(row)}
-                  </div>
-                )}
-              </div>
-            ))
+                  {expanded && (
+                    <div
+                      role="row"
+                      data-slot="smart-table-expanded"
+                      className="bg-muted/30 border-b"
+                      style={{ minWidth: tableMinWidth }}
+                    >
+                      <div role="cell" className="min-w-0 px-4 py-3 text-sm">
+                        {renderExpanded!(row)}
+                      </div>
+                    </div>
+                  )}
+                </Fragment>
+              );
+            })
           )}
         </div>
       </div>
       {pagination && (
         <SmartTablePagination
           {...pagination}
-          className="border-border/70 border-t px-4 py-3"
+          className="border-t px-4 py-3"
         />
       )}
     </div>
@@ -365,6 +523,8 @@ export function SmartTable<T>({
         hideLabels={cardHideLabels}
         renderAction={renderAction}
         onRowClick={onRowClick}
+        renderExpanded={renderExpanded}
+        expandedKeys={expandedKeys}
         emptyMessage={emptyMessage}
         dense={dense}
       />

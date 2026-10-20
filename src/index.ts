@@ -264,12 +264,20 @@ export type { CardListTableProps } from "./components/card-list-table";
 export { ResponsiveTable } from "./components/responsive-table";
 export type { ResponsiveTableProps } from "./components/responsive-table";
 
-export { SmartTable } from "./components/smart-table";
+export {
+  SmartTable,
+  SmartTableColumnsMenu,
+  useSmartTableColumns,
+} from "./components/smart-table";
 export type {
   SmartTableProps,
   SmartColumn,
   SmartTableSort,
   SmartTableMenuLabels,
+  SmartTableColumnsMenuProps,
+  SmartTableColumnsMenuLabels,
+  SmartTableColumnState,
+  UseSmartTableColumnsOptions,
   SmartTablePaginationProps,
   PaginationProps,
   SmartTablePaginationInfo,

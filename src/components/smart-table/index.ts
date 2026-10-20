@@ -5,6 +5,14 @@ export type {
   SmartTableSort,
 } from "./smart-table";
 export type { SmartTableMenuLabels } from "./smart-table-header-menu";
+export { SmartTableColumnsMenu } from "./smart-table-columns-menu";
+export type {
+  SmartTableColumnsMenuProps,
+  SmartTableColumnsMenuLabels,
+} from "./smart-table-columns-menu";
+export { useSmartTableColumns } from "./use-smart-table-columns";
+export type { UseSmartTableColumnsOptions } from "./use-smart-table-columns";
+export type { SmartTableColumnState } from "./column-state";
 
 // Also exported standalone. The accessibility here — nav aria-label,
 // aria-current, labelled prev/next, aria-hidden ellipsis, a polite live region
