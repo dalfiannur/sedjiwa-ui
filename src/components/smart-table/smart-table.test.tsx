@@ -308,4 +308,64 @@ describe("<SmartTable />", () => {
     );
     expect(screen.getByText("Show 1-2/6")).toBeInTheDocument();
   });
+
+  const headerTexts = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('[role="columnheader"]')).map(
+      (h) => h.textContent,
+    );
+
+  it("moves a column left/right via its menu", async () => {
+    const { container } = render(
+      <SmartTable columns={COLUMNS} rows={ORDERS} getRowKey={(o) => o.id} />,
+    );
+    await userEvent.click(screen.getAllByLabelText("Column options")[1]!);
+    await userEvent.click(screen.getByText("Move left"));
+    expect(headerTexts(container)).toEqual(["Name", "Order ID", "Phone"]);
+    // cells follow the header
+    const firstRow = screen.getAllByRole("row")[1]!;
+    expect(firstRow.querySelector('[role="cell"]')!.textContent).toBe(
+      "Linda's Asian Kitchen",
+    );
+
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    expect(screen.getByText("Move left").closest("[role=menuitem]")).toHaveAttribute(
+      "data-disabled",
+    );
+    await userEvent.click(screen.getByText("Move right"));
+    expect(headerTexts(container)).toEqual(["Order ID", "Name", "Phone"]);
+  });
+
+  it("controlled column state: renders columnState and emits changes instead of applying them", async () => {
+    const onColumnStateChange = vi.fn();
+    const { container } = render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        columnState={{ order: ["phone", "id", "name"], hidden: ["id"] }}
+        onColumnStateChange={onColumnStateChange}
+      />,
+    );
+    expect(headerTexts(container)).toEqual(["Phone", "Name"]);
+
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    await userEvent.click(screen.getByText("Hide column"));
+    expect(onColumnStateChange).toHaveBeenLastCalledWith({
+      order: ["phone", "id", "name"],
+      hidden: ["id", "phone"],
+    });
+    expect(headerTexts(container)).toEqual(["Phone", "Name"]);
+  });
+
+  it("omits Move items for a column with reorderable: false", async () => {
+    render(
+      <SmartTable
+        columns={[{ ...COLUMNS[0]!, reorderable: false }, COLUMNS[1]!]}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+      />,
+    );
+    await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
+    expect(screen.queryByText("Move right")).not.toBeInTheDocument();
+  });
 });

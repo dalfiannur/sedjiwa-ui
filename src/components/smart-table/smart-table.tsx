@@ -15,6 +15,12 @@ import {
   SmartTableHeaderMenu,
   type SmartTableMenuLabels,
 } from "./smart-table-header-menu";
+import {
+  moveColumn,
+  normalizeColumnState,
+  setColumnVisible,
+  type SmartTableColumnState,
+} from "./column-state";
 
 export type SmartColumn<T> = {
   key: string;
@@ -39,6 +45,8 @@ export type SmartColumn<T> = {
   sortField?: string;
   /** Whether the column offers "Hide column" in its ⋮ menu. Defaults to true. */
   hideable?: boolean;
+  /** Whether the column offers "Move left/right" in its ⋮ menu. Defaults to true. */
+  reorderable?: boolean;
   /** Custom ⋮ menu content. Overrides the built-in sort/hide menu for this column. */
   headerMenu?: ReactNode;
   /**
@@ -91,7 +99,15 @@ export type SmartTableProps<T> = {
    */
   sortState?: SmartTableSort | null;
   onSortChange?: (sort: SmartTableSort | null) => void;
-  /** Labels for the built-in column ⋮ menu (sort / hide). Defaults to English. */
+  /**
+   * Controlled column visibility + order. Pass `onColumnStateChange` to take
+   * control (usually with `useSmartTableColumns`, which can persist it); the
+   * table then renders `columnState` and only reports hide/move/show-all.
+   * Without it the table keeps its own state, reset on unmount.
+   */
+  columnState?: SmartTableColumnState;
+  onColumnStateChange?: (state: SmartTableColumnState) => void;
+  /** Labels for the built-in column ⋮ menu (sort / hide / move). Defaults to English. */
   menuLabels?: Partial<SmartTableMenuLabels>;
   className?: string;
 };
@@ -124,23 +140,41 @@ export function SmartTable<T>({
   pagination,
   sortState,
   onSortChange,
+  columnState,
+  onColumnStateChange,
   menuLabels,
   className,
 }: SmartTableProps<T>) {
   const controlled = !!onSortChange;
   const [internalSort, setInternalSort] = useState<SortState | null>(null);
   const sort = controlled ? (sortState ?? null) : internalSort;
-  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const columnsControlled = !!onColumnStateChange;
+  const [internalColumns, setInternalColumns] =
+    useState<SmartTableColumnState | null>(null);
+  const layout = normalizeColumnState(
+    columns.map((col) => col.key),
+    columnsControlled ? columnState : internalColumns,
+  );
+  const updateLayout = (next: SmartTableColumnState) => {
+    if (next === layout) return;
+    if (columnsControlled) onColumnStateChange!(next);
+    else setInternalColumns(next);
+  };
 
   const labels: SmartTableMenuLabels = {
     sortAsc: menuLabels?.sortAsc ?? "Sort ascending",
     sortDesc: menuLabels?.sortDesc ?? "Sort descending",
     hideColumn: menuLabels?.hideColumn ?? "Hide column",
     showAllColumns: menuLabels?.showAllColumns ?? "Show all columns",
+    moveLeft: menuLabels?.moveLeft ?? "Move left",
+    moveRight: menuLabels?.moveRight ?? "Move right",
   };
 
-  const visibleColumns = columns.filter((col) => !hidden.has(col.key));
-  const anyHidden = columns.some((col) => hidden.has(col.key));
+  const byKey = new Map(columns.map((col) => [col.key, col]));
+  const visibleColumns = layout.order
+    .filter((key) => !layout.hidden.includes(key))
+    .map((key) => byKey.get(key)!);
+  const anyHidden = layout.hidden.length > 0;
 
   const sortedRows = useMemo(() => {
     // In controlled mode the server returns already-sorted rows.
@@ -173,8 +207,8 @@ export function SmartTable<T>({
     else setInternalSort(next);
   };
   const hideColumn = (key: string) =>
-    setHidden((prev) => new Set(prev).add(key));
-  const showAllColumns = () => setHidden(new Set());
+    updateLayout(setColumnVisible(layout, key, false));
+  const showAllColumns = () => updateLayout({ ...layout, hidden: [] });
 
   const template = [
     renderLeading ? "2.75rem" : null,
@@ -210,12 +244,17 @@ export function SmartTable<T>({
               {leadingHeader}
             </div>
           )}
-          {visibleColumns.map((col) => {
+          {visibleColumns.map((col, index) => {
             const sortable = columnSortable(col);
             const hideable = col.hideable !== false;
+            const reorderable = col.reorderable !== false;
             const activeDir = columnActiveDir(col);
             const hasMenu =
-              col.headerMenu != null || sortable || hideable || anyHidden;
+              col.headerMenu != null ||
+              sortable ||
+              hideable ||
+              reorderable ||
+              anyHidden;
             return (
               <div
                 key={col.key}
@@ -271,6 +310,12 @@ export function SmartTable<T>({
                     hideable={hideable}
                     canHide={visibleColumns.length > 1}
                     onHide={() => hideColumn(col.key)}
+                    reorderable={reorderable}
+                    canMoveLeft={index > 0}
+                    canMoveRight={index < visibleColumns.length - 1}
+                    onMove={(delta) =>
+                      updateLayout(moveColumn(layout, col.key, delta))
+                    }
                     anyHidden={anyHidden}
                     onShowAll={showAllColumns}
                     labels={labels}

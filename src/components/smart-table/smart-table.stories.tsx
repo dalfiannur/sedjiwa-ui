@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CircleCheck, EllipsisVertical } from "lucide-react";
 import { SmartTable, type SmartColumn } from "./smart-table";
+import { SmartTableColumnsMenu } from "./smart-table-columns-menu";
+import { useSmartTableColumns } from "./use-smart-table-columns";
 import { Avatar, AvatarFallback, AvatarImage } from "../avatar";
 import { Badge } from "../badge";
 
@@ -143,4 +145,35 @@ export const Empty: Story = {
       <SmartTable columns={COLUMNS} rows={[]} getRowKey={(o) => o.id} emptyMessage="Belum ada order." />
     </div>
   ),
+};
+
+function CustomizableColumnsDemo() {
+  const { columnState, setColumnState, reset } = useSmartTableColumns(COLUMNS, {
+    storageKey: "storybook-orders",
+  });
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex justify-end">
+        <SmartTableColumnsMenu
+          columns={COLUMNS}
+          columnState={columnState}
+          onColumnStateChange={setColumnState}
+          onReset={reset}
+        />
+      </div>
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        minWidth="64rem"
+        columnState={columnState}
+        onColumnStateChange={setColumnState}
+      />
+    </div>
+  );
+}
+
+/** Hide and reorder columns from the Columns menu or each header's ⋮; the layout survives a reload. */
+export const CustomizableColumns: Story = {
+  render: () => <CustomizableColumnsDemo />,
 };
