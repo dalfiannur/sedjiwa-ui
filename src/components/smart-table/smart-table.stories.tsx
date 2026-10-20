@@ -6,6 +6,7 @@ import { SmartTableColumnsMenu } from "./smart-table-columns-menu";
 import { useSmartTableColumns } from "./use-smart-table-columns";
 import { Avatar, AvatarFallback, AvatarImage } from "../avatar";
 import { Badge } from "../badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../table";
 import { expect, waitFor, within } from "storybook/test";
 
 type Order = {
@@ -246,5 +247,50 @@ export const LongHeaders: Story = {
         0,
       ),
     );
+  },
+};
+
+/** SmartTable's header, rows and rules look the same as the plain Table's. */
+export const MatchesTable: Story = {
+  render: () => (
+    <div className="space-y-8">
+      <SmartTable columns={COLUMNS.slice(0, 3)} rows={ORDERS.slice(0, 2)} getRowKey={(o) => o.id} />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Order ID</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {ORDERS.slice(0, 2).map((o) => (
+            <TableRow key={o.id}>
+              <TableCell>{o.id}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const style = (selector: string) =>
+      getComputedStyle(canvasElement.querySelector<HTMLElement>(selector)!);
+    const smartHead = style('[data-slot="smart-table-header"]');
+    const head = style('[data-slot="table-head"]');
+    await expect(smartHead.backgroundColor).toBe(head.backgroundColor);
+    await expect(smartHead.borderTopLeftRadius).toBe(head.borderTopLeftRadius);
+    await expect(smartHead.height).toBe(head.height);
+
+    const smartCell = style('[data-slot="smart-table-row"] [role="cell"]');
+    const cell = style('[data-slot="table-cell"]');
+    await expect(smartCell.paddingTop).toBe(cell.paddingTop);
+    await expect(smartCell.paddingLeft).toBe(cell.paddingLeft);
+
+    const smartRow = style('[data-slot="smart-table-row"]');
+    await expect(smartRow.borderBottomWidth).toBe(cell.borderBottomWidth);
+    await expect(smartRow.borderBottomColor).toBe(cell.borderBottomColor);
+    await expect(smartRow.borderTopWidth).toBe("0px");
+    // Like TableBody, the last row has no rule under it.
+    const rows = canvasElement.querySelectorAll<HTMLElement>('[data-slot="smart-table-row"]');
+    await expect(getComputedStyle(rows[rows.length - 1]!).borderBottomWidth).toBe("0px");
   },
 };

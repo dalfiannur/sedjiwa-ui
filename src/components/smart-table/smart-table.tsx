@@ -320,12 +320,13 @@ export function SmartTable<T>({
         <div
           role="row"
           data-slot="smart-table-header"
-          className="bg-muted grid items-stretch"
+          // Same bar as TableHead: filled, rounded at the outer corners.
+          className="bg-table-header grid h-12 items-stretch rounded-xl"
           style={gridStyle}
           ref={headerRef}
         >
           {renderLeading && (
-            <div className="text-muted-foreground flex items-center justify-center py-3.5">
+            <div className="text-muted-foreground flex items-center justify-center">
               {leadingHeader}
             </div>
           )}
@@ -353,7 +354,7 @@ export function SmartTable<T>({
                     : undefined
                 }
                 className={cn(
-                  "text-foreground flex items-center gap-2 px-4 py-3.5 text-sm font-semibold",
+                  "text-foreground flex items-center gap-2 px-4 text-sm font-semibold",
                   col.align === "right" && "flex-row-reverse"
                 )}
               >
@@ -411,13 +412,13 @@ export function SmartTable<T>({
               </div>
             );
           })}
-          {renderAction && <div className="py-3.5" />}
+          {renderAction && <div />}
         </div>
 
         {/* Body */}
-        <div role="rowgroup">
+        <div role="rowgroup" className="[&>[role=row]:last-child]:border-b-0">
           {sortedRows.length === 0 ? (
-            <div className="text-muted-foreground border-border/70 border-t px-4 py-10 text-center text-sm">
+            <div className="text-muted-foreground px-4 py-10 text-center text-sm">
               {emptyMessage}
             </div>
           ) : (
@@ -438,7 +439,7 @@ export function SmartTable<T>({
                     }
                     data-slot="smart-table-row"
                     className={cn(
-                      "border-border/70 hover:bg-muted/40 grid items-center border-t transition-colors",
+                      "hover:bg-muted/50 grid items-center border-b transition-colors",
                       onRowClick && "cursor-pointer",
                     )}
                     style={gridStyle}
@@ -447,7 +448,7 @@ export function SmartTable<T>({
                     {renderLeading && (
                       <div
                         role="cell"
-                        className="flex items-center justify-center py-4"
+                        className="flex items-center justify-center py-3"
                       >
                         {renderLeading(row)}
                       </div>
@@ -457,7 +458,7 @@ export function SmartTable<T>({
                         key={col.key}
                         role="cell"
                         className={cn(
-                          "min-w-0 px-4 py-4 text-sm",
+                          "min-w-0 px-4 py-3 text-sm",
                           col.align === "right" && "text-right",
                           col.className,
                         )}
@@ -468,7 +469,7 @@ export function SmartTable<T>({
                     {renderAction && (
                       <div
                         role="cell"
-                        className="flex items-center justify-center py-4"
+                        className="flex items-center justify-center py-3"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {renderAction(row)}
@@ -479,7 +480,7 @@ export function SmartTable<T>({
                     <div
                       role="row"
                       data-slot="smart-table-expanded"
-                      className="border-border/70 bg-muted/30 border-t"
+                      className="bg-muted/30 border-b"
                       style={{ minWidth: tableMinWidth }}
                     >
                       <div role="cell" className="min-w-0 px-4 py-3 text-sm">
@@ -496,7 +497,7 @@ export function SmartTable<T>({
       {pagination && (
         <SmartTablePagination
           {...pagination}
-          className="border-border/70 border-t px-4 py-3"
+          className="border-t px-4 py-3"
         />
       )}
     </div>
