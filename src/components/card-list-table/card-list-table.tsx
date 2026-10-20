@@ -10,6 +10,9 @@ export type CardListTableProps<T> = {
   titleKey?: string;
   renderAction?: (item: T) => ReactNode;
   onRowClick?: (item: T) => void;
+  /** Detail content shown at the bottom of a card whose key is in `expandedKeys`. */
+  renderExpanded?: (item: T) => ReactNode;
+  expandedKeys?: readonly string[];
   emptyMessage?: ReactNode;
   dense?: boolean;
   /**
@@ -45,6 +48,8 @@ export function CardListTable<T>({
   titleKey,
   renderAction,
   onRowClick,
+  renderExpanded,
+  expandedKeys,
   emptyMessage = "No data",
   dense,
   orientation = "row",
@@ -224,6 +229,16 @@ export function CardListTable<T>({
                 </Fragment>
               ))}
             </dl>
+          )}
+
+          {renderExpanded && expandedKeys?.includes(getRowKey(row)) && (
+            <div
+              data-slot="card-list-table-expanded"
+              className={cn("border-border/70 border-t pt-3 text-sm", pad)}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {renderExpanded(row)}
+            </div>
           )}
         </Card>
       ))}

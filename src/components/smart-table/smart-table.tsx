@@ -1,4 +1,10 @@
-import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  Fragment,
+  type ReactNode,
+  useMemo,
+  useState,
+} from "react";
 import { ArrowDown, ArrowUp, EllipsisVertical } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { CardListTable } from "../card-list-table";
@@ -71,6 +77,15 @@ export type SmartTableProps<T> = {
   /** Trailing per-row action (e.g. a ⋮ row menu). Clicks here don't trigger `onRowClick`. */
   renderAction?: (item: T) => ReactNode;
   onRowClick?: (item: T) => void;
+  /**
+   * Detail content rendered full-width under a row whose `getRowKey` is in
+   * `expandedKeys`. The table does not toggle rows itself: keep the open keys
+   * in your state and flip them from a cell button or `onRowClick`. If that
+   * button lives in a column, mark the column `hideable: false` so it can't be
+   * hidden away.
+   */
+  renderExpanded?: (item: T) => ReactNode;
+  expandedKeys?: readonly string[];
   emptyMessage?: ReactNode;
   /** Minimum grid width before horizontal scroll kicks in. Defaults to `48rem`. */
   minWidth?: string;
@@ -131,6 +146,8 @@ export function SmartTable<T>({
   leadingHeader,
   renderAction,
   onRowClick,
+  renderExpanded,
+  expandedKeys,
   emptyMessage = "No data",
   minWidth = "48rem",
   responsive,
@@ -334,50 +351,75 @@ export function SmartTable<T>({
               {emptyMessage}
             </div>
           ) : (
-            sortedRows.map((row) => (
-              <div
-                key={getRowKey(row)}
-                role="row"
-                data-slot="smart-table-row"
-                className={cn(
-                  "border-border/70 hover:bg-muted/40 grid items-center border-t transition-colors",
-                  onRowClick && "cursor-pointer"
-                )}
-                style={gridStyle}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-              >
-                {renderLeading && (
+            sortedRows.map((row) => {
+              const rowKey = getRowKey(row);
+              const expanded =
+                !!renderExpanded && !!expandedKeys?.includes(rowKey);
+              return (
+                <Fragment key={rowKey}>
                   <div
-                    role="cell"
-                    className="flex items-center justify-center py-4"
-                  >
-                    {renderLeading(row)}
-                  </div>
-                )}
-                {visibleColumns.map((col) => (
-                  <div
-                    key={col.key}
-                    role="cell"
+                    role="row"
+                    data-state={
+                      renderExpanded
+                        ? expanded
+                          ? "open"
+                          : "closed"
+                        : undefined
+                    }
+                    data-slot="smart-table-row"
                     className={cn(
-                      "min-w-0 px-4 py-4 text-sm",
-                      col.align === "right" && "text-right",
-                      col.className
+                      "border-border/70 hover:bg-muted/40 grid items-center border-t transition-colors",
+                      onRowClick && "cursor-pointer",
                     )}
+                    style={gridStyle}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
-                    {col.render(row)}
+                    {renderLeading && (
+                      <div
+                        role="cell"
+                        className="flex items-center justify-center py-4"
+                      >
+                        {renderLeading(row)}
+                      </div>
+                    )}
+                    {visibleColumns.map((col) => (
+                      <div
+                        key={col.key}
+                        role="cell"
+                        className={cn(
+                          "min-w-0 px-4 py-4 text-sm",
+                          col.align === "right" && "text-right",
+                          col.className,
+                        )}
+                      >
+                        {col.render(row)}
+                      </div>
+                    ))}
+                    {renderAction && (
+                      <div
+                        role="cell"
+                        className="flex items-center justify-center py-4"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {renderAction(row)}
+                      </div>
+                    )}
                   </div>
-                ))}
-                {renderAction && (
-                  <div
-                    role="cell"
-                    className="flex items-center justify-center py-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {renderAction(row)}
-                  </div>
-                )}
-              </div>
-            ))
+                  {expanded && (
+                    <div
+                      role="row"
+                      data-slot="smart-table-expanded"
+                      className="border-border/70 bg-muted/30 border-t"
+                      style={{ minWidth }}
+                    >
+                      <div role="cell" className="min-w-0 px-4 py-3 text-sm">
+                        {renderExpanded!(row)}
+                      </div>
+                    </div>
+                  )}
+                </Fragment>
+              );
+            })
           )}
         </div>
       </div>
@@ -410,6 +452,8 @@ export function SmartTable<T>({
         hideLabels={cardHideLabels}
         renderAction={renderAction}
         onRowClick={onRowClick}
+        renderExpanded={renderExpanded}
+        expandedKeys={expandedKeys}
         emptyMessage={emptyMessage}
         dense={dense}
       />

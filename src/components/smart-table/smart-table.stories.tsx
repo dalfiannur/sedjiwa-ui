@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CircleCheck, EllipsisVertical } from "lucide-react";
 import { SmartTable, type SmartColumn } from "./smart-table";
@@ -176,4 +177,30 @@ function CustomizableColumnsDemo() {
 /** Hide and reorder columns from the Columns menu or each header's ⋮; the layout survives a reload. */
 export const CustomizableColumns: Story = {
   render: () => <CustomizableColumnsDemo />,
+};
+
+function ExpandableRowsDemo() {
+  const [open, setOpen] = useState<string[]>([ORDERS[0]!.id]);
+  const toggle = (id: string) =>
+    setOpen((prev) => (prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id]));
+  return (
+    <SmartTable
+      columns={COLUMNS}
+      rows={ORDERS}
+      getRowKey={(o) => o.id}
+      minWidth="64rem"
+      onRowClick={(o) => toggle(o.id)}
+      expandedKeys={open}
+      renderExpanded={(o) => (
+        <div className="text-muted-foreground">
+          {o.address} · {o.detail} · {o.duration}
+        </div>
+      )}
+    />
+  );
+}
+
+/** Click a row to show its detail underneath; the open keys live in the page's state. */
+export const ExpandableRows: Story = {
+  render: () => <ExpandableRowsDemo />,
 };

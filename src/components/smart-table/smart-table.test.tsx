@@ -368,4 +368,55 @@ describe("<SmartTable />", () => {
     await userEvent.click(screen.getAllByLabelText("Column options")[0]!);
     expect(screen.queryByText("Move right")).not.toBeInTheDocument();
   });
+
+  it("renders renderExpanded under the rows whose key is in expandedKeys", () => {
+    render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        expandedKeys={["504513701"]}
+        renderExpanded={(o) => <span>detail-{o.id}</span>}
+      />,
+    );
+    expect(screen.getByText("detail-504513701")).toBeInTheDocument();
+    expect(screen.queryByText("detail-504513718")).not.toBeInTheDocument();
+    const detail = screen.getByText("detail-504513701").closest(
+      '[data-slot="smart-table-expanded"]',
+    )!;
+    // sits right after its own row
+    expect(detail.previousElementSibling).toHaveTextContent("Krazy Pizza and Wings");
+  });
+
+  it("does not trigger onRowClick from inside the expanded content", async () => {
+    const onRowClick = vi.fn();
+    render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        onRowClick={onRowClick}
+        expandedKeys={["504513718"]}
+        renderExpanded={() => <button type="button">inner</button>}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "inner" }));
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
+
+  it("passes expanded content to the responsive card fallback", () => {
+    const { container } = render(
+      <SmartTable
+        columns={COLUMNS}
+        rows={ORDERS}
+        getRowKey={(o) => o.id}
+        responsive
+        expandedKeys={["504513718"]}
+        renderExpanded={(o) => <span>detail-{o.id}</span>}
+      />,
+    );
+    expect(
+      container.querySelector('[data-slot="card-list-table"]')!.textContent,
+    ).toContain("detail-504513718");
+  });
 });
