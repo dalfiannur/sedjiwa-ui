@@ -2,7 +2,9 @@ import {
   type CSSProperties,
   Fragment,
   type ReactNode,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { ArrowDown, ArrowUp, EllipsisVertical } from "lucide-react";
@@ -27,13 +29,18 @@ import {
   setColumnVisible,
   type SmartTableColumnState,
 } from "./column-state";
+import { floorTrack, gridMinWidth, trackMinimum } from "./column-width";
 
 export type SmartColumn<T> = {
   key: string;
   header: ReactNode;
   render: (item: T) => ReactNode;
   align?: "left" | "right";
-  /** Grid track for this column (e.g. `"1fr"`, `"minmax(0,1.5fr)"`, `"9rem"`). Defaults to `minmax(0,1fr)`. */
+  /**
+   * Grid track for this column (e.g. `"1fr"`, `"minmax(0,1.5fr)"`, `"9rem"`).
+   * Defaults to `minmax(0,1fr)`. Either way the column never gets narrower
+   * than its header, so a fixed width grows when the header needs more room.
+   */
   width?: string;
   className?: string;
   /**
@@ -87,7 +94,10 @@ export type SmartTableProps<T> = {
   renderExpanded?: (item: T) => ReactNode;
   expandedKeys?: readonly string[];
   emptyMessage?: ReactNode;
-  /** Minimum grid width before horizontal scroll kicks in. Defaults to `48rem`. */
+  /**
+   * Minimum grid width before horizontal scroll kicks in. Defaults to `48rem`;
+   * raised automatically when the columns' headers need more than that.
+   */
   minWidth?: string;
   /**
    * Below `md`, stack into `CardListTable` cards instead of a horizontally
@@ -227,15 +237,72 @@ export function SmartTable<T>({
     updateLayout(setColumnVisible(layout, key, false));
   const showAllColumns = () => updateLayout({ ...layout, hidden: [] });
 
-  const template = [
-    renderLeading ? "2.75rem" : null,
-    ...visibleColumns.map((col) => col.width ?? "minmax(0, 1fr)"),
-    renderAction ? "3rem" : null,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  // Header widths in px by column key: label text + padding, sort arrow and ⋮.
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerWidths, setHeaderWidths] = useState<Record<string, number>>({});
+  const visibleKeys = visibleColumns.map((col) => col.key).join(" ");
+  useLayoutEffect(() => {
+    const row = headerRef.current;
+    if (!row) return;
+    const measure = () => {
+      const next: Record<string, number> = {};
+      row
+        .querySelectorAll<HTMLElement>("[data-column-key]")
+        .forEach((cell) => {
+          const label = cell.querySelector<HTMLElement>(
+            '[data-slot="smart-table-header-label"]',
+          );
+          // Hidden (e.g. the responsive card view is showing): keep the last value.
+          if (!label || !cell.offsetWidth) return;
+          const range = document.createRange();
+          range.selectNodeContents(label);
+          const text = range.getBoundingClientRect().width;
+          const chrome = cell.offsetWidth - label.clientWidth;
+          next[cell.dataset.columnKey!] = Math.ceil(chrome + text);
+        });
+      setHeaderWidths((prev) => {
+        const merged = { ...prev, ...next };
+        const changed = Object.keys(merged).some(
+          (key) => merged[key] !== prev[key],
+        );
+        return changed ? merged : prev;
+      });
+    };
+    measure();
+    // Re-measure once web fonts land, and when a hidden table is shown.
+    let cancelled = false;
+    document.fonts?.ready.then(() => !cancelled && measure());
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(row);
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+    };
+  }, [visibleKeys, sort?.key, sort?.dir]);
 
-  const gridStyle: CSSProperties = { gridTemplateColumns: template, minWidth };
+  const tracks = [
+    renderLeading ? { track: "2.75rem", min: "2.75rem" } : null,
+    ...visibleColumns.map((col) => {
+      const floor = headerWidths[col.key] ?? 0;
+      return {
+        track: floorTrack(col.width, floor),
+        min: trackMinimum(col.width, floor),
+      };
+    }),
+    renderAction ? { track: "3rem", min: "3rem" } : null,
+  ].filter((t) => t !== null);
+  const template = tracks.map((t) => t.track).join(" ");
+  const tableMinWidth = gridMinWidth(
+    minWidth,
+    tracks.map((t) => t.min),
+    visibleColumns.some((col) => headerWidths[col.key]),
+  );
+
+  const gridStyle: CSSProperties = {
+    gridTemplateColumns: template,
+    minWidth: tableMinWidth,
+  };
 
   const table = (
     <div
@@ -255,6 +322,7 @@ export function SmartTable<T>({
           data-slot="smart-table-header"
           className="bg-muted grid items-stretch"
           style={gridStyle}
+          ref={headerRef}
         >
           {renderLeading && (
             <div className="text-muted-foreground flex items-center justify-center py-3.5">
@@ -276,6 +344,7 @@ export function SmartTable<T>({
               <div
                 key={col.key}
                 role="columnheader"
+                data-column-key={col.key}
                 aria-sort={
                   activeDir
                     ? activeDir === "asc"
@@ -289,6 +358,7 @@ export function SmartTable<T>({
                 )}
               >
                 <span
+                  data-slot="smart-table-header-label"
                   className={cn(
                     "min-w-0 flex-1 truncate",
                     // flex-row-reverse only mirrors the *order* of the header
@@ -410,7 +480,7 @@ export function SmartTable<T>({
                       role="row"
                       data-slot="smart-table-expanded"
                       className="border-border/70 bg-muted/30 border-t"
-                      style={{ minWidth }}
+                      style={{ minWidth: tableMinWidth }}
                     >
                       <div role="cell" className="min-w-0 px-4 py-3 text-sm">
                         {renderExpanded!(row)}

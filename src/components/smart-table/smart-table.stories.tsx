@@ -6,6 +6,7 @@ import { SmartTableColumnsMenu } from "./smart-table-columns-menu";
 import { useSmartTableColumns } from "./use-smart-table-columns";
 import { Avatar, AvatarFallback, AvatarImage } from "../avatar";
 import { Badge } from "../badge";
+import { expect, waitFor, within } from "storybook/test";
 
 type Order = {
   id: string;
@@ -203,4 +204,47 @@ function ExpandableRowsDemo() {
 /** Click a row to show its detail underneath; the open keys live in the page's state. */
 export const ExpandableRows: Story = {
   render: () => <ExpandableRowsDemo />,
+};
+
+const LONG_HEADER_COLUMNS: SmartColumn<Order>[] = [
+  { key: "id", header: "Order identification number", width: "5rem", render: (o) => o.id },
+  { key: "name", header: "Customer business name", render: (o) => o.name },
+  { key: "phone", header: "Primary contact phone", width: "minmax(0, 1.5fr)", render: (o) => o.phone },
+  { key: "date", header: "Requested delivery date", render: (o) => o.date },
+];
+
+/** Columns never get narrower than their header; the table scrolls sideways instead. */
+export const LongHeaders: Story = {
+  render: () => (
+    <div style={{ width: "32rem" }}>
+      <SmartTable
+        columns={LONG_HEADER_COLUMNS}
+        rows={ORDERS.slice(0, 3)}
+        getRowKey={(o) => o.id}
+        minWidth="20rem"
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const headers = await canvas.findAllByRole("columnheader");
+    await waitFor(() => {
+      for (const header of headers) {
+        const label = header.querySelector("span")!;
+        const range = document.createRange();
+        range.selectNodeContents(label);
+        const textWidth = range.getBoundingClientRect().width;
+        expect(label.clientWidth + 1, header.textContent ?? "").toBeGreaterThanOrEqual(textWidth);
+      }
+    });
+    // Body cells stay lined up with their header.
+    const firstRow = canvas.getAllByRole("row")[1]!;
+    const cells = within(firstRow).getAllByRole("cell");
+    headers.forEach((header, i) =>
+      expect(cells[i]!.getBoundingClientRect().left).toBeCloseTo(
+        header.getBoundingClientRect().left,
+        0,
+      ),
+    );
+  },
 };
